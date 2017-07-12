@@ -5,12 +5,14 @@ import './DayToken.sol';
 
 contract Bounty is DayInterface, DayToken {
 
-uint256 bounty; 
-uint lastUpdated; 
-function getBounty()public returns (bool) {
-uint today = (block.timestamp - initialBlockTimestamp) % 1 day; 
-require(today != lastUpdated); 
-updateAllBalances(); 
-lastUpdated = today; 
+    uint256 bounty; 
+    uint lastUpdated; //STORE THIS SOMEWHERE
+    function getBounty() public returns (bool) {
+        uint today = (block.timestamp - initialBlockTimestamp)/1 days; 
+        require(today != lastUpdated); 
+        updateAllBalances(); 
+        lastUpdated = today; 
+        balances[msg.sender] + = bounty; 
+    }
 }
-}
+
