@@ -1,0 +1,39 @@
+{
+    "name": "ico-by-tosh",
+    "version": "0.0.1",
+    "description": "ICO contracts by Toshendra Sharma",
+    "main": "truffle.js",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/toshendra/ethereum-erc20-token"
+    },
+    "keywords": [
+        "solidity",
+        "ethereum",
+        "smart",
+        "contracts",
+        "security",
+        "zeppelin"
+    ],
+    "author": "Manuel Araoz <manuelaraoz@gmail.com>",
+    "license": "MIT",
+    "bugs": {
+        "url": "https://github.com/toshendra/ethereum-erc20-token/issues"
+    },
+    "homepage": "https://github.com/toshendra/ethereum-erc20-token",
+    "dependencies": {
+        "truffle-hdwallet-provider": "0.0.3"
+    },
+    "devDependencies": {
+        "big-number": "^0.4.0",
+        "babel-preset-es2015": "^6.18.0",
+        "babel-preset-stage-2": "^6.18.0",
+        "babel-preset-stage-3": "^6.17.0",
+        "babel-register": "^6.23.0",
+        "coveralls": "^2.13.1",
+        "ethereumjs-testrpc": "^3.0.2",
+        "mocha-lcov-reporter": "^1.3.0",
+        "solidity-coverage": "^0.1.0",
+        "truffle": "3.2.2"
+    }
+}
