@@ -140,22 +140,6 @@ contract DayToken is ReleasableToken, MintableToken, UpgradeableToken, DayInterf
 
 //<==========End Minting Power=========>
 //<===================Balances=================>
-/*
-function availableBalanceOf(uint256 id)returns (uint256) {
-//Cant get of specified 2 days. Need the block timestamp of both the days.
-Contributor user = contributors[id]; 
-uint256 inPhase = getPhaseCount(startDay)-1; 
-uint256 enPhase = getPhaseCount(endDay)-1; 
-uint256 balance; `
-    uint256 power = min((halvingCycle * (inPhase + 1) - startDay-1), endDay - startDay); 
-balance = inbalance; 
-balance = (balance * ((10 *  * (decimals + 2) + factor/(2 *  * inPhase)) *  * power))/10 *  * (power * 7); 
-for (uint256 i = inPhase + 1; i <= enPhase; i++) {
-balance = (balance * ((10 *  * (decimals + 2) + factor/(2 *  * i))) *  * min(halvingCycle, (safeSub(endDay, i * halvingCycle) + 1)))/10 *  * (min(halvingCycle, (safeSub(endDay, i * halvingCycle) + 1)) * 5); 
-}
-return balance; 
-}
-*/
     function availableBalanceOf(uint256 id) internal returns (uint256){
         Contributor user = contributors[id]; 
         balance=user.balance;
