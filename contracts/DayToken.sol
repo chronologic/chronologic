@@ -79,7 +79,7 @@ mintingFinished = true;
 require(totalSupply != 0); 
 }
 //SET INITIAL VALUES
-for(uint i=1;i<=maxAddresses;i++)
+for(uint i=0;i<maxAddresses;i++)
 {
  Contributor user = contributors[i];
  user.initialContribution=79200000000;
@@ -88,15 +88,15 @@ for(uint i=1;i<=maxAddresses;i++)
  user.totalMinted=0;
  int totalTransferred=0;
 }
-Contributor user1 = contributors[1];
+Contributor user1 = contributors[0];
 user.adr=0x34b187ed0a80f35d15375b650cfaf25a24167b8f;
-idOf[0x34b187ed0a80f35d15375b650cfaf25a24167b8f]=1;
-Contributor user2 = contributors[2];
+idOf[0x34b187ed0a80f35d15375b650cfaf25a24167b8f]=0;
+Contributor user2 = contributors[1];
 user.adr=0x250d570c3999b2c823190b4a40ed276422ccb5aa;
-idOf[0x250d570c3999b2c823190b4a40ed276422ccb5aa]=2;
-Contributor user3 = contributors[3];
+idOf[0x250d570c3999b2c823190b4a40ed276422ccb5aa]=1;
+Contributor user3 = contributors[2];
 user.adr=0x11105c0def2b6b32f3aa85f47d9c1cdfb8a156e8;
-idOf[0x11105c0def2b6b32f3aa85f47d9c1cdfb8a156e8]=3;
+idOf[0x11105c0def2b6b32f3aa85f47d9c1cdfb8a156e8]=2;
 
 //CALL function setInitialMintingPowerOf
 }
