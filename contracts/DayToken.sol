@@ -46,7 +46,7 @@ uint8 public decimals;
     * @param _mintable Are new tokens created over the crowdsale or do we distribute only the initial supply? Note that when the token becomes transferable the minting always ends.
     */
 function DayToken(string _name, string _symbol, uint _initialSupply, uint8 _decimals, bool _mintable, uint _maxAddresses, uint256 _minMintingPower,
- uint256 _maxMintingPower, uint _halvingCycle, uint _initialBlockTimestamp, uint _mintingDec)UpgradeableToken(msg.sender) {
+ uint256 _maxMintingPower, uint _halvingCycle, uint _initialBlockTimestamp, uint _mintingDec,uint _bounty)UpgradeableToken(msg.sender) {
 
 // Create any address, can be transferred
 // to team multisig via changeOwner(),
@@ -68,6 +68,7 @@ initialBlockTimestamp=_initialBlockTimestamp;
 mintingDec=_mintingDec;
 latestContributerId=0;
 latestAllUpdate=0;
+bounty=_bounty;
 
 if (totalSupply > 0) {
 Minted(owner, totalSupply); 
@@ -187,16 +188,21 @@ return balances[_adr];
 
 // To be called daily
 function updateAllBalances()public returns (bool status) {
+    uint today = (block.timestamp - initialBlockTimestamp)/1 days; 
+        require(today != latestAllUpdate); 
 for (uint i = 1; i <= latestContributerId; i++) {
 if (updateBalanceOf(i)) {}
 else {
 UpdateFailed(i); 
 }
 }
-latestAllUpdate = getDayCount(); 
+latestAllUpdate = today; 
+balances[msg.sender]+= bounty; 
 UpToDate(true); 
 }
-
+function setBounty(uint256 _bounty) onlyOwner{
+    bounty=_bounty;
+}
 //=============================UNDER DEV===============================
 //<===================End Balances================>
 

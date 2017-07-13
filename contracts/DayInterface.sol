@@ -28,9 +28,10 @@ uint256 public initialBlockCount; //Hard Code
 uint256 public initialBlockTimestamp; //Hard Code
 uint256 public dayPerEther; //Hard Code
 uint256 public mintingDec; 
+uint256 public bounty;
 
 function availableBalanceOf(uint256 id)internal returns (uint256);//calculates balance and calls setBalanceOf() Done
-
+function setBounty(uint256 _bounty) onlyOwner;
 function setBalanceOf(address,uint256) returns (bool); //Done
 function setInitialMintingPowerOf(uint256 id) internal returns (bool);//Done
 
