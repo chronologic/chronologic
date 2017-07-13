@@ -1,0 +1,20 @@
+*~
+*#
+.#*
+
+# Logs
+logs
+*.log
+
+# Dependency directory
+node_modules
+
+# Generated files
+build
+dist
+
+
+# Mac's .DS folders
+.DS_Store
+
+
