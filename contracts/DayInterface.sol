@@ -16,7 +16,7 @@ struct Contributor
     int totalTransferred;
 }
 mapping (address => uint) public idOf;
-mapping (uint256 => Contributor) contributors;
+mapping (uint256 => Contributor) public contributors;
 
 uint public latestAllUpdate;
 uint256 public latestContributerId;
@@ -31,7 +31,7 @@ uint256 public mintingDec;
 uint256 public bounty;
 
 function availableBalanceOf(uint256 id)internal returns (uint256);//calculates balance and calls setBalanceOf() Done
-function setBounty(uint256 _bounty) onlyOwner;
+function setBounty(uint256 _bounty);
 function setBalanceOf(address,uint256) returns (bool); //Done
 function setInitialMintingPowerOf(uint256 id) internal returns (bool);//Done
 

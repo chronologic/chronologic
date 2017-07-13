@@ -1,4 +1,4 @@
-var Token = artifacts.require("./CrowdsaleToken.sol");
+var Token = artifacts.require("./DayToken.sol");
 
 
 
@@ -27,7 +27,13 @@ module.exports = function(deployer, network, accounts) {
     var _tokenDecimals = 8;
     var _tokenInitialSupply = tokenInSmallestUnit(0, _tokenDecimals);
     var _tokenMintable = true;
-
+    var _maxAddresses = 3;
+    var _minMintingPower = 500000000000000000;
+    var _maxMintingPower = 1000000000000000000;
+    var _halvingCycle = 88;
+    var _initalBlockTimestamp = 1499644800;
+    var _mintingDec = 19;
+    var _bounty = 100000000;
     /**
      * 
      * ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -39,11 +45,11 @@ module.exports = function(deployer, network, accounts) {
     var tokenInstance;
 
     deployer.then(function() {
-        return Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable);
+        return Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty);
     }).then(function(Instance) {
         tokenInstance = Instance;
         if (debug) console.log("CrowdsaleToken Parameters are:");
-        if (debug) console.log(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable);
+        if (debug) console.log(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty);
         if (debug) console.log("CrowdsaleToken address is: ", tokenInstance.address);
         if (showURL) console.log("Token URL is: " + getEtherScanUrl(network, tokenInstance.address, "token"));
         if (showURL) console.log("Transaction URL is: " + getEtherScanUrl(network, tokenInstance.transactionHash, "tx"));

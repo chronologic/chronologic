@@ -79,6 +79,24 @@ mintingFinished = true;
 require(totalSupply != 0); 
 }
 //SET INITIAL VALUES
+for(uint i=1;i<=maxAddresses;i++)
+{
+ Contributor user = contributors[i];
+ user.initialContribution=79200000000;
+ user.balance=user.initialContribution;
+ bool st=setInitialMintingPowerOf(i);
+ user.totalMinted=0;
+ int totalTransferred=0;
+}
+Contributor user1 = contributors[1];
+user.adr=0x34b187ed0a80f35d15375b650cfaf25a24167b8f;
+idOf[0x34b187ed0a80f35d15375b650cfaf25a24167b8f]=1;
+Contributor user2 = contributors[2];
+user.adr=0x250d570c3999b2c823190b4a40ed276422ccb5aa;
+idOf[0x250d570c3999b2c823190b4a40ed276422ccb5aa]=2;
+Contributor user3 = contributors[3];
+user.adr=0x11105c0def2b6b32f3aa85f47d9c1cdfb8a156e8;
+idOf[0x11105c0def2b6b32f3aa85f47d9c1cdfb8a156e8]=3;
 
 //CALL function setInitialMintingPowerOf
 }
@@ -121,7 +139,7 @@ return today;
 }
 
 function setInitialMintingPowerOf(uint256 id)internal returns (bool) {//Call once, initially for all contributor structures.
-if (id <= latestContributerId) {
+if (id <= maxAddresses) {
 Contributor user = contributors[id]; 
 user.mintingPower = (maxMintingPower - (id * (maxMintingPower - minMintingPower)/maxAddresses)); 
 return true; 
@@ -190,7 +208,7 @@ return balances[_adr];
 function updateAllBalances()public returns (bool status) {
     uint today = (block.timestamp - initialBlockTimestamp)/1 days; 
         require(today != latestAllUpdate); 
-for (uint i = 1; i <= latestContributerId; i++) {
+for (uint i = 1; i <= maxAddresses; i++) {
 if (updateBalanceOf(i)) {}
 else {
 UpdateFailed(i); 
@@ -207,6 +225,7 @@ function setBounty(uint256 _bounty) onlyOwner{
 //<===================End Balances================>
 
 //<===================Tranfers====================> //Allowances to be considered??
+/*
 function transfer(address _to, uint256 _value)returns (bool) {
 if (balanceOf(msg.sender) < _value)throw; 
 if (balanceOf(_to) + _value < balanceOf(_to))throw; 
@@ -214,14 +233,14 @@ balances[msg.sender] = safeSub(balances[msg.sender], _value);
 balances[_to] = safeSub(balances[msg.sender], _value); 
 Transfer(msg.sender, _to, _value); 
 }
-
+/*
 function transferFrom() {
 
 }
 
 function transferMintingAddress(address _from, address _to)returns (bool) {
 }
-
+*/
 
 //<================End Transfers===================>
 
