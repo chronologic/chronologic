@@ -175,10 +175,7 @@ contract DayToken is ReleasableToken, MintableToken, UpgradeableToken, DayInterf
     }
 
     // To be called daily
-    function updateAllBalances() public constant returns (bool status) {
-        uint today=getDayCount()
-        uint dayDif = (today - latestAllUpdate); 
-        if (dayDiff >=1) {
+    function updateAllBalances() public returns (bool status) {
             for (i = 1; i <= latestContributerId; i++) {
                 if (updateBalanceOf(id)) 
                 {_}
@@ -189,13 +186,6 @@ contract DayToken is ReleasableToken, MintableToken, UpgradeableToken, DayInterf
             latestAllUpdate = today; 
             UpToDate(true)
         }
-        else if (dayDiff >= 3) {
-            return false; 
-        }
-        else {
-            return true; 
-        }
-    }
 
 //=============================UNDER DEV===============================
 //<===================End Balances================>
