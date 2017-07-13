@@ -45,7 +45,8 @@ uint8 public decimals;
     * @param _decimals Number of decimal places
     * @param _mintable Are new tokens created over the crowdsale or do we distribute only the initial supply? Note that when the token becomes transferable the minting always ends.
     */
-function DayToken(string _name, string _symbol, uint _initialSupply, uint _decimals, bool _mintable)UpgradeableToken(msg.sender) {
+function DayToken(string _name, string _symbol, uint _initialSupply, uint8 _decimals, bool _mintable, uint _maxAddresses, uint256 _minMintingPower,
+ uint256 _maxMintingPower, uint _halvingCycle, uint _initialBlockTimestamp, uint _mintingDec)UpgradeableToken(msg.sender) {
 
 // Create any address, can be transferred
 // to team multisig via changeOwner(),
@@ -59,6 +60,15 @@ decimals = _decimals;
 // Create initially all balance on the team multisig
 balances[owner] = totalSupply; 
 
+maxAddresses=_maxAddresses;
+minMintingPower=_minMintingPower;
+maxMintingPower=_maxMintingPower;
+halvingCycle=_halvingCycle;
+initialBlockTimestamp=_initialBlockTimestamp;
+mintingDec=_mintingDec;
+latestContributerId=0;
+latestAllUpdate=0;
+
 if (totalSupply > 0) {
 Minted(owner, totalSupply); 
 }
@@ -68,6 +78,7 @@ mintingFinished = true;
 require(totalSupply != 0); 
 }
 //SET INITIAL VALUES
+
 //CALL function setInitialMintingPowerOf
 }
 
@@ -99,19 +110,19 @@ UpdatedTokenInformation(name, symbol);
     * Owner can update token information here
     */
 function getPhaseCount(uint day)public constant returns (uint phase) {
-phase = (day/halvingcycle) + 1; 
+phase = (day/halvingCycle) + 1; 
 return (phase); 
 }
 
-function getDayCount()public constant returns (uint today) {
-today = ((block.timestamp - intialBlockTimestamp)/86400); 
+function getDayCount() public constant returns (uint today) {
+today = ((block.timestamp - initialBlockTimestamp)/86400); 
 return today; 
 }
 
 function setInitialMintingPowerOf(uint256 id)internal returns (bool) {//Call once, initially for all contributor structures.
-if (id <= latestContributorId) {
+if (id <= latestContributerId) {
 Contributor user = contributors[id]; 
-user.mintingPower = (maxMintingPower - (contributionId * (maxMintingPower - minMintingPower)/maxAddresses)); 
+user.mintingPower = (maxMintingPower - (id * (maxMintingPower - minMintingPower)/maxAddresses)); 
 return true; 
 }
 else {
@@ -131,12 +142,13 @@ MintingPower(user.adr, user.mintingPower);
 return user.mintingPower; 
 }
 
+/*
 // CHECK THIS. NEEDS UPDATES
 function getTotalMinted(address _adr)returns (uint256) {
 Contributor user = contributors[idOf[_adr]]; 
 return user.balance - user.totalTransferred - user.initialContribution; 
 }
-
+*/
 //<==========End Minting Power=========>
 //<===================Balances=================>
 function availableBalanceOf(uint256 id)internal returns (uint256) {
@@ -145,7 +157,7 @@ uint256 balance = user.balance;
 for (uint i = user.lastUpdatedOn; i < getDayCount(); i++) {
 balance = (balance * ((10 ** (mintingDec + 2) * (2 ** (getPhaseCount(i)-1))) + user.mintingPower))/(2 ** (getPhaseCount(i)-1)); 
 }
-balance = balance/10 ** ((mintitngDec + 2) * (getDayCount() - lastUpdatedOn)); 
+balance = balance/10 ** ((mintingDec + 2) * (getDayCount() - user.lastUpdatedOn)); 
 return balance; 
 }
 
@@ -159,7 +171,7 @@ return true;
 
 //For user to call
 function balanceOf(address _adr)public constant returns (uint256 balance) {
-uint id = IdOf[_adr]; 
+uint id = idOf[_adr]; 
 if (id <= maxAddresses) {
 require(updateBalanceOf(id)); 
 }
@@ -168,7 +180,7 @@ return balances[_adr];
 function balanceById(uint id)public constant returns (uint256 balance) {
 if (id <= maxAddresses) {
 address _adr=contributors[id].adr; 
-require(updateBalanceOf(_adr)); 
+require(updateBalanceOf(id)); 
 }
 return balances[_adr]; 
 }
@@ -192,8 +204,8 @@ UpToDate(true);
 function transfer(address _to, uint256 _value)returns (bool) {
 if (balanceOf(msg.sender) < _value)throw; 
 if (balanceOf(_to) + _value < balanceOf(_to))throw; 
-balances[msg.sender] = safesub(balances[msg.sender], _value); 
-balances[to] = safesub(balances[msg.sender], _value); 
+balances[msg.sender] = safeSub(balances[msg.sender], _value); 
+balances[_to] = safeSub(balances[msg.sender], _value); 
 Transfer(msg.sender, _to, _value); 
 }
 
