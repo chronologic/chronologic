@@ -1,8 +1,8 @@
 'use strict';
 
 const assertJump = require('./helpers/assertJump');
-var Token = artifacts.require("./CrowdsaleToken.sol");
-contract('CrowdsaleToken', function(accounts) {
+var Token = artifacts.require("./DayToken.sol");
+contract('DayToken', function(accounts) {
     var _tokenName = "Etheriya";
     var _tokenSymbol = "RIYA";
     var _tokenDecimals = 8;
