@@ -4,7 +4,7 @@ import "./StandardToken.sol";
 import "./UpgradeableToken.sol"; 
 import "./ReleasableToken.sol"; 
 import "./MintableToken.sol"; 
-import "./DayInterface.sol"; 
+//import "./DayInterface.sol"; 
 import "./SafeMathLib.sol"; 
 
 //TODO: Add permissions: modifiers
@@ -20,19 +20,45 @@ import "./SafeMathLib.sol";
  * - The token can be capped (supply set in the constructor) or uncapped (crowdsale contract can mint new tokens)
  *
  */
-contract DayToken is ReleasableToken, MintableToken, UpgradeableToken, DayInterface {
+contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
 
-    event UpdatedTokenInformation(string newName, string newSymbol); 
-    event UpdateFailed(uint id); 
-    event UpToDate (bool status); 
-    event MintingPower(address adr, uint256 mintingPower); 
-    event Balance(address adr, uint256 balance); 
+struct Contributor
+{
+    address adr;
+	uint256 initialContribution;
+    uint256 balance;
+    uint256 lastUpdatedOn; //Day from Minting Epoch
+    uint256 mintingPower;
+    uint256 totalMinted; 
+    int totalTransferred;
+}
 
-    string public name; 
+mapping (address => uint) public idOf;
+mapping (uint256 => Contributor) public contributors;
 
-    string public symbol; 
+uint256 public latestAllUpdate;
+uint256 public latestContributerId;
+uint256 public maxAddresses;// Hard Code: Stores max number of minting addresses
+uint256 public minMintingPower;
+uint256 public maxMintingPower;
+uint256 public halvingCycle;
+uint256 public initialBlockCount; //Hard Code
+uint256 public initialBlockTimestamp; //Hard Code
+//uint256 public dayPerEther; //Hard Code
+uint256 public mintingDec; 
+uint256 public bounty;
 
-    uint8 public decimals; 
+event UpdatedTokenInformation(string newName, string newSymbol); 
+event UpdateFailed(uint id); 
+event UpToDate (bool status); 
+event MintingPower(address adr, uint256 mintingPower); 
+event Balance(address adr, uint256 balance); 
+
+string public name; 
+
+string public symbol; 
+
+uint8 public decimals; 
 
     /**
         * Construct the token.
@@ -43,11 +69,10 @@ contract DayToken is ReleasableToken, MintableToken, UpgradeableToken, DayInterf
         * @param _symbol Token symbol - should be all caps
         * @param _initialSupply How many tokens we start with
         * @param _decimals Number of decimal places
-        * @param _mintable Are new tokens created over the crowdsale or do we distribute only the initial supply? Note that when the token becomes transferable the minting always ends.
+        * _mintable Are new tokens created over the crowdsale or do we distribute only the initial supply? Note that when the token becomes transferable the minting always ends.
         */
-    function DayToken(string _name, string _symbol, uint _initialSupply, uint8 _decimals, bool _mintable, uint _maxAddresses, uint256 _minMintingPower,
-        uint256 _maxMintingPower, uint _halvingCycle, uint _initialBlockTimestamp, uint256 _mintingDec, uint _bounty, address[] testAddresses) UpgradeableToken(msg.sender) {
-
+    function DayToken(string _name, string _symbol, uint _initialSupply, uint8 _decimals, bool _mintable, uint _maxAddresses, uint256 _minMintingPower, uint256 _maxMintingPower, uint _halvingCycle, uint _initialBlockTimestamp, uint256 _mintingDec, uint _bounty, address[] testAddresses) UpgradeableToken(msg.sender) {
+        //uint256 _maxMintingPower, uint _halvingCycle, uint _initialBlockTimestamp, uint256 _mintingDec, uint _bounty, address[] testAddresses
         // Create any address, can be transferred
         // to team multisig via changeOwner(),
         // also remember to call setUpgradeMaster()
@@ -79,12 +104,12 @@ contract DayToken is ReleasableToken, MintableToken, UpgradeableToken, DayInterf
             require(totalSupply != 0); 
         }
 
-        //SET INITIAL VALUES
+        
         uint i;
-        for(i=1;i<=testAddresses.length;i++)
+        for(i=1;i<=7;i++)
         {
             contributors[i].initialContribution=79200000000;
-            contributors[i].balance=contributors[i].initialContribution;
+            contributors[i].balance=79200000000;
             setInitialMintingPowerOf(i);
             contributors[i].totalMinted=0;
             contributors[i].totalTransferred=0;

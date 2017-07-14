@@ -7,7 +7,8 @@ module.exports = {
         testrpc: {
             host: "localhost",
             port: 8545,
-            network_id: "*"
+            network_id: "*",
+            gas: 3512388
         },
         kovan: {
             host: "localhost",
