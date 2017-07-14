@@ -45,11 +45,11 @@ module.exports = function(deployer, network, accounts) {
     var tokenInstance;
 
     deployer.then(function() {
-        return Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty);
+        return Token.new(_tokenName, _tokenSymbol, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty);
     }).then(function(Instance) {
         tokenInstance = Instance;
         if (debug) console.log("CrowdsaleToken Parameters are:");
-        if (debug) console.log(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty);
+        if (debug) console.log(_tokenName, _tokenSymbol, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty);
        // if (debug) console.log("CrowdsaleToken address is: ", tokenInstance.address);
         //if (showURL) console.log("Token URL is: " + getEtherScanUrl(network, tokenInstance.address, "token"));
         //if (showURL) console.log("Transaction URL is: " + getEtherScanUrl(network, tokenInstance.transactionHash, "tx"));
@@ -95,5 +95,5 @@ module.exports = function(deployer, network, accounts) {
     function tokenInSmallestUnit(tokens, _tokenDecimals) {
         return tokens * Math.pow(10, _tokenDecimals);
     }*/
-    
+    console.log("CrowdsaleToken Parameters are:");
 }

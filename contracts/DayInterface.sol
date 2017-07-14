@@ -26,8 +26,8 @@ uint256 public maxMintingPower;
 uint256 public halvingCycle;
 uint256 public initialBlockCount; //Hard Code
 uint256 public initialBlockTimestamp; //Hard Code
-uint256 public dayPerEther; //Hard Code
-uint256 public mintingDec; 
+//uint256 public dayPerEther; //Hard Code
+uint8 public mintingDec; 
 uint256 public bounty;
 
 function availableBalanceOf(uint256 id)internal returns (uint256);//calculates balance and calls setBalanceOf() Done

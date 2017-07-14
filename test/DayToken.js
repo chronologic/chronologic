@@ -10,21 +10,21 @@ contract('DayToken', function(accounts) {
     var _tokenMintable = true;
     var decimals = _tokenDecimals;
     it('Creation: should return the correct totalSupply after construction', async function() {
-        let instance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, { from: accounts[0] });
+        let instance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, , _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, { from: accounts[0] });
         let totalSupply = await instance.totalSupply();
 
         assert.equal(totalSupply, _tokenInitialSupply);
     });
 
     it('Creation: should return the correct balance of admin after construction', async function() {
-        let instance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, { from: accounts[0] });
+        let instance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, , _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, { from: accounts[0] });
         let adminBalance = await instance.balanceOf.call(accounts[0]);
 
         assert.equal(adminBalance, _tokenInitialSupply);
     });
 
     it('Creation: sould return correct token meta information', async function() {
-        let instance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, { from: accounts[0] });
+        let instance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, , _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, { from: accounts[0] });
 
         let name = await instance.name.call();
         assert.strictEqual(name, _tokenName, "Name value is not as expected.");
@@ -37,7 +37,7 @@ contract('DayToken', function(accounts) {
     });
 
     it('Transfer: ether transfer to token address should fail.', async function() {
-        let instance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, { from: accounts[0] });
+        let instance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, , _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, { from: accounts[0] });
         try {
             await web3.eth.sendTransaction({ from: accounts[0], to: instance.address, value: web3.toWei("10", "Ether") });
         } catch (error) {
