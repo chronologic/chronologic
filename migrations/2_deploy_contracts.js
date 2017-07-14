@@ -25,7 +25,7 @@ module.exports = function(deployer, network, accounts) {
     var _tokenName = "Feed";
     var _tokenSymbol = "FEED";
     var _tokenDecimals = 8;
-    var _tokenInitialSupply = 0000000000;
+    var _tokenInitialSupply = 0;
     var _tokenMintable = true;
     var _maxAddresses = 3;
     var _minMintingPower = 500000000000000000;
@@ -45,12 +45,14 @@ module.exports = function(deployer, network, accounts) {
     var tokenInstance;
 
     deployer.then(function() {
-        return Token.new(_tokenName, _tokenSymbol, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty);
+        console.log("i am here");
+        return Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, accounts, {gas: 2512388});
     }).then(function(Instance) {
+        console.log(Instance);
         tokenInstance = Instance;
         if (debug) console.log("CrowdsaleToken Parameters are:");
-        if (debug) console.log(_tokenName, _tokenSymbol, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty);
-       // if (debug) console.log("CrowdsaleToken address is: ", tokenInstance.address);
+        if (debug) console.log(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, accounts);
+        if (debug) console.log("CrowdsaleToken address is: ", tokenInstance.address);
         //if (showURL) console.log("Token URL is: " + getEtherScanUrl(network, tokenInstance.address, "token"));
         //if (showURL) console.log("Transaction URL is: " + getEtherScanUrl(network, tokenInstance.transactionHash, "tx"));
         //if (showABI) console.log("CrowdsaleToken ABI is: ", JSON.stringify(tokenInstance.abi));
