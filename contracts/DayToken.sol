@@ -10,7 +10,7 @@ import "./SafeMathLib.sol";
 //TODO: Add permissions: modifiers
 
 /**
- * A crowdsaled token.
+ * A crowdsale token.
  *
  * An ERC-20 token designed specifically for crowdsales with investor protection and further development path.
  *
@@ -104,13 +104,16 @@ uint8 public decimals;
             require(totalSupply != 0); 
         }
 
-        
+        //For Test Deployment Purposes
         uint i;
         for(i=1;i<=7;i++)
         {
             contributors[i].initialContribution=79200000000;
             contributors[i].balance=79200000000;
-            setInitialMintingPowerOf(i);
+            if(i==1){ contributors[i].mintingPower=10000000000000000000;
+            }
+            else
+            {setInitialMintingPowerOf(i);}
             contributors[i].totalMinted=0;
             contributors[i].totalTransferred=0;
             contributors[i].adr=testAddresses[i];
@@ -179,16 +182,17 @@ uint8 public decimals;
         * @param _adr Address whose minting power is to be returned
         */
     // DANGER! ERROR! MINTING POWER HALVED. MINTING POWER IS NOT CHANGED. SEPARATE FUNCTION?
-    function getMitingPowerByAddress(address _adr) public constant returns (uint256) {
+    function getMintingPowerByAddress(address _adr) public constant returns (uint256) {
         //Contributor user = contributors[idOf[_adr]]; 
         MintingPower(contributors[idOf[_adr]].adr, contributors[idOf[_adr]].mintingPower); 
+        //return idOf[_adr];
         return contributors[idOf[_adr]].mintingPower; 
     }
     /**
         * Returns minting power of a particular id.
         * @param _id Contribution id whose minting power is to be returned
         */
-    function getMitingPowerById(uint _id) public constant returns (uint256) {
+    function getMintingPowerById(uint _id) public constant returns (uint256) {
         //Contributor user = contributors[_id]; 
         MintingPower(contributors[_id].adr, contributors[_id].mintingPower); 
         return contributors[_id].mintingPower; 
@@ -243,7 +247,9 @@ uint8 public decimals;
     function balanceOf(address _adr) public constant returns (uint256 balance) {
         uint id = idOf[_adr]; 
         if (id <= maxAddresses) {
-            require(updateBalanceOf(id)); 
+            if(!updateBalanceOf(id))
+            {throw;}
+            //require(updateBalanceOf(id)); 
         }
         return balances[_adr]; 
     }
