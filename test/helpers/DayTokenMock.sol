@@ -20,7 +20,7 @@ import "./SafeMathLib.sol";
  * - The token can be capped (supply set in the constructor) or uncapped (crowdsale contract can mint new tokens)
  *
  */
-contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
+contract DayTokenMock is  ReleasableToken, MintableToken, UpgradeableToken {
 
 struct Contributor
 {
@@ -50,7 +50,7 @@ uint256 public bounty;
 
 event UpdatedTokenInformation(string newName, string newSymbol); 
 event UpdateFailed(uint id); 
-event UpToDate (bool status); 
+event UpToDate (uint256 balance); 
 event MintingPower(address adr, uint256 mintingPower); 
 event Balance(address adr, uint256 balance); 
 
@@ -71,7 +71,7 @@ uint8 public decimals;
         * @param _decimals Number of decimal places
         * _mintable Are new tokens created over the crowdsale or do we distribute only the initial supply? Note that when the token becomes transferable the minting always ends.
         */
-    function DayToken(string _name, string _symbol, uint _initialSupply, uint8 _decimals, bool _mintable, uint _maxAddresses, uint256 _minMintingPower, uint256 _maxMintingPower, uint _halvingCycle, uint _initialBlockTimestamp, uint256 _mintingDec, uint _bounty, address[] testAddresses) UpgradeableToken(msg.sender) {
+    function DayTokenTest(string _name, string _symbol, uint _initialSupply, uint8 _decimals, bool _mintable, uint _maxAddresses, uint256 _minMintingPower, uint256 _maxMintingPower, uint _halvingCycle, uint _initialBlockTimestamp, uint256 _mintingDec, uint _bounty, address[] testAddresses) UpgradeableToken(msg.sender) {
         //uint256 _maxMintingPower, uint _halvingCycle, uint _initialBlockTimestamp, uint256 _mintingDec, uint _bounty, address[] testAddresses
         // Create any address, can be transferred
         // to team multisig via changeOwner(),
@@ -213,13 +213,13 @@ uint8 public decimals;
         * Can calculate balance based on last updated. *!MAXIMUM 3 DAYS!*. A difference of more than 3 days will lead to crashing of the contract.
         * @param _id id whose balnce is to be calculated
         */
-    function availableBalanceOf(uint256 _id) internal returns (uint256) {
+    function availableBalanceOf(uint256 _id,uint day) internal returns (uint256) {
        // Contributor user = contributors[_id]; 
         uint256 balance = contributors[_id].balance; 
-        for (uint i = contributors[_id].lastUpdatedOn; i < getDayCount(); i++) {
+        for (uint i = contributors[_id].lastUpdatedOn; i < day; i++) {
             balance = (balance * ((10 ** (mintingDec + 2) * (2 ** (getPhaseCount(i)-1))) + contributors[_id].mintingPower))/(2 ** (getPhaseCount(i)-1)); 
         }
-        balance = balance/10 ** ((mintingDec + 2) * (getDayCount() - contributors[_id].lastUpdatedOn)); 
+        balance = balance/10 ** ((mintingDec + 2) * (day - contributors[_id].lastUpdatedOn)); 
         return balance; 
     }
     /**
@@ -228,11 +228,13 @@ uint8 public decimals;
         * Only for internal calls. Not public.
         * @param _id id whose balance is to be updated.
         */
-    function updateBalanceOf(uint256 _id) internal returns (bool success) {
-        contributors[_id].balance = availableBalanceOf(_id);
+    function updateBalanceOf(uint256 _id,uint day) internal returns (bool success) {
+        //Contributor user = contributors[_id]; 
+        contributors[_id].balance = availableBalanceOf(_id,day);
         totalSupply = safeSub(totalSupply, balances[contributors[_id].adr]);
         balances[contributors[_id].adr] = contributors[_id].balance; 
         totalSupply = safeAdd(totalSupply, balances[contributors[_id].adr]);
+        // UpToDate(balances[contributors[_id].adr]);
         return true; 
     }
 
@@ -243,14 +245,18 @@ uint8 public decimals;
         * For public calls.
         * @param _adr address whose balance is to be returned.
         */
-    function balanceOf(address _adr) public constant returns (uint256 balance) {
+    function balanceOf(address _adr,int day) public constant returns (uint256 balance) {
         uint id = idOf[_adr]; 
+        if(!(day<0)){
         if (id <= maxAddresses) {
-            require(updateBalanceOf(id,));
+            require(updateBalanceOf(id,uint(day)));
             return balances[_adr]; 
         }
         }
-
+        else{
+            return balances[_adr]; 
+        }
+    }
     /**
         * Standard ERC20 function overridden.
         * Returns the balance of the specified id after updating it.
@@ -258,12 +264,16 @@ uint8 public decimals;
         * For public calls.
         * @param _id address whose balance is to be returned.
         */
-    function balanceById(uint _id) public constant returns (uint256 balance) {
+    function balanceById(uint _id,uint day) public constant returns (uint256 balance) {
         if (_id <= maxAddresses) {
             address adr=contributors[_id].adr; 
-            require(updateBalanceOf(_id)); 
+            require(updateBalanceOf(_id,day)); 
         }
         return balances[adr]; 
+    }
+    function noUpdateBalanceAdr(address _adr, uint day) public returns (uint256 balance)
+    {  
+        return balances[_adr];
     }
     /**
         * Updates balances of all minitng addresses.
@@ -273,11 +283,11 @@ uint8 public decimals;
         * For public calls.
         * Logs the ids whose balance could not be updated
         */
-    function updateAllBalances() public {
-        uint today =(block.timestamp - initialBlockTimestamp)/1 days;
+    function updateAllBalances(uint day) public {
+        uint today =day;
         require(today != latestAllUpdate); 
         for (uint i = 1; i <= latestContributerId; i++) {
-            if (updateBalanceOf(i)) {}
+            if (updateBalanceOf(i,day)) {}
             else {
                 UpdateFailed(i); 
             }
@@ -285,7 +295,7 @@ uint8 public decimals;
         latestAllUpdate = today; 
         balances[msg.sender]+= bounty; 
         totalSupply = safeAdd(totalSupply, bounty);
-        UpToDate(true); 
+        UpToDate(latestAllUpdate); 
     }
     /**
         * Used to set bounty reward for caller of updateAllBalances
