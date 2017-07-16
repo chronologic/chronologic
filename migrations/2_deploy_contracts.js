@@ -45,7 +45,6 @@ module.exports = function(deployer, network, accounts) {
     var tokenInstance;
 
     deployer.then(function() {
-        console.log("i am here");
         return Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, accounts);
     }).then(function(Instance) {
         //console.log(Instance);

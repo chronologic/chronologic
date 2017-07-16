@@ -20,7 +20,7 @@ import "./SafeMathLib.sol";
  * - The token can be capped (supply set in the constructor) or uncapped (crowdsale contract can mint new tokens)
  *
  */
-contract DayTokenMock is  ReleasableToken, MintableToken, UpgradeableToken {
+contract DayTokenTest is  ReleasableToken, MintableToken, UpgradeableToken {
 
 struct Contributor
 {
@@ -333,11 +333,23 @@ uint8 public decimals;
         return true;
     }
 
-    /*
-    function transferFrom() {
-
+   function transferFrom(address _from, address _to, uint _value) returns (bool success) {
+        uint _allowance = allowed[_from][msg.sender];
+        require (!(balanceOf(_from) >= _value   // From a/c has balance
+            && _allowance >= _value    // Transfer approved
+            && _value > 0              // Non-zero transfer
+            && balanceOf(_to) + _value > balanceOf(_to)  // Overflow check
+            ));
+            balances[_to] = safeAdd(balances[_to],_value);
+            balances[_from] = safeSub(balances[_from],_value);
+            allowed[_from][msg.sender] = safeSub(_allowance,_value);
+            Transfer(_from, _to, _value);
+            contributors[idOf[msg.sender]].balance = safeSub(contributors[idOf[msg.sender]].balance,_value);
+                if(idOf[_to]<=maxAddresses)
+                {
+                    contributors[idOf[_to]].balance = safeAdd(contributors[idOf[_to]].balance,_value);
+                }
     }
-    */
 
     /**
         * Transfer minting address from one user to another

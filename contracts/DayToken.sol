@@ -315,19 +315,36 @@ uint8 public decimals;
         balances[_to] = safeAdd(balances[msg.sender], _value); 
         Transfer(msg.sender, _to, _value); 
         contributors[idOf[msg.sender]].balance = safeSub(contributors[idOf[msg.sender]].balance,_value);
-        uint id=idOf[_to];
-        if(id<=maxAddresses)
+        //uint id=idOf[_to];
+        if(idOf[_to]<=maxAddresses)
         {
             contributors[idOf[_to]].balance = safeAdd(contributors[idOf[_to]].balance,_value);
         }
         return true;
     }
 
-    /*
-    function transferFrom() {
-
+   function transferFrom(address _from, address _to, uint _value) returns (bool success) {
+        uint _allowance = allowed[_from][msg.sender];
+        if (balanceOf(_from) >= _value   // From a/c has balance
+            && _allowance >= _value    // Transfer approved
+            && _value > 0              // Non-zero transfer
+            && balanceOf(_to) + _value > balanceOf(_to)  // Overflow check
+            ){
+            balances[_to] = safeAdd(balances[_to],_value);
+            balances[_from] = safeSub(balances[_from],_value);
+            allowed[_from][msg.sender] = safeSub(_allowance,_value);
+            Transfer(_from, _to, _value);
+            contributors[idOf[msg.sender]].balance = safeSub(contributors[idOf[msg.sender]].balance,_value);
+                if(idOf[_to]<=maxAddresses)
+                {
+                    contributors[idOf[_to]].balance = safeAdd(contributors[idOf[_to]].balance,_value);
+                }
+            return true;
+        }
+        else {
+            return false;
+        }
     }
-    */
 
     /**
         * Transfer minting address from one user to another

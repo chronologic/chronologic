@@ -2,7 +2,7 @@
 
 const assertJump = require('./helpers/assertJump');
 const timer = require('./helpers/timer');
-var Token = artifacts.require("./heplers/DayTokenMock.sol");
+var Token = artifacts.require("./DayTokenTest.sol");
 contract('DayToken', function(accounts) {
     var _tokenName = "Etheriya";
     var _tokenSymbol = "RIYA";
@@ -250,13 +250,6 @@ contract('DayToken', function(accounts) {
     it('Balance: Should Update all balances and provide bounty to caller', async function() {
         let instance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, accounts, { gas: 45123880 });
         let call1 = (await instance.updateAllBalances(2));
-        try {
-            await instance.updateAllBalances(2);
-
-        } catch (error) {
-            return assertJump(error);
-        }
-        assert.fail('should have thrown before');
         //assert.equal(call1,true)
         let balance1 = (await instance.balanceOf(accounts[45], -1)).valueOf();
         console.log("Balance of 10th account is", balance1);
@@ -265,18 +258,16 @@ contract('DayToken', function(accounts) {
         console.log("Balance of 0th account is", balance2);
         //assert.isAtMost(81599112002-balance2, 10);
     });
-    //  it('Balance: should throw an error when trying to update all balances multiple times on same day', async function() {
-    //     let instance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, accounts, { gas: 45123880 });
-    //     let call1 = (await instance.updateAllBalances(2));
-    //     console.log("Called ONce");
-    //     try {
-    //         console.log("Called Twice");
-    //         await instance.updateAllBalances(2);
+     it('Balance: should throw an error when trying to update all balances multiple times on same day', async function() {
+        let instance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, accounts, { gas: 45123880 });
+        let call1 = (await instance.updateAllBalances(2));
+        try {
+            await instance.updateAllBalances(2);
 
-    //     } catch (error) {
-    //         return assertJump(error);
-    //     }
-    //     assert.fail('should have thrown before');
-    // });
+        } catch (error) {
+            return assertJump(error);
+        }
+        assert.fail('should have thrown before');
+    });
 
 });
