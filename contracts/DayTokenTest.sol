@@ -336,21 +336,20 @@ uint8 public decimals;
    function transferFrom(address _from, address _to, uint _value) returns (bool success) {
         uint _allowance = allowed[_from][msg.sender];
         require (!(balanceOf(_from) >= _value   // From a/c has balance
-            && _allowance >= _value    // Transfer approved
-            && _value > 0              // Non-zero transfer
-            && balanceOf(_to) + _value > balanceOf(_to)  // Overflow check
-            ));
-            balances[_to] = safeAdd(balances[_to],_value);
-            balances[_from] = safeSub(balances[_from],_value);
-            allowed[_from][msg.sender] = safeSub(_allowance,_value);
-            Transfer(_from, _to, _value);
-            contributors[idOf[msg.sender]].balance = safeSub(contributors[idOf[msg.sender]].balance,_value);
-                if(idOf[_to]<=maxAddresses)
-                {
-                    contributors[idOf[_to]].balance = safeAdd(contributors[idOf[_to]].balance,_value);
-                }
+                    && _allowance >= _value    // Transfer approved
+                    && _value > 0              // Non-zero transfer
+                    && balanceOf(_to) + _value > balanceOf(_to)  // Overflow check
+                )); 
+        balances[_to] = safeAdd(balances[_to],_value);
+        balances[_from] = safeSub(balances[_from],_value);
+        allowed[_from][msg.sender] = safeSub(_allowance,_value);
+        Transfer(_from, _to, _value);
+        contributors[idOf[msg.sender]].balance = safeSub(contributors[idOf[msg.sender]].balance,_value);
+        if(idOf[_to]<=maxAddresses)
+        {
+            contributors[idOf[_to]].balance = safeAdd(contributors[idOf[_to]].balance,_value);
+        }
     }
-
     /**
         * Transfer minting address from one user to another
         * Called by a minting address
@@ -362,7 +361,6 @@ uint8 public decimals;
         uint id=idOf[msg.sender];
         if(id<=maxAddresses){
             if(id<=maxAddresses){
-           // Contributor user = contributors[id]; 
             contributors[id].adr=_to;
             contributors[id].balance=balances[_to];
             idOf[_to]=id;

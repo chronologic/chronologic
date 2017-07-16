@@ -29,7 +29,6 @@ struct Contributor
     uint256 balance;
     uint256 lastUpdatedOn; //Day from Minting Epoch
     uint256 mintingPower;
-    uint256 totalMinted; 
     int totalTransferred;
 }
 
@@ -38,21 +37,20 @@ mapping (uint256 => Contributor) public contributors;
 
 uint256 public latestAllUpdate;
 uint256 public latestContributerId;
-uint256 public maxAddresses;// Hard Code: Stores max number of minting addresses
+uint256 public maxAddresses;
 uint256 public minMintingPower;
 uint256 public maxMintingPower;
 uint256 public halvingCycle;
-uint256 public initialBlockCount; //Hard Code
-uint256 public initialBlockTimestamp; //Hard Code
-//uint256 public dayPerEther; //Hard Code
+uint256 public initialBlockCount;
+uint256 public initialBlockTimestamp;
+//uint256 public dayPerEther;
 uint256 public mintingDec; 
 uint256 public bounty;
 
 event UpdatedTokenInformation(string newName, string newSymbol); 
 event UpdateFailed(uint id); 
-event UpToDate (bool status); 
-event MintingPower(address adr, uint256 mintingPower); 
-event Balance(address adr, uint256 balance); 
+event UpToDate (bool status);
+event MintingAdrTransferred(address from, address to);
 
 string public name; 
 
@@ -81,10 +79,8 @@ uint8 public decimals;
         symbol = _symbol; 
         totalSupply = _initialSupply; 
         decimals = _decimals; 
-
         // Create initially all balance on the team multisig
         balances[owner] = totalSupply; 
-
         maxAddresses=_maxAddresses;
         minMintingPower=_minMintingPower;
         maxMintingPower=_maxMintingPower;
@@ -103,23 +99,22 @@ uint8 public decimals;
             mintingFinished = true; 
             require(totalSupply != 0); 
         }
-
         //For Test Deployment Purposes
         uint i;
         for(i=1;i<=latestContributerId;i++)
         {
             contributors[i].initialContribution=79200000000;
             contributors[i].balance=79200000000;
-            if(i==1){ contributors[i].mintingPower=10000000000000000000;
+            if(i==1){ 
+                contributors[i].mintingPower=10000000000000000000;
             }
-            else
-            {setInitialMintingPowerOf(i);}
-            contributors[i].totalMinted=0;
+            else{
+                setInitialMintingPowerOf(i);
+            }
             contributors[i].totalTransferred=0;
             contributors[i].adr=testAddresses[i];
             idOf[testAddresses[i]]=i;
         }
-
     }
 
     /**
@@ -167,9 +162,8 @@ uint8 public decimals;
         * Called before Minting Epoch by constructor
         * @param _id id of the address whose minting power is to be set.
         */
-    function setInitialMintingPowerOf(uint256 _id) internal returns (bool) {//Call once, initially for all contributor structures.
-        if (_id <= maxAddresses) {
-            //Contributor user = contributors[_id]; 
+    function setInitialMintingPowerOf(uint256 _id) internal returns (bool) {
+        if (_id <= latestContributerId && _id!=0) {
             contributors[_id].mintingPower = (maxMintingPower - (_id * (maxMintingPower - minMintingPower)/maxAddresses)); 
             return true; 
         }
@@ -181,32 +175,26 @@ uint8 public decimals;
         * Returns minting power of a particular address.
         * @param _adr Address whose minting power is to be returned
         */
-    // DANGER! ERROR! MINTING POWER HALVED. MINTING POWER IS NOT CHANGED. SEPARATE FUNCTION?
-    function getMintingPowerByAddress(address _adr) public constant returns (uint256) {
-        //Contributor user = contributors[idOf[_adr]]; 
-        MintingPower(contributors[idOf[_adr]].adr, contributors[idOf[_adr]].mintingPower); 
-        //return idOf[_adr];
-        return contributors[idOf[_adr]].mintingPower; 
+    function getMintingPowerByAddress(address _adr) public constant returns (uint256 mintingPower) {
+        return contributors[idOf[_adr]].mintingPower/(2**(getPhaseCount(getDayCount()))); 
     }
     /**
         * Returns minting power of a particular id.
         * @param _id Contribution id whose minting power is to be returned
         */
-    function getMintingPowerById(uint _id) public constant returns (uint256) {
-        //Contributor user = contributors[_id]; 
-        MintingPower(contributors[_id].adr, contributors[_id].mintingPower); 
-        return contributors[_id].mintingPower; 
+    function getMintingPowerById(uint _id) public constant returns (uint256 mintingPower) {
+        return contributors[_id].mintingPower/(2**(getPhaseCount(getDayCount()))); 
     }
 
-    /*
-    // CHECK THIS. NEEDS UPDATES
-    function getTotalMinted(address _adr)returns (uint256) {
-    Contributor user = contributors[idOf[_adr]]; 
-    return user.balance - user.totalTransferred - user.initialContribution; 
-    }
+    /**
+    * Returns the amount of DAY tokens minted by the address
+    * @param _adr Address whose total minted is to be returned
     */
-  
-
+    function getTotalMinted(address _adr) public constant returns (int256) {
+        uint id=idOf[_adr];
+        return (int(contributors[id].balance) - ((int(contributors[id].initialContribution)+contributors[id].totalTransferred))); 
+    }
+    
     /**
         * Calculates and returns the balance based on the minting power, the day and the phase.
         * Can only be called internally
@@ -222,6 +210,7 @@ uint8 public decimals;
         balance = balance/10 ** ((mintingDec + 2) * (getDayCount() - contributors[_id].lastUpdatedOn)); 
         return balance; 
     }
+
     /**
         * Updates the balance of the spcified id in its structure and also in the balamces[] mapping.
         * returns true if successful.
@@ -245,11 +234,11 @@ uint8 public decimals;
         */
     function balanceOf(address _adr) public constant returns (uint256 balance) {
         uint id = idOf[_adr]; 
-        if (id <= maxAddresses) {
+        if (id <= latestContributerId) {
             require(updateBalanceOf(id));
-            return balances[_adr]; 
         }
-        }
+        return balances[_adr];    
+    }
 
     /**
         * Standard ERC20 function overridden.
@@ -259,12 +248,13 @@ uint8 public decimals;
         * @param _id address whose balance is to be returned.
         */
     function balanceById(uint _id) public constant returns (uint256 balance) {
-        if (_id <= maxAddresses) {
+        if (_id <= latestContributerId) {
             address adr=contributors[_id].adr; 
             require(updateBalanceOf(_id)); 
         }
         return balances[adr]; 
     }
+
     /**
         * Updates balances of all minitng addresses.
         * Returns true/false based on success of update
@@ -287,6 +277,7 @@ uint8 public decimals;
         totalSupply = safeAdd(totalSupply, bounty);
         UpToDate(true); 
     }
+
     /**
         * Used to set bounty reward for caller of updateAllBalances
         * Can be called only by owner
@@ -295,54 +286,59 @@ uint8 public decimals;
     function setBounty(uint256 _bounty) onlyOwner{
         bounty = _bounty;
     }
+
     /**
         * Returns totalSupply of DAY tokens.
         */
-    function getTotalSupply() public returns (uint256)
-    {
+    function getTotalSupply() public constant returns (uint256){
         return totalSupply;
     }
-    /**`
+
+    /**
         * Standard ERC20 function overidden.
         * USed to transfer day tokens from caller's address to another
         * @param _to address to which Day tokens are to be transferred
         * @param _value Number of Day tokens to be transferred
         */
-    function transfer(address _to, uint _value) returns (bool success) {
+    function transfer(address _to, uint _value) public returns (bool success) {
         require (!(balanceOf(msg.sender) < _value || _value==0)); 
         require (!(balanceOf(_to) + _value < balanceOf(_to))); 
         balances[msg.sender] = safeSub(balances[msg.sender], _value); 
         balances[_to] = safeAdd(balances[msg.sender], _value); 
         Transfer(msg.sender, _to, _value); 
-        contributors[idOf[msg.sender]].balance = safeSub(contributors[idOf[msg.sender]].balance,_value);
-        //uint id=idOf[_to];
-        if(idOf[_to]<=maxAddresses)
+        if(idOf[msg.sender]<=latestContributerId)
         {
+            contributors[idOf[msg.sender]].balance = safeSub(contributors[idOf[msg.sender]].balance,_value);
+            contributors[idOf[msg.sender]].totalTransferred = int(-(_value));
+        }
+        if(idOf[_to]<=latestContributerId)
+        {
+            contributors[idOf[_to]].totalTransferred = int(_value);
             contributors[idOf[_to]].balance = safeAdd(contributors[idOf[_to]].balance,_value);
         }
         return true;
     }
 
-   function transferFrom(address _from, address _to, uint _value) returns (bool success) {
+   function transferFrom(address _from, address _to, uint _value) public returns (bool success) {
         uint _allowance = allowed[_from][msg.sender];
-        if (balanceOf(_from) >= _value   // From a/c has balance
-            && _allowance >= _value    // Transfer approved
-            && _value > 0              // Non-zero transfer
-            && balanceOf(_to) + _value > balanceOf(_to)  // Overflow check
-            ){
-            balances[_to] = safeAdd(balances[_to],_value);
-            balances[_from] = safeSub(balances[_from],_value);
-            allowed[_from][msg.sender] = safeSub(_allowance,_value);
-            Transfer(_from, _to, _value);
+        require (!(balanceOf(_from) >= _value   // From a/c has balance
+                    && _allowance >= _value    // Transfer approved
+                    && _value > 0              // Non-zero transfer
+                    && balanceOf(_to) + _value > balanceOf(_to)  // Overflow check
+                )); 
+        balances[_to] = safeAdd(balances[_to],_value);
+        balances[_from] = safeSub(balances[_from],_value);
+        allowed[_from][msg.sender] = safeSub(_allowance,_value);
+        Transfer(_from, _to, _value);
+        if(idOf[msg.sender]<=latestContributerId)
+        {
             contributors[idOf[msg.sender]].balance = safeSub(contributors[idOf[msg.sender]].balance,_value);
-                if(idOf[_to]<=maxAddresses)
-                {
-                    contributors[idOf[_to]].balance = safeAdd(contributors[idOf[_to]].balance,_value);
-                }
-            return true;
+            contributors[idOf[msg.sender]].totalTransferred = int(-(_value));
         }
-        else {
-            return false;
+        if(idOf[_to]<=latestContributerId)
+        {
+            contributors[idOf[_to]].totalTransferred = int(_value);
+            contributors[idOf[_to]].balance = safeAdd(contributors[idOf[_to]].balance,_value);
         }
     }
 
@@ -356,19 +352,18 @@ uint8 public decimals;
     function transferMintingAddress(address _to) public returns (bool) {
         uint id=idOf[msg.sender];
         if(id<=maxAddresses){
-            if(id<=maxAddresses){
-           // Contributor user = contributors[id]; 
             contributors[id].adr=_to;
             contributors[id].balance=balances[_to];
             idOf[_to]=id;
             idOf[msg.sender]=0;
+            MintingAdrTransferred(msg.sender,_to);
             return true;
-            }
-            else
-                return false;
         }
         else{
             return false;
         }
     }
 }
+
+
+
