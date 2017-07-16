@@ -246,7 +246,7 @@ uint8 public decimals;
     function balanceOf(address _adr) public constant returns (uint256 balance) {
         uint id = idOf[_adr]; 
         if (id <= maxAddresses) {
-            require(updateBalanceOf(id,));
+            require(updateBalanceOf(id));
             return balances[_adr]; 
         }
         }
