@@ -11,12 +11,12 @@ contract('DayToken', function(accounts) {
     var _tokenMintable = true;
     var decimals = _tokenDecimals;
     var _maxAddresses = 3333;
-    var _now = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
-    var _day = 84;
+   // var _now = 
+   // var _day = 84;
     var _minMintingPower = 5000000000000000000;
     var _maxMintingPower = 10000000000000000000;
     var _halvingCycle = 88;
-    var _initalBlockTimestamp = _now;
+    var _initalBlockTimestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp;;
     var _mintingDec = 19;
     var _bounty = 100000000;
     it('Creation: should return the correct totalSupply after construction', async function() {
@@ -59,18 +59,18 @@ contract('DayToken', function(accounts) {
     // it('Transfer: should return correct balances in receiver account after transfer', async function() {
     //     let instance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, accounts, { gas:45123880 } );
 
-    //     let balance0_old = await instance.balanceOf(accounts[0]);
+    //     let balance0_old = await instance.balanceOf(accounts[0],1);
     //     assert.equal(balance0_old, 100000000 * Math.pow(10, decimals), "balance0_old is not 100,000,000");
 
-    //     let balance1_old = await instance.balanceOf(accounts[1]);
+    //     let balance1_old = await instance.balanceOf(accounts[1],1);
     //     assert.equal(balance1_old, 0, "balance1_old is not 0");
 
     //     await instance.transfer(accounts[1], 100000000 * Math.pow(10, decimals));
 
-    //     let balance0_new = await instance.balanceOf(accounts[0]);
+    //     let balance0_new = await instance.balanceOf(accounts[0],1);
     //     assert.equal(balance0_new, 0, "balance0_new is not 0");
 
-    //     let balance1_new = await instance.balanceOf(accounts[1]);
+    //     let balance1_new = await instance.balanceOf(accounts[1],1);
     //     assert.equal(balance1_new, 100000000 * Math.pow(10, decimals), "balance1_new is not 100,000,000");
     // });
 
@@ -220,10 +220,12 @@ contract('DayToken', function(accounts) {
     });
     it('Balance: Should return correct Minting Power by Address', async function() {
         let instance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, accounts, { gas: 45123880 });
+       let MintingPower0 = (await instance.getMintingPowerByAddress(accounts[0])).valueOf();
+       assert.equal(MintingPower0, 0);
         let MintingPower1 = (await instance.getMintingPowerByAddress(accounts[1])).valueOf();
         assert.equal(MintingPower1, 10000000000000000000);
-        let MintingPower2 = (await instance.getMintingPowerByAddress(accounts[7])).valueOf();
-        assert.equal(MintingPower2, 9989498949894989499);
+        let MintingPower2 = (await instance.getMintingPowerByAddress(accounts[27])).valueOf();
+        assert.equal(MintingPower2, 9959495949594959496);
     });
     it('Balance: Should return correct Minting Power by ID', async function() {
         let instance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, accounts, { gas: 45123880 });
@@ -238,6 +240,8 @@ contract('DayToken', function(accounts) {
         assert.isAtMost(81599839200 - balance1, 10);
         let balance2 = (await instance.balanceOf(accounts[2], 3)).valueOf();
         assert.isAtMost(81599112002 - balance2, 10);
+        let balance3 = (await instance.balanceOf(accounts[25], 2)).valueOf();
+        assert.isAtMost(80785920111 - balance3, 10);
 
     });
     it('Balance: Should return correct Balance by ID', async function() {
@@ -246,17 +250,26 @@ contract('DayToken', function(accounts) {
         assert.isAtMost(81599839200 - balance1, 10);
         let balance2 = (await instance.balanceById(2, 3)).valueOf();
         assert.isAtMost(81599112002 - balance2, 10);
+        let balance3 = (await instance.balanceById(37, 1)).valueOf();
+        assert.isAtMost(79987603960 - balance3, 10);
     });
     it('Balance: Should Update all balances and provide bounty to caller', async function() {
         let instance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, accounts, { gas: 45123880 });
         let call1 = (await instance.updateAllBalances(2));
-        //assert.equal(call1,true)
-        let balance1 = (await instance.balanceOf(accounts[45], -1)).valueOf();
-        console.log("Balance of 10th account is", balance1);
-        //assert.isAtMost(81599839200-balance1, 10);
-        let balance2 = (await instance.balanceOf(accounts[0], -1)).valueOf();
-        console.log("Balance of 0th account is", balance2);
-        //assert.isAtMost(81599112002-balance2, 10);
+        let balance1 = (await instance.balanceOf(accounts[45], -1)).valueOf(); // -1 to indicate that we want to check balance without updating it again
+        assert.isAtMost(80781120361 - balance1, 10);
+        let bounty = (await instance.balanceOf(accounts[0], -1)).valueOf();
+        assert.equal(bounty, 100000000);
+        let balance2 = (await instance.balanceOf(accounts[10], -1)).valueOf();
+        assert.isAtMost(80789520018 - balance2, 10);
+
+        let call2 = (await instance.updateAllBalances(1));
+        let balance11 = (await instance.balanceOf(accounts[49], -1)).valueOf(); // -1 to indicate that we want to check balance without updating it again
+        assert.isAtMost(79986178218 - balance11, 10);
+        let bounty1 = (await instance.balanceOf(accounts[0], -1)).valueOf();
+        assert.equal(bounty1, 200000000);
+        let balance21 = (await instance.balanceOf(accounts[25], -1)).valueOf();
+        assert.isAtMost(79989029703 - balance21, 10);
     });
      it('Balance: should throw an error when trying to update all balances multiple times on same day', async function() {
         let instance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, accounts, { gas: 45123880 });
