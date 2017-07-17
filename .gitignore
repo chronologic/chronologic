@@ -12,6 +12,7 @@ node_modules
 # Generated files
 build
 dist
+bin
 
 
 # Mac's .DS folders
