@@ -9,7 +9,7 @@ import './Ownable.sol';
 ///      Implementing "first price" tranches, meaning, that if byers order is
 ///      covering more than one tranche, the price of the lowest tranche will apply
 ///      to the whole order.
-contract EthTranchePricing is PricingStrategy, Ownable, SafeMathLib {
+contract EthTranchePricing is PricingStrategy, Ownable {
 
   uint public constant MAX_TRANCHES = 10;
  
@@ -24,7 +24,7 @@ contract EthTranchePricing is PricingStrategy, Ownable, SafeMathLib {
   struct Tranche {
       // Amount in weis when this tranche becomes active
       uint amount;
-      // How many tokens per wei you will get while this tranche is active
+      // How many tokens per wei you will get while t5his tranche is active
       uint price;
   }
 
@@ -46,9 +46,7 @@ contract EthTranchePricing is PricingStrategy, Ownable, SafeMathLib {
     //   2000000000000000000000, 1000000000000000 ]
     // Need to have tuples, length check
     require(!(_tranches.length % 2 == 1 || _tranches.length >= MAX_TRANCHES*2));
-    // if(_tranches.length % 2 == 1 || _tranches.length >= MAX_TRANCHES*2) {
-    //   throw;
-    // }
+  
     trancheCount = _tranches.length / 2;
     uint highestAmount = 0;
     for(uint i=0; i<_tranches.length/2; i++) {
@@ -56,36 +54,28 @@ contract EthTranchePricing is PricingStrategy, Ownable, SafeMathLib {
       tranches[i].price = _tranches[i*2+1];
       // No invalid steps
       require(!((highestAmount != 0) && (tranches[i].amount <= highestAmount)));
-      // if((highestAmount != 0) && (tranches[i].amount <= highestAmount)) {
-      //   throw;
-      // }
+     
       highestAmount = tranches[i].amount;
     }
 
     // We need to start from zero, otherwise we blow up our deployment
     require(tranches[0].amount == 0);
-    // if(tranches[0].amount != 0) {
-    //   throw;
-    // }
 
     // Last tranche price must be zero, terminating the crowdale
     require(tranches[trancheCount-1].price == 0);
-    // if(tranches[trancheCount-1].price != 0) {
-    //   throw;
-    // }
   }
 
-  /// @dev This is invoked once for every pre-ICO address, set pricePerToken
-  ///      to 0 to disable
-  /// @param preicoAddress PresaleFundCollector address
-  /// @param pricePerToken How many weis one token cost for pre-ico investors
-  function setPreicoAddress(address preicoAddress, uint pricePerToken)
-    public
-    onlyOwner
-  {
-    preicoAddresses[preicoAddress] = pricePerToken;
-  }
-
+  // /// @dev This is invoked once for every pre-ICO address, set pricePerToken
+  // ///      to 0 to disable
+  // /// @param preicoAddress PresaleFundCollector address
+  // /// @param pricePerToken How many weis one token cost for pre-ico investors
+  // function setPreicoAddress(address preicoAddress, uint tokenAmount, uint weiAmount) //Take Wei Amount
+  //   public
+  //   onlyOwner
+  // {
+  //   preicoAddresses[preicoAddress] = pricePerToken;
+  // }
+ 
   /// @dev Iterate through tranches. You reach end of tranches when price = 0
   /// @return tuple (time, price)
   function getTranche(uint n) public constant returns (uint, uint) {
@@ -136,14 +126,14 @@ contract EthTranchePricing is PricingStrategy, Ownable, SafeMathLib {
   }
 
   /// @dev Calculate the current price for buy in amount.
-  function calculatePrice(uint value, uint weiRaised, uint tokensSold, address msgSender, uint decimals) public constant returns (uint) {
+  function calculatePrice(uint value, uint weiRaised, uint tokensSold, address reciever, uint decimals) public constant returns (uint) {
 
     uint multiplier = 10 ** decimals;
 
     // This investor is coming through pre-ico
-    if(preicoAddresses[msgSender] > 0) {
-      return safeMul(value, multiplier) / preicoAddresses[msgSender];
-    }
+    // if(preicoAddresses[reciever] > 0) {
+    //   return safeMul(value, multiplier) / preicoAddresses[msgSender];
+    // }
 
     uint price = getCurrentPrice(weiRaised);
     

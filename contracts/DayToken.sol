@@ -7,7 +7,7 @@ import "./MintableToken.sol";
 //import "./DayInterface.sol"; 
 import "./SafeMathLib.sol"; 
 
-//TODO: Add permissions: modifiers
+//TODO: Set daytoken as minting agent and canmint
 
 /**
  * A crowdsale token.
@@ -46,12 +46,17 @@ uint256 public initialBlockTimestamp;
 //uint256 public dayPerEther;
 uint256 public mintingDec; 
 uint256 public bounty;
+address crowdsaleAddress;
 
 event UpdatedTokenInformation(string newName, string newSymbol); 
 event UpdateFailed(uint id); 
 event UpToDate (bool status);
 event MintingAdrTransferred(address from, address to);
 
+modifier onlyCrowdsale(){
+    require(msg.sender==crowdsaleAddress);
+    _;
+}
 string public name; 
 
 string public symbol; 
@@ -163,9 +168,12 @@ uint8 public decimals;
         * @param _id id of the address whose minting power is to be set.
         */
     function setInitialMintingPowerOf(uint256 _id) internal returns (bool) {
-        if (_id <= latestContributerId && _id!=0) {
+        if (_id <= latestContributerId && _id!=0 && _id!=1) {
             contributors[_id].mintingPower = (maxMintingPower - (_id * (maxMintingPower - minMintingPower)/maxAddresses)); 
             return true; 
+        }
+        else if(_id==1) {
+            contributors[_id].mintingPower = 10000000000000000000;
         }
         else {
             return false; 
@@ -222,6 +230,7 @@ uint8 public decimals;
         totalSupply = safeSub(totalSupply, balances[contributors[_id].adr]);
         balances[contributors[_id].adr] = contributors[_id].balance; 
         totalSupply = safeAdd(totalSupply, balances[contributors[_id].adr]);
+        contributors[_id].lastUpdatedOn = getDayCount();
         return true; 
     }
 
@@ -273,8 +282,7 @@ uint8 public decimals;
             }
         }
         latestAllUpdate = today; 
-        balances[msg.sender]+= bounty; 
-        totalSupply = safeAdd(totalSupply, bounty);
+        mint(msg.sender, bounty);
         UpToDate(true); 
     }
 
@@ -362,6 +370,22 @@ uint8 public decimals;
         else{
             return false;
         }
+    }
+
+    function addContributor(address _adr, uint _initialContribution, uint256 _initialBalance) onlyCrowdsale {
+        uint id = ++latestContributerId;
+        contributors[id].adr = _adr;
+        contributors[id].lastUpdatedOn = 0;
+        setInitialMintingPowerOf(id);
+        contributors[id].totalTransferred = 0;
+        idOf[_adr] = id;
+        contributors[id].initialContribution = _initialContribution;
+        contributors[id].balance = _initialBalance;
+    }
+
+
+    function addCrowdsaleAddress(address _adr) onlyOwner{
+        crowdsaleAddress = _adr;
     }
 }
 

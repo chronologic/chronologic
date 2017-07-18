@@ -7,6 +7,7 @@ import "./FinalizeAgent.sol";
 import "./FractionalERC20.sol";
 import "./DayToken.sol";
 
+// in capped crowdsale add iscrowdsalefull
 
 /**
  * Abstract base contract for token sales.
@@ -67,6 +68,8 @@ contract Crowdsale is Haltable, DayToken{
   /* Do we need to have unique contributor id for each customer */
   bool public requireCustomerId;
 
+  uint maxPreAddresses;
+
   /* Min and Max contribution during pre-ICO and during ICO   */
   uint preMinWei;
   uint preMaxWei;
@@ -122,7 +125,7 @@ contract Crowdsale is Haltable, DayToken{
   // Crowdsale end time has been changed
   event EndsAtChanged(uint endsAt);
 
-  function Crowdsale(address _token, PricingStrategy _pricingStrategy, address _multisigWallet, uint _start, uint _end, uint _minimumFundingGoal, uint _preMinWei, uint _preMaxWei, uint _minWei, uint _maxWei) {
+  function Crowdsale(address _token, PricingStrategy _pricingStrategy, address _multisigWallet, uint _start, uint _end, uint _minimumFundingGoal, uint _preMinWei, uint _preMaxWei, uint _minWei, uint _maxWei, uint _maxPreAddresses) {
 
     owner = msg.sender;
 
@@ -153,6 +156,7 @@ contract Crowdsale is Haltable, DayToken{
     preMaxWei = _preMaxWei;
     minWei = _minWei;
     maxWei = _maxWei;
+    maxPreAddresses = _maxPreAddresses;
   }
 
   /**
@@ -175,39 +179,27 @@ contract Crowdsale is Haltable, DayToken{
   function investInternal(address receiver, uint128 customerId) stopInEmergency private {
 
     // Determine if it's a good time to accept investment from this participant
-    if(getState() == State.PreFunding) {
-      // Are we whitelisted for early deposit
-      require(earlyParticipantWhitelist[receiver]);
-      // if(!earlyParticipantWhitelist[receiver]) {
-      //   throw;
-      // }
-    } else if(getState() == State.Funding) {
+    if(getState() == State.Funding) {
       // Retail participants can only come in when the crowdsale is running
       // pass
     } else {
       // Unwanted state
       throw;
     }
-    if(earlyParticipantWhitelist[receiver])
-    {
-      uint minWei = 33000000000000000000;
-    }
-    else{
-      uint minWei = 1000000000000000000;
-      uint maxWei = 333000000000000000000;
-    }
     uint weiAmount = msg.value;
-    uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, weiRaised, tokensSold, msg.sender, token.decimals());
+    
+    DayToken dayToken = DayToken(token);
+
+    require(weiAmount >= minWei && weiAmount <= maxWei);
+    uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, weiRaised, tokensSold, receiver, token.decimals());
+    
 
     require(tokenAmount != 0);
-    // if(tokenAmount == 0) {
-    //   // Dust transaction
-    //   throw;
-    // }
+    dayToken.addContributor(receiver, weiAmount, tokenAmount);
 
     if(investedAmountOf[receiver] == 0) {
-       // A new investor
-       investorCount++;
+        // A new investor
+        investorCount++;
     }
 
     // Update investor
@@ -253,9 +245,14 @@ contract Crowdsale is Haltable, DayToken{
     uint tokenAmount = fullTokens * 10**uint(token.decimals());
     uint weiAmount = weiPrice * fullTokens; // This can be also 0, we give out tokens for free
 
+    require(weiAmount >= preMinWei);
+
     weiRaised = safeAdd(weiRaised,weiAmount);
     tokensSold = safeAdd(tokensSold,tokenAmount);
 
+    DayToken dayToken = DayToken(token);
+    dayToken.addContributor(receiver, weiAmount, tokenAmount);
+    
     investedAmountOf[receiver] = safeAdd(investedAmountOf[receiver],weiAmount);
     tokenAmountOf[receiver] = safeAdd(tokenAmountOf[receiver],tokenAmount);
 
@@ -500,7 +497,7 @@ contract Crowdsale is Haltable, DayToken{
     else if (address(finalizeAgent) == 0) return State.Preparing;
     else if (!finalizeAgent.isSane()) return State.Preparing;
     else if (!pricingStrategy.isSane(address(this))) return State.Preparing;
-    else if (block.timestamp < startsAt) return State.PreFunding;
+    else if (block.timestamp < startsAt && latestContributerId <= maxPreAddresses) return State.PreFunding;
     else if (block.timestamp <= endsAt && !isCrowdsaleFull()) return State.Funding;
     else if (isMinimumGoalReached()) return State.Success;
     else if (!isMinimumGoalReached() && weiRaised > 0 && loadedRefund >= weiRaised) return State.Refunding;
