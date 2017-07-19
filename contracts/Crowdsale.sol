@@ -4,10 +4,8 @@ import "./SafeMathLib.sol";
 import "./Haltable.sol";
 import "./PricingStrategy.sol";
 import "./FinalizeAgent.sol";
-import "./FractionalERC20.sol";
 import "./DayToken.sol";
 
-// in capped crowdsale add iscrowdsalefull
 
 /**
  * Abstract base contract for token sales.
@@ -27,7 +25,7 @@ contract Crowdsale is Haltable, DayToken{
   uint public MAX_INVESTMENTS_BEFORE_MULTISIG_CHANGE = 5;
 
   /* The token we are selling */
-  FractionalERC20 public token;
+  DayToken public token;
 
   /* How we are going to price our offering */
   PricingStrategy public pricingStrategy;
@@ -68,7 +66,8 @@ contract Crowdsale is Haltable, DayToken{
   /* Do we need to have unique contributor id for each customer */
   bool public requireCustomerId;
 
-  uint maxPreAddresses;
+  /* Maximum number of addresses on sale for Pre-ICO */
+  uint public maxPreAddresses;
 
   /* Min and Max contribution during pre-ICO and during ICO   */
   uint preMinWei;
@@ -111,7 +110,7 @@ contract Crowdsale is Haltable, DayToken{
   enum State{Unknown, Preparing, PreFunding, Funding, Success, Failure, Finalized, Refunding}
 
   // A new investment was made
-  event Invested(address investor, uint weiAmount, uint tokenAmount, uint128 customerId);
+  event Invested(address investor, uint weiAmount, uint tokenAmount, uint128 customerId, uint contributorId);
 
   // Refund was processed for a contributor
   event Refund(address investor, uint weiAmount);
@@ -148,6 +147,8 @@ contract Crowdsale is Haltable, DayToken{
     // Don't mess the dates
     require(startsAt < endsAt);
 
+    //The token minting of the addresses shouldn't start before ICO ends.
+    require(endsAt <= initialBlockTimestamp);
 
     // Minimum funding goal can be zero
     minimumFundingGoal = _minimumFundingGoal;
@@ -195,7 +196,7 @@ contract Crowdsale is Haltable, DayToken{
     
 
     require(tokenAmount != 0);
-    dayToken.addContributor(receiver, weiAmount, tokenAmount);
+    uint id = dayToken.addContributor(receiver, weiAmount, tokenAmount);
 
     if(investedAmountOf[receiver] == 0) {
         // A new investor
@@ -222,7 +223,7 @@ contract Crowdsale is Haltable, DayToken{
     if(!multisigWallet.send(weiAmount)) throw;
 
     // Tell us invest was success
-    Invested(receiver, weiAmount, tokenAmount, customerId);
+    Invested(receiver, weiAmount, tokenAmount, customerId, id);
   }
 
   /**
@@ -251,7 +252,7 @@ contract Crowdsale is Haltable, DayToken{
     tokensSold = safeAdd(tokensSold,tokenAmount);
 
     DayToken dayToken = DayToken(token);
-    dayToken.addContributor(receiver, weiAmount, tokenAmount);
+    uint id = dayToken.addContributor(receiver, weiAmount, tokenAmount);
     
     investedAmountOf[receiver] = safeAdd(investedAmountOf[receiver],weiAmount);
     tokenAmountOf[receiver] = safeAdd(tokenAmountOf[receiver],tokenAmount);
@@ -259,7 +260,7 @@ contract Crowdsale is Haltable, DayToken{
     assignTokens(receiver, tokenAmount);
 
     // Tell us invest was success
-    Invested(receiver, weiAmount, tokenAmount, 0);
+    Invested(receiver, weiAmount, tokenAmount, 0, id);
   }
 
   /**
@@ -326,7 +327,7 @@ contract Crowdsale is Haltable, DayToken{
   /**
    * Finalize a succcesful crowdsale.
    *
-   * The owner can triggre a call the contract that provides post-crowdsale actions, like releasing the tokens.
+   * The owner can trigger a call the contract that provides post-crowdsale actions, like releasing the tokens.
    */
   function finalize() public inState(State.Success) onlyOwner stopInEmergency {
 

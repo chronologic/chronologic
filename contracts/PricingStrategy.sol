@@ -9,7 +9,7 @@ contract PricingStrategy {
   function isPricingStrategy() public constant returns (bool) {
     return true;
   }
-
+  
   /** Self check if all references are correctly set.
    *
    * Checks that pricing strategy matches crowdsale parameters.

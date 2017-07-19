@@ -7,7 +7,7 @@ import "./MintableToken.sol";
 //import "./DayInterface.sol"; 
 import "./SafeMathLib.sol"; 
 
-//TODO: Set daytoken as minting agent and canmint
+//TODO: Set daytoken as minting agent and canmint. Set latest contributer to 0
 
 /**
  * A crowdsale token.
@@ -52,6 +52,7 @@ event UpdatedTokenInformation(string newName, string newSymbol);
 event UpdateFailed(uint id); 
 event UpToDate (bool status);
 event MintingAdrTransferred(address from, address to);
+event ContributorAdded(address adr, uint id);
 
 modifier onlyCrowdsale(){
     require(msg.sender==crowdsaleAddress);
@@ -96,6 +97,7 @@ uint8 public decimals;
         latestAllUpdate=0;
         bounty=_bounty;
 
+        
         if (totalSupply > 0) {
             Minted(owner, totalSupply); 
         }
@@ -372,7 +374,7 @@ uint8 public decimals;
         }
     }
 
-    function addContributor(address _adr, uint _initialContribution, uint256 _initialBalance) onlyCrowdsale {
+    function addContributor(address _adr, uint _initialContribution, uint256 _initialBalance) onlyCrowdsale returns(uint){
         uint id = ++latestContributerId;
         contributors[id].adr = _adr;
         contributors[id].lastUpdatedOn = 0;
@@ -381,11 +383,17 @@ uint8 public decimals;
         idOf[_adr] = id;
         contributors[id].initialContribution = _initialContribution;
         contributors[id].balance = _initialBalance;
+        ContributorAdded(_adr, id);
+        return id;
     }
 
 
     function addCrowdsaleAddress(address _adr) onlyOwner{
         crowdsaleAddress = _adr;
+    }
+
+    function getLatestContributorId() constant public returns(uint id){
+        return latestContributerId;
     }
 }
 
