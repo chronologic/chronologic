@@ -8,7 +8,7 @@ import "./MintableToken.sol";
 import "./SafeMathLib.sol"; 
 
 //TODO: Set daytoken as minting agent and canmint. Set latest contributer to 0
-
+//OTDO SEllingLIst: initialize to -1
 /**
  * A crowdsale token.
  *
@@ -22,6 +22,8 @@ import "./SafeMathLib.sol";
  */
 contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
 
+
+enum sellingStatus {SOLD, EXPIRED, ONSALE, NOTONSALE}
 struct Contributor
 {
     address adr;
@@ -30,9 +32,12 @@ struct Contributor
     uint256 lastUpdatedOn; //Day from Minting Epoch
     uint256 mintingPower;
     int totalTransferred;
+    uint expiryBlockNumber;
+    uint256 minPrice;
+    sellingStatus status;
 }
 
-mapping (address => uint) public idOf;
+mapping (address => AddressSeller) public contributors;buyIdping (address => uint) public idOf;
 mapping (uint256 => Contributor) public contributors;
 
 uint256 public latestAllUpdate;
@@ -47,15 +52,22 @@ uint256 public initialBlockTimestamp;
 uint256 public mintingDec; 
 uint256 public bounty;
 address crowdsaleAddress;
+uint256 minBalanceToSell;
 
 event UpdatedTokenInformation(string newName, string newSymbol); 
 event UpdateFailed(uint id); 
 event UpToDate (bool status);
 event MintingAdrTransferred(address from, address to);
 event ContributorAdded(address adr, uint id);
+event onSale(uint id, address adr, uint minPrice, uint expiryBlockNumber);
 
 modifier onlyCrowdsale(){
     require(msg.sender==crowdsaleAddress);
+    _;
+}
+
+modifier onlyContributor(uint id){
+    require(id <= latestContributerId && id != 0);
     _;
 }
 string public name; 
@@ -75,7 +87,7 @@ uint8 public decimals;
         * @param _decimals Number of decimal places
         * _mintable Are new tokens created over the crowdsale or do we distribute only the initial supply? Note that when the token becomes transferable the minting always ends.
         */
-    function DayToken(string _name, string _symbol, uint _initialSupply, uint8 _decimals, bool _mintable, uint _maxAddresses, uint256 _minMintingPower, uint256 _maxMintingPower, uint _halvingCycle, uint _initialBlockTimestamp, uint256 _mintingDec, uint _bounty, address[] testAddresses) UpgradeableToken(msg.sender) {
+    function DayToken(string _name, string _symbol, uint _initialSupply, uint8 _decimals, bool _mintable, uint _maxAddresses, uint256 _minMintingPower, uint256 _maxMintingPower, uint _halvingCycle, uint _initialBlockTimestamp, uint256 _mintingDec, uint _bounty, address[] testAddresses, uint256 _minBalanceToSell) UpgradeableToken(msg.sender) {
         //uint256 _maxMintingPower, uint _halvingCycle, uint _initialBlockTimestamp, uint256 _mintingDec, uint _bounty, address[] testAddresses
         // Create any address, can be transferred
         // to team multisig via changeOwner(),
@@ -96,7 +108,7 @@ uint8 public decimals;
         latestContributerId=50;
         latestAllUpdate=0;
         bounty=_bounty;
-
+        minBalanceToSell = _minBalanceToSell;
         
         if (totalSupply > 0) {
             Minted(owner, totalSupply); 
@@ -222,7 +234,7 @@ uint8 public decimals;
     }
 
     /**
-        * Updates the balance of the spcified id in its structure and also in the balamces[] mapping.
+        * Updates the balance of the spcified id in its structure and also in the balances[] mapping.
         * returns true if successful.
         * Only for internal calls. Not public.
         * @param _id id whose balance is to be updated.
@@ -340,10 +352,10 @@ uint8 public decimals;
         balances[_from] = safeSub(balances[_from],_value);
         allowed[_from][msg.sender] = safeSub(_allowance,_value);
         Transfer(_from, _to, _value);
-        if(idOf[msg.sender]<=latestContributerId)
+        if(idOf[_from]<=latestContributerId)
         {
-            contributors[idOf[msg.sender]].balance = safeSub(contributors[idOf[msg.sender]].balance,_value);
-            contributors[idOf[msg.sender]].totalTransferred = int(-(_value));
+            contributors[idOf[_from]].balance = safeSub(contributors[idOf[_from]].balance,_value);
+            contributors[idOf[_from]].totalTransferred = int(-(_value));
         }
         if(idOf[_to]<=latestContributerId)
         {
@@ -359,19 +371,18 @@ uint8 public decimals;
         * returns true if successful and false if not.
         * @param _to address of the user to which minting address is to be tranferred
         */
-    function transferMintingAddress(address _to) public returns (bool) {
-        uint id=idOf[msg.sender];
-        if(id<=maxAddresses){
-            contributors[id].adr=_to;
-            contributors[id].balance=balances[_to];
-            idOf[_to]=id;
-            idOf[msg.sender]=0;
-            MintingAdrTransferred(msg.sender,_to);
-            return true;
-        }
-        else{
-            return false;
-        }
+    function transferMintingAddress(address _from, address _to) internal onlyContributor(idOf[_from]) {
+        uint id = idOf[_from];
+        contributors[id].adr = _to;
+        idOf[_to] = id;
+        idOf[_from] = 0;
+        contributors[id].initialContribution = 0;
+        contributors[id].balance = balances[_to];
+        contributors[id].lastUpdatedOn = getDayCount();
+        contributors[id].totalTransferred = balances[_to];
+        contributors[id].expiryBlockNumber = 0;
+        contributors[id].status = sellingStatus.NOTONSALE;
+        MintingAdrTransferred(_from,_to);
     }
 
     function addContributor(address _adr, uint _initialContribution, uint256 _initialBalance) onlyCrowdsale returns(uint){
@@ -384,6 +395,9 @@ uint8 public decimals;
         contributors[id].initialContribution = _initialContribution;
         contributors[id].balance = _initialBalance;
         ContributorAdded(_adr, id);
+        contributors[id].status = sellingStatus.NOTONSALE;
+        contributors[id].minPrice = 0;
+        contributors[id].expiryBlockNumber = 0;
         return id;
     }
 
@@ -394,6 +408,56 @@ uint8 public decimals;
 
     function getLatestContributorId() constant public returns(uint id){
         return latestContributerId;
+    }
+
+    function sellMintingAddress(uint256 minPrice, uint expiryBlockNumber) onlyContributor(idOf[msg.sender]) {
+        uint id = idOf[msg.sender];
+        require(contributors[id].status == sellingStatus.NOTONSALE);
+        require(balances[msg.sender] >= minBalanceToSell);
+        contributors[id].minPrice = minPrice;
+        contributors[id].expiryBlockNumber = expiryBlockNumber;
+        contributors[id].status = sellingStatus.ONSALE;
+        balances[msg.sender] -= minBalanceToSell;
+        contributors[id].balance -= minBalanceToSell;
+        contributors[id].lastUpdatedOn = getDayCount();
+    }
+
+    function getOnSaleAddresses() constant public {
+      for(uint i=1; i <= latestContributerId; i++)
+      {
+        if(block.number > contributors[i].expiryBlockNumber && contributors[i].status != sellingStatus.NOTONSALE)
+        {
+            contributors[i].status = sellingStatus.EXPIRED;
+        }
+        if(contributors[i].status == sellingStatus.ONSALE)
+        {
+            onSale(i, contributors[i].adr, contributors[i].minPrice, contributors[i].expiryBlockNumber);
+        }
+      }
+    }
+
+    function buyMintingAddress(uint buyId, uint256 offer) public {
+        if(block.number > contributors[buyId].expiryBlockNumber && contributors[buyId].status != sellingStatus.NOTONSALE)
+        {
+            contributors[buyId].status = sellingStatus.EXPIRED;
+        }
+        require(contributors[buyId].status == sellingStatus.ONSALE);
+        require(offer >= contributors[buyId].minPrice);
+        transferFrom(msg.sender, contributors[buyId].adr, offer);
+        transferMintingAddress(contributors[buyId].adr, msg.sender); //Function update
+        balances[contributors[buyId].adr] += minBalanceToSell;
+    }
+    function refundAuctionAmount() onlyContributor(idOf[msg.sender]) {
+        uint id = idOf[msg.sender];
+        if(block.number > contributors[id].expiryBlockNumber && contributors[id].status != sellingStatus.NOTONSALE)
+        {
+            contributors[id].status = sellingStatus.EXPIRED;
+        }
+        require(contributors[id].status == sellingStatus.EXPIRED);
+        balances[msg.sender] += minBalanceToSell;
+        contributors[id].balance += minBalanceToSell;
+        contributors[id].lastUpdatedOn = getDayCount();
+        contributors[id].status = sellingStatus.NOTONSALE;
     }
 }
 
