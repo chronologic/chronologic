@@ -39,7 +39,7 @@ struct Contributor
 
 mapping (address => uint) public idOf;
 mapping (uint256 => Contributor) public contributors;
-
+mapping (address => uint256) public teamIssuedTimestamp;
 uint256 public latestAllUpdate;
 uint256 public latestContributerId;
 uint256 public maxAddresses;
@@ -60,6 +60,8 @@ event UpToDate (bool status);
 event MintingAdrTransferred(address from, address to);
 event ContributorAdded(address adr, uint id);
 event onSale(uint id, address adr, uint minPrice, uint expiryBlockNumber);
+event teamMemberId(address adr, uint contributorId);
+event PostInvested(address investor, uint weiAmount, uint tokenAmount, uint128 customerId, uint contributorId);
 
 modifier onlyCrowdsale(){
     require(msg.sender==crowdsaleAddress);
@@ -181,17 +183,8 @@ uint8 public decimals;
         * Called before Minting Epoch by constructor
         * @param _id id of the address whose minting power is to be set.
         */
-    function setInitialMintingPowerOf(uint256 _id) internal returns (bool) {
-        if (_id <= latestContributerId && _id!=0 && _id!=1) {
-            contributors[_id].mintingPower = (maxMintingPower - (_id * (maxMintingPower - minMintingPower)/maxAddresses)); 
-            return true; 
-        }
-        else if(_id==1) {
-            contributors[_id].mintingPower = 10000000000000000000;
-        }
-        else {
-            return false; 
-        }
+    function setInitialMintingPowerOf(uint256 _id) internal onlyContributor(_id) {
+        contributors[_id].mintingPower = (maxMintingPower - ((_id-1) * (maxMintingPower - minMintingPower)/(maxAddresses-1))); 
     }
      /**
         * Returns minting power of a particular address.
@@ -323,6 +316,10 @@ uint8 public decimals;
         * @param _value Number of Day tokens to be transferred
         */
     function transfer(address _to, uint _value) public returns (bool success) {
+        if(teamIssuedTimestamp[msg.sender] != 0)
+        {
+            require(block.timestamp - teamIssuedTimestamp[msg.sender] >= 15780000);
+        }
         require (!(balanceOf(msg.sender) < _value || _value==0)); 
         require (!(balanceOf(_to) + _value < balanceOf(_to))); 
         balances[msg.sender] = safeSub(balances[msg.sender], _value); 
@@ -342,6 +339,10 @@ uint8 public decimals;
     }
 
    function transferFrom(address _from, address _to, uint _value) public returns (bool success) {
+       if(teamIssuedTimestamp[_from] != 0)
+        {
+            require(block.timestamp - teamIssuedTimestamp[_from] >= 15780000);
+        }
         uint _allowance = allowed[_from][msg.sender];
         require (!(balanceOf(_from) >= _value   // From a/c has balance
                     && _allowance >= _value    // Transfer approved
@@ -411,6 +412,10 @@ uint8 public decimals;
     }
 
     function sellMintingAddress(uint256 minPrice, uint expiryBlockNumber) onlyContributor(idOf[msg.sender]) {
+        if(teamIssuedTimestamp[msg.sender] != 0)
+        {
+            require(block.timestamp - teamIssuedTimestamp[msg.sender] >= 15780000);
+        }
         uint id = idOf[msg.sender];
         require(contributors[id].status == sellingStatus.NOTONSALE);
         require(balances[msg.sender] >= minBalanceToSell);
@@ -443,7 +448,7 @@ uint8 public decimals;
         }
         require(contributors[buyId].status == sellingStatus.ONSALE);
         require(offer >= contributors[buyId].minPrice);
-        transferFrom(msg.sender, contributors[buyId].adr, offer);
+        transfer(contributors[buyId].adr, offer);
         transferMintingAddress(contributors[buyId].adr, msg.sender); //Function update
         balances[contributors[buyId].adr] += minBalanceToSell;
     }
@@ -459,7 +464,17 @@ uint8 public decimals;
         contributors[id].lastUpdatedOn = getDayCount();
         contributors[id].status = sellingStatus.NOTONSALE;
     }
+
+    function addTeamAddress(address _adr, uint256 _initialBalance) public onlyOwner {
+        uint id = addContributor(_adr, 0, _initialBalance);
+        teamIssuedTimestamp[_adr] = block.timestamp;
+        teamMemberId(_adr, id);
+    }
+
+
+    function postAllocate(address receiver, uint128 customerId) public onlyOwner {
+        require(released == true);
+        uint id = addContributor(receiver, 0, 0);
+        PostInvested(receiver, 0, 0, customerId, id);
+    }
 }
-
-
-
