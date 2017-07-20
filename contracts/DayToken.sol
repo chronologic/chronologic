@@ -37,7 +37,7 @@ struct Contributor
     sellingStatus status;
 }
 
-mapping (address => AddressSeller) public contributors;buyIdping (address => uint) public idOf;
+mapping (address => uint) public idOf;
 mapping (uint256 => Contributor) public contributors;
 
 uint256 public latestAllUpdate;
@@ -379,7 +379,7 @@ uint8 public decimals;
         contributors[id].initialContribution = 0;
         contributors[id].balance = balances[_to];
         contributors[id].lastUpdatedOn = getDayCount();
-        contributors[id].totalTransferred = balances[_to];
+        contributors[id].totalTransferred = int(balances[_to]);
         contributors[id].expiryBlockNumber = 0;
         contributors[id].status = sellingStatus.NOTONSALE;
         MintingAdrTransferred(_from,_to);
@@ -447,7 +447,7 @@ uint8 public decimals;
         transferMintingAddress(contributors[buyId].adr, msg.sender); //Function update
         balances[contributors[buyId].adr] += minBalanceToSell;
     }
-    function refundAuctionAmount() onlyContributor(idOf[msg.sender]) {
+    function refundAuctionAmount() onlyContributor(idOf[msg.sender]) public {
         uint id = idOf[msg.sender];
         if(block.number > contributors[id].expiryBlockNumber && contributors[id].status != sellingStatus.NOTONSALE)
         {
