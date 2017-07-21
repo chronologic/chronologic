@@ -3,12 +3,10 @@ pragma solidity ^0.4.11;
 import "./StandardToken.sol"; 
 import "./UpgradeableToken.sol"; 
 import "./ReleasableToken.sol"; 
-import "./MintableToken.sol"; 
-//import "./DayInterface.sol"; 
+import "./MintableToken.sol";
 import "./SafeMathLib.sol"; 
 
 //TODO: Set daytoken as minting agent and canmint. Set latest contributer to 0
-//OTDO SEllingLIst: initialize to -1
 /**
  * A crowdsale token.
  *
