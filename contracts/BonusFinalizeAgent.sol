@@ -73,10 +73,6 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
     // contract then throw
     require(msg.sender == address(crowdsale));
 
-    // if(msg.sender != address(crowdsale)) {
-    //   throw;
-    // }
-
     // get the total sold tokens count.
     uint tokensSold = crowdsale.tokensSold();
     

@@ -7,6 +7,13 @@ import "./MintableToken.sol";
 import "./SafeMathLib.sol"; 
 
 //TODO: Set daytoken as minting agent and canmint. Set latest contributer to 0
+//todo: icoweicap: 38383 
+//selling weiminPriceinDay
+//balances[] contributors.balance check
+//Not Floating address. 
+//add lastUpdatedOn
+// Mint all bounty
+
 /**
  * A crowdsale token.
  *
@@ -20,21 +27,20 @@ import "./SafeMathLib.sol";
  */
 contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
 
-
-enum sellingStatus {SOLD, EXPIRED, ONSALE, NOTONSALE}
+enum sellingStatus {NOTONSALE, SOLD, EXPIRED, ONSALE}
 struct Contributor
 {
     address adr;
-	uint256 initialContribution;
+	uint256 initialContributionWei;
     uint256 balance;
     uint256 lastUpdatedOn; //Day from Minting Epoch
     uint256 mintingPower;
-    int totalTransferred;
+    int totalTransferredWei;
     uint expiryBlockNumber;
-    uint256 minPrice;
+    uint256 minPriceinDay;
     sellingStatus status;
+    uint256 sellingPriceInDay;
 }
-
 mapping (address => uint) public idOf;
 mapping (uint256 => Contributor) public contributors;
 mapping (address => uint256) public teamIssuedTimestamp;
@@ -46,7 +52,6 @@ uint256 public maxMintingPower;
 uint256 public halvingCycle;
 uint256 public initialBlockCount;
 uint256 public initialBlockTimestamp;
-//uint256 public dayPerEther;
 uint256 public mintingDec; 
 uint256 public bounty;
 address crowdsaleAddress;
@@ -57,7 +62,7 @@ event UpdateFailed(uint id);
 event UpToDate (bool status);
 event MintingAdrTransferred(address from, address to);
 event ContributorAdded(address adr, uint id);
-event onSale(uint id, address adr, uint minPrice, uint expiryBlockNumber);
+event onSale(uint id, address adr, uint minPriceinDay, uint expiryBlockNumber);
 event teamMemberId(address adr, uint contributorId);
 event PostInvested(address investor, uint weiAmount, uint tokenAmount, uint128 customerId, uint contributorId);
 
@@ -122,7 +127,7 @@ uint8 public decimals;
         uint i;
         for(i=1;i<=latestContributerId;i++)
         {
-            contributors[i].initialContribution=79200000000;
+            contributors[i].initialContributionWei=79200000000;
             contributors[i].balance=79200000000;
             if(i==1){ 
                 contributors[i].mintingPower=10000000000000000000;
@@ -130,7 +135,7 @@ uint8 public decimals;
             else{
                 setInitialMintingPowerOf(i);
             }
-            contributors[i].totalTransferred=0;
+            contributors[i].totalTransferredWei=0;
             contributors[i].adr=testAddresses[i];
             idOf[testAddresses[i]]=i;
         }
@@ -205,7 +210,7 @@ uint8 public decimals;
     */
     function getTotalMinted(address _adr) public constant returns (int256) {
         uint id=idOf[_adr];
-        return (int(contributors[id].balance) - ((int(contributors[id].initialContribution)+contributors[id].totalTransferred))); 
+        return int(contributors[id].balance) - ((int(contributors[id].initialContributionWei)+contributors[id].totalTransferredWei)); 
     }
     
     /**
@@ -215,7 +220,6 @@ uint8 public decimals;
         * @param _id id whose balnce is to be calculated
         */
     function availableBalanceOf(uint256 _id) internal returns (uint256) {
-       // Contributor user = contributors[_id]; 
         uint256 balance = contributors[_id].balance; 
         for (uint i = contributors[_id].lastUpdatedOn; i < getDayCount(); i++) {
             balance = (balance * ((10 ** (mintingDec + 2) * (2 ** (getPhaseCount(i)-1))) + contributors[_id].mintingPower))/(2 ** (getPhaseCount(i)-1)); 
@@ -326,16 +330,20 @@ uint8 public decimals;
         if(idOf[msg.sender]<=latestContributerId)
         {
             contributors[idOf[msg.sender]].balance = safeSub(contributors[idOf[msg.sender]].balance,_value);
-            contributors[idOf[msg.sender]].totalTransferred = int(-(_value));
+            contributors[idOf[msg.sender]].totalTransferredWei = int(-(_value));
         }
         if(idOf[_to]<=latestContributerId)
         {
-            contributors[idOf[_to]].totalTransferred = int(_value);
+            contributors[idOf[_to]].totalTransferredWei = int(_value);
             contributors[idOf[_to]].balance = safeAdd(contributors[idOf[_to]].balance,_value);
         }
         return true;
     }
+    /**
+        * Transfe 
 
+
+        */
    function transferFrom(address _from, address _to, uint _value) public returns (bool success) {
        if(teamIssuedTimestamp[_from] != 0)
         {
@@ -354,11 +362,11 @@ uint8 public decimals;
         if(idOf[_from]<=latestContributerId)
         {
             contributors[idOf[_from]].balance = safeSub(contributors[idOf[_from]].balance,_value);
-            contributors[idOf[_from]].totalTransferred = int(-(_value));
+            contributors[idOf[_from]].totalTransferredWei = int(-(_value));
         }
         if(idOf[_to]<=latestContributerId)
         {
-            contributors[idOf[_to]].totalTransferred = int(_value);
+            contributors[idOf[_to]].totalTransferredWei = int(_value);
             contributors[idOf[_to]].balance = safeAdd(contributors[idOf[_to]].balance,_value);
         }
     }
@@ -370,46 +378,62 @@ uint8 public decimals;
         * returns true if successful and false if not.
         * @param _to address of the user to which minting address is to be tranferred
         */
-    function transferMintingAddress(address _from, address _to) internal onlyContributor(idOf[_from]) {
+    function transferMintingAddress(address _from, address _to) internal onlyContributor(idOf[_from]) returns (bool){
         uint id = idOf[_from];
         contributors[id].adr = _to;
         idOf[_to] = id;
         idOf[_from] = 0;
-        contributors[id].initialContribution = 0;
+        contributors[id].initialContributionWei = 0;
         contributors[id].balance = balances[_to];
         contributors[id].lastUpdatedOn = getDayCount();
-        contributors[id].totalTransferred = int(balances[_to]);
+        contributors[id].totalTransferredWei = int(balances[_to]);
         contributors[id].expiryBlockNumber = 0;
         contributors[id].status = sellingStatus.NOTONSALE;
         MintingAdrTransferred(_from,_to);
+        return true;
     }
 
-    function addContributor(address _adr, uint _initialContribution, uint256 _initialBalance) onlyCrowdsale returns(uint){
+    /** 
+        * Add any contributor structure (For every kind of contributors: Team/Pre-ICO/ICO/Test)
+        * Can only be added by Crowdsale.
+        * @param _adr Address of the contributor to be added  
+        * @param _initialContributionWei Initial Contribution of the contributor to be added
+        * @param _initialBalance  Initial balance in wei of the contributor to be added
+        */
+    function addContributor(address _adr, uint _initialContributionWei, uint256 _initialBalance) onlyCrowdsale returns(uint){
         uint id = ++latestContributerId;
         contributors[id].adr = _adr;
         contributors[id].lastUpdatedOn = 0;
         setInitialMintingPowerOf(id);
-        contributors[id].totalTransferred = 0;
+        contributors[id].totalTransferredWei = 0;
         idOf[_adr] = id;
-        contributors[id].initialContribution = _initialContribution;
+        contributors[id].initialContributionWei = _initialContributionWei;
         contributors[id].balance = _initialBalance;
         ContributorAdded(_adr, id);
         contributors[id].status = sellingStatus.NOTONSALE;
-        contributors[id].minPrice = 0;
+        contributors[id].minPriceinDay = 0;
         contributors[id].expiryBlockNumber = 0;
         return id;
     }
 
-
+    /** Function to be called once to add the deployed Crowdsale Contract
+        */
     function addCrowdsaleAddress(address _adr) onlyOwner{
         crowdsaleAddress = _adr;
     }
 
+    /** Function to be called by any user to give the latest contributor ID.
+        */
     function getLatestContributorId() constant public returns(uint id){
         return latestContributerId;
     }
+    // CHANGE IT ALL 
 
-    function sellMintingAddress(uint256 minPrice, uint expiryBlockNumber) onlyContributor(idOf[msg.sender]) {
+    /** Function to be called by minting addresses in order to sell their address
+        * @param _minPriceInDay Minimum price in DAY tokens set by the seller
+        * @param _expiryBlockNumber Expiry Block Number set by the seller
+        */
+    function sellMintingAddress(uint256 _minPriceInDay, uint _expiryBlockNumber) onlyContributor(idOf[msg.sender]) returns (bool){
         if(teamIssuedTimestamp[msg.sender] != 0)
         {
             require(block.timestamp - teamIssuedTimestamp[msg.sender] >= 15780000);
@@ -417,50 +441,82 @@ uint8 public decimals;
         uint id = idOf[msg.sender];
         require(contributors[id].status == sellingStatus.NOTONSALE);
         require(balances[msg.sender] >= minBalanceToSell);
-        contributors[id].minPrice = minPrice;
-        contributors[id].expiryBlockNumber = expiryBlockNumber;
+        contributors[id].minPriceinDay = _minPriceInDay;
+        contributors[id].expiryBlockNumber = _expiryBlockNumber;
         contributors[id].status = sellingStatus.ONSALE;
-        balances[msg.sender] -= minBalanceToSell;
-        contributors[id].balance -= minBalanceToSell;
+        transfer(this, minBalanceToSell); //CONFIRM THIS CAREFully
         contributors[id].lastUpdatedOn = getDayCount();
+        return true;
     }
 
+    /** Function to be called by any user to get a list of all on sale addresses
+        */
     function getOnSaleAddresses() constant public {
       for(uint i=1; i <= latestContributerId; i++)
       {
-        if(block.number > contributors[i].expiryBlockNumber && contributors[i].status != sellingStatus.NOTONSALE)
+        if(contributors[i].expiryBlockNumber!=0 && block.number > contributors[i].expiryBlockNumber )
         {
             contributors[i].status = sellingStatus.EXPIRED;
         }
         if(contributors[i].status == sellingStatus.ONSALE)
         {
-            onSale(i, contributors[i].adr, contributors[i].minPrice, contributors[i].expiryBlockNumber);
+            onSale(i, contributors[i].adr, contributors[i].minPriceinDay, contributors[i].expiryBlockNumber);
         }
       }
     }
 
-    function buyMintingAddress(uint buyId, uint256 offer) public {
-        if(block.number > contributors[buyId].expiryBlockNumber && contributors[buyId].status != sellingStatus.NOTONSALE)
+    /** Function to be called by any user to buy a onsale address by offering an amount
+        * @param _offerId ID number of the address to be bought by the buyer
+        * @param _offerInDay Offer given by the buyer in number of DAY tokens
+        */
+    function buyMintingAddress(uint _offerId, uint256 _offerInDay) public {
+        if(contributors[_offerId].status != sellingStatus.NOTONSALE && block.number > contributors[_offerId].expiryBlockNumber )
         {
-            contributors[buyId].status = sellingStatus.EXPIRED;
+            contributors[_offerId].status = sellingStatus.EXPIRED;
         }
-        require(contributors[buyId].status == sellingStatus.ONSALE);
-        require(offer >= contributors[buyId].minPrice);
-        transfer(contributors[buyId].adr, offer);
-        transferMintingAddress(contributors[buyId].adr, msg.sender); //Function update
-        balances[contributors[buyId].adr] += minBalanceToSell;
+        require(contributors[_offerId].status == sellingStatus.ONSALE);
+        require(_offerInDay >= contributors[_offerId].minPriceinDay);
+        //first get the offered DayToken in the token contract & then transfer the total sum (minBalanceToSend+_offerInDay) to the seller
+        transfer(this, _offerInDay);
+        if(transferMintingAddress(contributors[_offerId].adr, msg.sender)) 
+        {
+            //mark the offer as sold & let seller pull the proceed to his own account.
+            contributors[_offerId].status = sellingStatus.SOLD;
+            contributors[_offerId].sellingPriceInDay = _offerInDay;
+        }
+        
     }
-    function refundAuctionAmount() onlyContributor(idOf[msg.sender]) public {
+
+    function fetchSuccessfulSaleProceed() onlyContributor(idOf[msg.sender]) public  returns(bool) {
+        //allow the seller to pull the net balance (minBalanceToSend+_offerInDay) to his own account back
+        // throw if there is no offer from the sender or no successfull offer from sender
+        require(contributors[idOf[msg.sender]].status == sellingStatus.SOLD);
+        balances[this] -= minBalanceToSell + contributors[idOf[msg.sender]].sellingPriceInDay;
+        balances[msg.sender] += minBalanceToSell + contributors[idOf[msg.sender]].sellingPriceInDay;
+        contributors[idOf[msg.sender]].lastUpdatedOn = getDayCount();
+        contributors[idOf[msg.sender]].status = sellingStatus.NOTONSALE;
+        contributors[idOf[msg.sender]].minPriceinDay = 0;
+        contributors[idOf[msg.sender]].sellingPriceInDay = 0;
+        contributors[idOf[msg.sender]].expiryBlockNumber = 0;
+        return true;
+                
+    }
+
+    function refundFailedAuctionAmount() onlyContributor(idOf[msg.sender]) public returns(bool){
         uint id = idOf[msg.sender];
-        if(block.number > contributors[id].expiryBlockNumber && contributors[id].status != sellingStatus.NOTONSALE)
+        if(block.number > contributors[id].expiryBlockNumber && contributors[id].status == sellingStatus.ONSALE)
         {
             contributors[id].status = sellingStatus.EXPIRED;
         }
         require(contributors[id].status == sellingStatus.EXPIRED);
+        balances[this] -= minBalanceToSell;
         balances[msg.sender] += minBalanceToSell;
-        contributors[id].balance += minBalanceToSell;
-        contributors[id].lastUpdatedOn = getDayCount();
-        contributors[id].status = sellingStatus.NOTONSALE;
+        contributors[idOf[msg.sender]].lastUpdatedOn = getDayCount();
+        contributors[idOf[msg.sender]].status = sellingStatus.NOTONSALE;
+        contributors[idOf[msg.sender]].minPriceinDay = 0;
+        contributors[idOf[msg.sender]].sellingPriceInDay = 0;
+        contributors[idOf[msg.sender]].expiryBlockNumber = 0;
+        return true;
     }
 
     function addTeamAddress(address _adr, uint256 _initialBalance) public onlyOwner {

@@ -3,11 +3,8 @@ pragma solidity ^0.4.11;
 import "./StandardToken.sol"; 
 import "./UpgradeableToken.sol"; 
 import "./ReleasableToken.sol"; 
-import "./MintableToken.sol"; 
-//import "./DayInterface.sol"; 
+import "./MintableToken.sol";  
 import "./SafeMathLib.sol"; 
-
-//TODO: Add permissions: modifiers
 
 /**
  * A crowdsale token.
