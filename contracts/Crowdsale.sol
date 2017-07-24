@@ -8,6 +8,7 @@ import "./DayToken.sol";
 
 
 /**
+
  * Abstract base contract for token sales.
  *
  * Handle
@@ -19,7 +20,7 @@ import "./DayToken.sol";
  * - different investment policies (require server side customer id, allow only whitelisted addresses)
  *
  */
-contract Crowdsale is Haltable, DayToken{
+contract Crowdsale is Haltable, SafeMathLib{
 
   /* Max investment count when we are still allowed to change the multisig address */
   uint public MAX_INVESTMENTS_BEFORE_MULTISIG_CHANGE = 5;
@@ -77,8 +78,7 @@ contract Crowdsale is Haltable, DayToken{
   uint preMaxWei;
   uint minWei;
   uint maxWei;
-
-
+  
   /**
     * Do we verify that contributor has been cleared on the server side (accredited investors only).
     * This method was first used in FirstBlood crowdsale to ensure all contributors have accepted terms on sale (on the web).
@@ -151,7 +151,7 @@ contract Crowdsale is Haltable, DayToken{
     require(startsAt < endsAt);
 
     //The token minting of the addresses shouldn't start before ICO ends.
-    require(endsAt <= initialBlockTimestamp);
+    require(endsAt <= token.initialBlockTimestamp());
 
     // Minimum funding goal can be zero
     minimumFundingGoal = _minimumFundingGoal;
@@ -251,7 +251,7 @@ contract Crowdsale is Haltable, DayToken{
 
     require(weiAmount >= preMinWei);
     require(weiAmount >= preMaxWei);
-    
+
     weiRaised = safeAdd(weiRaised,weiAmount);
     tokensSold = safeAdd(tokensSold,tokenAmount);
 
@@ -502,7 +502,7 @@ contract Crowdsale is Haltable, DayToken{
     else if (address(finalizeAgent) == 0) return State.Preparing;
     else if (!finalizeAgent.isSane()) return State.Preparing;
     else if (!pricingStrategy.isSane(address(this))) return State.Preparing;
-    else if (block.timestamp < startsAt && latestContributerId <= maxPreAddresses) return State.PreFunding;
+    else if (block.timestamp < startsAt && token.latestContributerId() <= maxPreAddresses) return State.PreFunding;
     else if (block.timestamp <= endsAt && !isCrowdsaleFull()) return State.Funding;
     else if (isMinimumGoalReached()) return State.Success;
     else if (!isMinimumGoalReached() && weiRaised > 0 && loadedRefund >= weiRaised) return State.Refunding;

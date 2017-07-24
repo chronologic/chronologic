@@ -1,7 +1,7 @@
 var Token = artifacts.require("./DayToken.sol");
 var PricingStartegy = artifacts.require("./FlatPricing.sol");
 //ar MultisigWallet = artifacts.require("./MultisigWalletConsenSys.sol");
-//var MultiSigWallet = artifacts.require("./MultiSigWalletCombined.sol");
+var MultiSigWallet = artifacts.require("./MultiSigWallet.sol");
 var Crowdsale = artifacts.require("./AddressCappedCrowdsale.sol");
 var FinalizeAgent = artifacts.require("./BonusFinalizeAgent.sol");
 
@@ -36,7 +36,7 @@ module.exports = function(deployer, network, accounts) {
     var _minMintingPower = 500000000000000000;
     var _maxMintingPower = 1000000000000000000;
     var _halvingCycle = 88;
-    var _initalBlockTimestamp = 1499644800;
+    var _initalBlockTimestamp = getUnixTimestamp('2017-08-7 09:00:00 GMT');
     var _mintingDec = 19;
     var _bounty = 100000000;
 
@@ -146,28 +146,28 @@ module.exports = function(deployer, network, accounts) {
     //  * here you have to mention the list of wallet owners (none of them must be 0)
     //  * and the minimum approvals required to approve the transactions.
     //  */
-    // var _minRequired = 2;
+    var _minRequired = 2;
 
-    // var _listOfOwners;
-    // if (network == "testrpc") {
-    //     _listOfOwners = [accounts[1], accounts[2], accounts[3]];
-    // } else if (network == "ropsten") {
-    //     var aliceRopsten = "0x00568Fa85228C66111E3181085df48681273cD77";
-    //     var bobRopsten = "0x00B600dE56F7570AEE3d57fe55E0462e51ca5280";
-    //     var eveRopsten = "0x00F131eD217EC029732235A96EEEe044555CEd4d";
-    //     _listOfOwners = [aliceRopsten, bobRopsten, eveRopsten];
-    // } else if (network == "mainnet") {
-    //     // you have to manually specify this 
-    //     // before you deploy this in mainnet
-    //     // or else this deployment will fail
-    //     var member1 = "0x00";
-    //     var member2 = "0x00";
-    //     var member3 = "0x00";
-    //     _listOfOwners = [member1, member2, member3];
-    //     if (member1 == "0x00" || member2 == "0x00" || member3 == "0x00") {
-    //         throw new Error("MultiSigWallet members are not set properly. Please set them in migration/2_deploy_contracts.js.");
-    //     }
-    // }
+    var _listOfOwners;
+    if (network == "testrpc") {
+        _listOfOwners = [accounts[1], accounts[2], accounts[3]];
+    } else if (network == "ropsten") {
+        var aliceRopsten = "0x00568Fa85228C66111E3181085df48681273cD77";
+        var bobRopsten = "0x00B600dE56F7570AEE3d57fe55E0462e51ca5280";
+        var eveRopsten = "0x00F131eD217EC029732235A96EEEe044555CEd4d";
+        _listOfOwners = [aliceRopsten, bobRopsten, eveRopsten];
+    } else if (network == "mainnet") {
+        // you have to manually specify this 
+        // before you deploy this in mainnet
+        // or else this deployment will fail
+        var member1 = "0x00";
+        var member2 = "0x00";
+        var member3 = "0x00";
+        _listOfOwners = [member1, member2, member3];
+        if (member1 == "0x00" || member2 == "0x00" || member3 == "0x00") {
+            throw new Error("MultiSigWallet members are not set properly. Please set them in migration/2_deploy_contracts.js.");
+        }
+    }
 
 
 
@@ -210,8 +210,18 @@ module.exports = function(deployer, network, accounts) {
         if (showABI) console.log("FlatPricing ABI is: ", JSON.stringify(pricingInstance.abi));
         if (debug) console.log("===============================================");
         if (debug) console.log("\n\n");
+        if (debug) console.log("*************  Deploying MultiSigWallet by Zeppelin  ************** \n");
+        return MultiSigWallet.new(_listOfOwners, _minRequired);
+    }).then(function(Instance) {
+        multisigWalletInstance = Instance;
+        if (debug) console.log("MultiSigWallet Parameters are:");
+        if (debug) console.log(_listOfOwners, _minRequired);
+        if (debug) console.log("MultiSigWallet address is: ", multisigWalletInstance.address);
+        if (showURL) console.log("Wallet URL is: " + getEtherScanUrl(network, multisigWalletInstance.address, "address"));
+        if (showURL) console.log("Transaction URL is: " + getEtherScanUrl(network, multisigWalletInstance.transactionHash, "tx"));
+        if (showABI) console.log("MultiSigWallet ABI is: ", JSON.stringify(multisigWalletInstance.abi));
         if (debug) console.log("*************  Deploying AddressCappedCrowdsale  ************** \n");
-        return Crowdsale.new(tokenInstance.address, pricingInstance.address, accounts[0], _startTime, _endTime, _minimumFundingGoal, _cap, _preMinWei, _preMaxWei, _minWei, _maxWei, _maxPreAddresses, _maxIcoAddresses);
+        return Crowdsale.new(tokenInstance.address, pricingInstance.address, multisigWalletInstance.address, _startTime, _endTime, _minimumFundingGoal, _cap, _preMinWei, _preMaxWei, _minWei, _maxWei, _maxPreAddresses, _maxIcoAddresses);
     }).then(function(Instance) {
         crowdsaleInstance = Instance;
         if (debug) console.log("AddressCappedCrowdsale Parameters are:");
@@ -237,7 +247,7 @@ module.exports = function(deployer, network, accounts) {
         console.log("\n*************  Setting up Agents  ************** \n");
         return tokenInstance.setMintAgent(crowdsaleInstance.address, true);
     }).then(function() {
-        console.log("MintedTokenCappedCrowdsale is set as Mint Agent in CrowdsaleToken. Moving ahead...");
+        console.log("AddressCappedCrowdsale is set as Mint Agent in CrowdsaleToken. Moving ahead...");
         return tokenInstance.setMintAgent(finalizeAgentInstance.address, true);
     }).then(function() {
         console.log("BonusFinalizeAgent is set as Mint Agent in CrowdsaleToken. Moving ahead...");
@@ -247,11 +257,11 @@ module.exports = function(deployer, network, accounts) {
 
         return tokenInstance.setTransferAgent(crowdsaleInstance.address, true);
     }).then(function() {
-        console.log("MintedTokenCappedCrowdsale is set as Transfer Agent in CrowdsaleToken. Moving ahead...");
+        console.log("AddressCappedCrowdsale is set as Transfer Agent in CrowdsaleToken. Moving ahead...");
 
         return crowdsaleInstance.setFinalizeAgent(finalizeAgentInstance.address);
     }).then(function() {
-        console.log("BonusFinalizeAgent is set as Finalize Agent in MintedTokenCappedCrowdsale. Moving ahead...");
+        console.log("BonusFinalizeAgent is set as Finalize Agent in AddressCappedCrowdsale. Moving ahead...");
 
         return crowdsaleInstance.isFinalizerSane();
     }).then(function(status) {

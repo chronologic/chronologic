@@ -572,4 +572,6 @@ uint8 public decimals;
     function setTeamTestEndId(uint id) onlyBonusFinalizeAgent {
         teamTestAdrEndId = id;
     }
+
+  
 }
