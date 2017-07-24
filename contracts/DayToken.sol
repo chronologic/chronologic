@@ -7,12 +7,10 @@ import "./MintableToken.sol";
 import "./SafeMathLib.sol"; 
 
 //TODO: Set daytoken as minting agent and canmint. Set latest contributer to 0
-//todo: icoweicap: 38383 
-//selling weiminPriceinDay
-//balances[] contributors.balance check
-//Not Floating address. 
-//add lastUpdatedOn
+//todo:
 // Mint all bounty
+// Slabs
+//Transfer minitng address me total Wei transferred
 
 /**
  * A crowdsale token.
@@ -32,7 +30,7 @@ struct Contributor
 {
     address adr;
 	uint256 initialContributionWei;
-    uint256 balance;
+    //uint256 balance;
     uint256 lastUpdatedOn; //Day from Minting Epoch
     uint256 mintingPower;
     int totalTransferredWei;
@@ -55,7 +53,10 @@ uint256 public initialBlockTimestamp;
 uint256 public mintingDec; 
 uint256 public bounty;
 address crowdsaleAddress;
+address BonusFinalizeAgentAddress;
 uint256 minBalanceToSell;
+uint256 teamLockPeriodInSec;  //Initialize and set function
+uint public teamTestAdrEndId;
 
 event UpdatedTokenInformation(string newName, string newSymbol); 
 event UpdateFailed(uint id); 
@@ -63,7 +64,6 @@ event UpToDate (bool status);
 event MintingAdrTransferred(address from, address to);
 event ContributorAdded(address adr, uint id);
 event onSale(uint id, address adr, uint minPriceinDay, uint expiryBlockNumber);
-event teamMemberId(address adr, uint contributorId);
 event PostInvested(address investor, uint weiAmount, uint tokenAmount, uint128 customerId, uint contributorId);
 
 modifier onlyCrowdsale(){
@@ -73,6 +73,11 @@ modifier onlyCrowdsale(){
 
 modifier onlyContributor(uint id){
     require(id <= latestContributerId && id != 0);
+    _;
+}
+
+modifier onlyBonusFinalizeAgent(){
+    require(msg.sender == BonusFinalizeAgentAddress);
     _;
 }
 string public name; 
@@ -93,7 +98,7 @@ uint8 public decimals;
         * _mintable Are new tokens created over the crowdsale or do we distribute only the initial supply? Note that when the token becomes transferable the minting always ends.
         */
     function DayToken(string _name, string _symbol, uint _initialSupply, uint8 _decimals, bool _mintable, uint _maxAddresses, uint256 _minMintingPower, uint256 _maxMintingPower, uint _halvingCycle, uint _initialBlockTimestamp, uint256 _mintingDec, uint _bounty, address[] testAddresses, uint256 _minBalanceToSell) UpgradeableToken(msg.sender) {
-        //uint256 _maxMintingPower, uint _halvingCycle, uint _initialBlockTimestamp, uint256 _mintingDec, uint _bounty, address[] testAddresses
+        
         // Create any address, can be transferred
         // to team multisig via changeOwner(),
         // also remember to call setUpgradeMaster()
@@ -104,15 +109,15 @@ uint8 public decimals;
         decimals = _decimals; 
         // Create initially all balance on the team multisig
         balances[owner] = totalSupply; 
-        maxAddresses=_maxAddresses;
-        minMintingPower=_minMintingPower;
-        maxMintingPower=_maxMintingPower;
-        halvingCycle=_halvingCycle;
-        initialBlockTimestamp=_initialBlockTimestamp;
-        mintingDec=_mintingDec;
-        latestContributerId=50;
-        latestAllUpdate=0;
-        bounty=_bounty;
+        maxAddresses = _maxAddresses;
+        minMintingPower = _minMintingPower;
+        maxMintingPower = _maxMintingPower;
+        halvingCycle = _halvingCycle;
+        initialBlockTimestamp = _initialBlockTimestamp;
+        mintingDec = _mintingDec;
+        latestContributerId = 0;
+        latestAllUpdate = 0;
+        bounty = _bounty;
         minBalanceToSell = _minBalanceToSell;
         
         if (totalSupply > 0) {
@@ -128,7 +133,6 @@ uint8 public decimals;
         for(i=1;i<=latestContributerId;i++)
         {
             contributors[i].initialContributionWei=79200000000;
-            contributors[i].balance=79200000000;
             if(i==1){ 
                 contributors[i].mintingPower=10000000000000000000;
             }
@@ -166,7 +170,7 @@ uint8 public decimals;
     }
 
     /**
-        * Returns the current phase. 
+        * Returns the current phase.  
         * Note: Phase starts with 1
         * @param _day Number of days since Minting Epoch
         */
@@ -177,9 +181,9 @@ uint8 public decimals;
     /**
         * Returns current day number since minting epoch.
         */
-    function getDayCount() public constant returns (uint today) {
-        today = ((block.timestamp - initialBlockTimestamp)/86400); 
-        return today; 
+    function getDayCount() public constant returns (uint daySinceMintingEpoch) {
+        daySinceMintingEpoch = ((block.timestamp - initialBlockTimestamp)/86400); 
+        return daySinceMintingEpoch; 
     }
     /**
         * Calculates and Sets the minting power of a particular id.
@@ -189,6 +193,7 @@ uint8 public decimals;
     function setInitialMintingPowerOf(uint256 _id) internal onlyContributor(_id) {
         contributors[_id].mintingPower = (maxMintingPower - ((_id-1) * (maxMintingPower - minMintingPower)/(maxAddresses-1))); 
     }
+
      /**
         * Returns minting power of a particular address.
         * @param _adr Address whose minting power is to be returned
@@ -196,6 +201,7 @@ uint8 public decimals;
     function getMintingPowerByAddress(address _adr) public constant returns (uint256 mintingPower) {
         return contributors[idOf[_adr]].mintingPower/(2**(getPhaseCount(getDayCount()))); 
     }
+
     /**
         * Returns minting power of a particular id.
         * @param _id Contribution id whose minting power is to be returned
@@ -209,8 +215,8 @@ uint8 public decimals;
     * @param _adr Address whose total minted is to be returned
     */
     function getTotalMinted(address _adr) public constant returns (int256) {
-        uint id=idOf[_adr];
-        return int(contributors[id].balance) - ((int(contributors[id].initialContributionWei)+contributors[id].totalTransferredWei)); 
+        uint id = idOf[_adr];
+        return int(balances[_adr]) - ((int(contributors[id].initialContributionWei)+contributors[id].totalTransferredWei)); 
     }
     
     /**
@@ -220,7 +226,7 @@ uint8 public decimals;
         * @param _id id whose balnce is to be calculated
         */
     function availableBalanceOf(uint256 _id) internal returns (uint256) {
-        uint256 balance = contributors[_id].balance; 
+        uint256 balance = balances[contributors[_id].adr]; 
         for (uint i = contributors[_id].lastUpdatedOn; i < getDayCount(); i++) {
             balance = (balance * ((10 ** (mintingDec + 2) * (2 ** (getPhaseCount(i)-1))) + contributors[_id].mintingPower))/(2 ** (getPhaseCount(i)-1)); 
         }
@@ -235,9 +241,8 @@ uint8 public decimals;
         * @param _id id whose balance is to be updated.
         */
     function updateBalanceOf(uint256 _id) internal returns (bool success) {
-        contributors[_id].balance = availableBalanceOf(_id);
         totalSupply = safeSub(totalSupply, balances[contributors[_id].adr]);
-        balances[contributors[_id].adr] = contributors[_id].balance; 
+        balances[contributors[_id].adr] = availableBalanceOf(_id);
         totalSupply = safeAdd(totalSupply, balances[contributors[_id].adr]);
         contributors[_id].lastUpdatedOn = getDayCount();
         return true; 
@@ -291,7 +296,7 @@ uint8 public decimals;
             }
         }
         latestAllUpdate = today; 
-        mint(msg.sender, bounty);
+        mint(msg.sender, bounty); //TO BE CHANGED
         UpToDate(true); 
     }
 
@@ -322,27 +327,27 @@ uint8 public decimals;
         {
             require(block.timestamp - teamIssuedTimestamp[msg.sender] >= 15780000);
         }
-        require (!(balanceOf(msg.sender) < _value || _value==0)); 
+        require (!(balanceOf(msg.sender) < _value || _value == 0)); 
         require (!(balanceOf(_to) + _value < balanceOf(_to))); 
         balances[msg.sender] = safeSub(balances[msg.sender], _value); 
         balances[_to] = safeAdd(balances[msg.sender], _value); 
         Transfer(msg.sender, _to, _value); 
-        if(idOf[msg.sender]<=latestContributerId)
+        if(idOf[msg.sender] <= latestContributerId)
         {
-            contributors[idOf[msg.sender]].balance = safeSub(contributors[idOf[msg.sender]].balance,_value);
+            balances[msg.sender] = safeSub(balances[msg.sender],_value);
             contributors[idOf[msg.sender]].totalTransferredWei = int(-(_value));
+            contributors[idOf[msg.sender]].lastUpdatedOn = getDayCount();
         }
         if(idOf[_to]<=latestContributerId)
         {
             contributors[idOf[_to]].totalTransferredWei = int(_value);
-            contributors[idOf[_to]].balance = safeAdd(contributors[idOf[_to]].balance,_value);
+            balances[msg.sender] = safeAdd(balances[msg.sender],_value);
+            contributors[idOf[_to]].lastUpdatedOn = getDayCount();
         }
         return true;
     }
     /**
-        * Transfe 
-
-
+        * Standard ERC20 Standard Tken function over-written. Added Team address vesting period lock. 
         */
    function transferFrom(address _from, address _to, uint _value) public returns (bool success) {
        if(teamIssuedTimestamp[_from] != 0)
@@ -359,15 +364,17 @@ uint8 public decimals;
         balances[_from] = safeSub(balances[_from],_value);
         allowed[_from][msg.sender] = safeSub(_allowance,_value);
         Transfer(_from, _to, _value);
-        if(idOf[_from]<=latestContributerId)
+        if(idOf[_from] <= latestContributerId)
         {
-            contributors[idOf[_from]].balance = safeSub(contributors[idOf[_from]].balance,_value);
+            balances[_from] = safeSub(balances[_from],_value);
             contributors[idOf[_from]].totalTransferredWei = int(-(_value));
+            contributors[idOf[_from]].lastUpdatedOn = getDayCount();
         }
         if(idOf[_to]<=latestContributerId)
         {
             contributors[idOf[_to]].totalTransferredWei = int(_value);
-            contributors[idOf[_to]].balance = safeAdd(contributors[idOf[_to]].balance,_value);
+            balances[_to] = safeAdd(balances[_to],_value);
+            contributors[idOf[_to]].lastUpdatedOn = getDayCount();
         }
     }
 
@@ -384,7 +391,7 @@ uint8 public decimals;
         idOf[_to] = id;
         idOf[_from] = 0;
         contributors[id].initialContributionWei = 0;
-        contributors[id].balance = balances[_to];
+        //contributors[id].balance = balances[_to];
         contributors[id].lastUpdatedOn = getDayCount();
         contributors[id].totalTransferredWei = int(balances[_to]);
         contributors[id].expiryBlockNumber = 0;
@@ -402,17 +409,18 @@ uint8 public decimals;
         */
     function addContributor(address _adr, uint _initialContributionWei, uint256 _initialBalance) onlyCrowdsale returns(uint){
         uint id = ++latestContributerId;
+        require(contributors[id].adr == 0);
         contributors[id].adr = _adr;
-        contributors[id].lastUpdatedOn = 0;
+        contributors[id].lastUpdatedOn = 0; //IS THIS NECESSARY
         setInitialMintingPowerOf(id);
-        contributors[id].totalTransferredWei = 0;
+        contributors[id].totalTransferredWei = 0; //IS THIS NECESSARY
         idOf[_adr] = id;
         contributors[id].initialContributionWei = _initialContributionWei;
-        contributors[id].balance = _initialBalance;
+        balances[_adr] = _initialBalance;
         ContributorAdded(_adr, id);
         contributors[id].status = sellingStatus.NOTONSALE;
-        contributors[id].minPriceinDay = 0;
-        contributors[id].expiryBlockNumber = 0;
+        contributors[id].minPriceinDay = 0; //IS THIS NECESSARY
+        contributors[id].expiryBlockNumber = 0; //IS THIS NECESSARY
         return id;
     }
 
@@ -422,13 +430,17 @@ uint8 public decimals;
         crowdsaleAddress = _adr;
     }
 
+    /** Function to be called once to add the deployed BonusFinalizeAgent Contract
+        */
+    function setBonusFinalizeAgentAddress(address adr) onlyOwner {
+        BonusFinalizeAgentAddress = adr;
+    }
     /** Function to be called by any user to give the latest contributor ID.
         */
     function getLatestContributorId() constant public returns(uint id){
         return latestContributerId;
     }
-    // CHANGE IT ALL 
-
+   
     /** Function to be called by minting addresses in order to sell their address
         * @param _minPriceInDay Minimum price in DAY tokens set by the seller
         * @param _expiryBlockNumber Expiry Block Number set by the seller
@@ -436,7 +448,7 @@ uint8 public decimals;
     function sellMintingAddress(uint256 _minPriceInDay, uint _expiryBlockNumber) onlyContributor(idOf[msg.sender]) returns (bool){
         if(teamIssuedTimestamp[msg.sender] != 0)
         {
-            require(block.timestamp - teamIssuedTimestamp[msg.sender] >= 15780000);
+            require(block.timestamp - teamIssuedTimestamp[msg.sender] >= teamLockPeriodInSec);
         }
         uint id = idOf[msg.sender];
         require(contributors[id].status == sellingStatus.NOTONSALE);
@@ -486,10 +498,12 @@ uint8 public decimals;
         }
         
     }
-
+    
+    /** Funtion to allow seller to get back his deposited amount of day tokens(minBalanceToSell) and offer made by buyer after successful sale.
+        * Throws if sale is not successful
+        * Resets all slae-related variables to 0 and status to NOTONSALE
+        */
     function fetchSuccessfulSaleProceed() onlyContributor(idOf[msg.sender]) public  returns(bool) {
-        //allow the seller to pull the net balance (minBalanceToSend+_offerInDay) to his own account back
-        // throw if there is no offer from the sender or no successfull offer from sender
         require(contributors[idOf[msg.sender]].status == sellingStatus.SOLD);
         balances[this] -= minBalanceToSell + contributors[idOf[msg.sender]].sellingPriceInDay;
         balances[msg.sender] += minBalanceToSell + contributors[idOf[msg.sender]].sellingPriceInDay;
@@ -502,6 +516,10 @@ uint8 public decimals;
                 
     }
 
+    /** Function that lets a seller get his deposited day tokens (minBalanceToSell) back, if no buyer turns up.
+        * Allowed only after expiryBlockNumber
+        * Throws if any other state other than EXPIRED
+        */
     function refundFailedAuctionAmount() onlyContributor(idOf[msg.sender]) public returns(bool){
         uint id = idOf[msg.sender];
         if(block.number > contributors[id].expiryBlockNumber && contributors[id].status == sellingStatus.ONSALE)
@@ -519,16 +537,40 @@ uint8 public decimals;
         return true;
     }
 
-    function addTeamAddress(address _adr, uint256 _initialBalance) public onlyOwner {
-        uint id = addContributor(_adr, 0, _initialBalance);
+    /** Function to add a team address as a contributor and store it's time issued to calculate vesting period
+        * Called by BonusFinalizeAgent
+        */
+    function addAddressWithId(address _adr, uint256 _initialBalance, uint id) onlyBonusFinalizeAgent returns (uint){                //VISIBILITY?
+        contributors[id].adr = _adr;
+        contributors[id].lastUpdatedOn = 0; //IS THIS NECESSARY
+        setInitialMintingPowerOf(id);
+        contributors[id].totalTransferredWei = 0; //IS THIS NECESSARY
+        idOf[_adr] = id;
+        contributors[id].initialContributionWei = 0;
+        balances[_adr] = _initialBalance;
+        ContributorAdded(_adr, id);
+        contributors[id].status = sellingStatus.NOTONSALE;
+        contributors[id].minPriceinDay = 0; //IS THIS NECESSARY
+        contributors[id].expiryBlockNumber = 0; //IS THIS NECESSARY  
         teamIssuedTimestamp[_adr] = block.timestamp;
-        teamMemberId(_adr, id);
+        return id;
     }
 
-
+    /** Function to add addresses post-ICO. Only by owner
+        * @param receiver Address of the minting to be added
+        * @param customerId Server side id of the customer
+        */
     function postAllocate(address receiver, uint128 customerId) public onlyOwner {
+        if(latestContributerId == 3216)
+        {
+            latestContributerId = teamTestAdrEndId - 1;
+        }
         require(released == true);
         uint id = addContributor(receiver, 0, 0);
         PostInvested(receiver, 0, 0, customerId, id);
+    }
+
+    function setTeamTestEndAdr(uint id) onlyBonusFinalizeAgent {
+        teamTestAdrEndId = id;
     }
 }
