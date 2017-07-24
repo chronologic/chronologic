@@ -97,7 +97,7 @@ uint8 public decimals;
         * @param _decimals Number of decimal places
         * _mintable Are new tokens created over the crowdsale or do we distribute only the initial supply? Note that when the token becomes transferable the minting always ends.
         */
-    function DayToken(string _name, string _symbol, uint _initialSupply, uint8 _decimals, bool _mintable, uint _maxAddresses, uint256 _minMintingPower, uint256 _maxMintingPower, uint _halvingCycle, uint _initialBlockTimestamp, uint256 _mintingDec, uint _bounty, address[] testAddresses, uint256 _minBalanceToSell) UpgradeableToken(msg.sender) {
+    function DayToken(string _name, string _symbol, uint _initialSupply, uint8 _decimals, bool _mintable, uint _maxAddresses, uint256 _minMintingPower, uint256 _maxMintingPower, uint _halvingCycle, uint _initialBlockTimestamp, uint256 _mintingDec, uint _bounty, uint256 _minBalanceToSell) UpgradeableToken(msg.sender) {
         
         // Create any address, can be transferred
         // to team multisig via changeOwner(),
@@ -129,20 +129,20 @@ uint8 public decimals;
             require(totalSupply != 0); 
         }
         //For Test Deployment Purposes
-        uint i;
-        for(i=1;i<=latestContributerId;i++)
-        {
-            contributors[i].initialContributionWei=79200000000;
-            if(i==1){ 
-                contributors[i].mintingPower=10000000000000000000;
-            }
-            else{
-                setInitialMintingPowerOf(i);
-            }
-            contributors[i].totalTransferredWei=0;
-            contributors[i].adr=testAddresses[i];
-            idOf[testAddresses[i]]=i;
-        }
+        // uint i;
+        // for(i=1;i<=latestContributerId;i++)
+        // {
+        //     contributors[i].initialContributionWei=79200000000;
+        //     if(i==1){ 
+        //         contributors[i].mintingPower=10000000000000000000;
+        //     }
+        //     else{
+        //         setInitialMintingPowerOf(i);
+        //     }
+        //     contributors[i].totalTransferredWei=0;
+        //     contributors[i].adr=testAddresses[i];
+        //     idOf[testAddresses[i]]=i;
+        // }
     }
 
     /**
@@ -540,14 +540,13 @@ uint8 public decimals;
     /** Function to add a team address as a contributor and store it's time issued to calculate vesting period
         * Called by BonusFinalizeAgent
         */
-    function addAddressWithId(address _adr, uint256 _initialBalance, uint id) onlyBonusFinalizeAgent returns (uint){                //VISIBILITY?
+    function addAddressWithId(address _adr, uint id) onlyBonusFinalizeAgent returns (uint){                //VISIBILITY?
         contributors[id].adr = _adr;
         contributors[id].lastUpdatedOn = 0; //IS THIS NECESSARY
         setInitialMintingPowerOf(id);
         contributors[id].totalTransferredWei = 0; //IS THIS NECESSARY
         idOf[_adr] = id;
         contributors[id].initialContributionWei = 0;
-        balances[_adr] = _initialBalance;
         ContributorAdded(_adr, id);
         contributors[id].status = sellingStatus.NOTONSALE;
         contributors[id].minPriceinDay = 0; //IS THIS NECESSARY
@@ -570,7 +569,7 @@ uint8 public decimals;
         PostInvested(receiver, 0, 0, customerId, id);
     }
 
-    function setTeamTestEndAdr(uint id) onlyBonusFinalizeAgent {
+    function setTeamTestEndId(uint id) onlyBonusFinalizeAgent {
         teamTestAdrEndId = id;
     }
 }

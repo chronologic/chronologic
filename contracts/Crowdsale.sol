@@ -250,7 +250,8 @@ contract Crowdsale is Haltable, DayToken{
     uint weiAmount = weiPrice * fullTokens; // This can be also 0, we give out tokens for free
 
     require(weiAmount >= preMinWei);
-
+    require(weiAmount >= preMaxWei);
+    
     weiRaised = safeAdd(weiRaised,weiAmount);
     tokensSold = safeAdd(tokensSold,tokenAmount);
 
