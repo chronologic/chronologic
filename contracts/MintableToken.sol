@@ -28,7 +28,7 @@ contract MintableToken is StandardToken, Ownable {
   function mint(address receiver, uint amount) onlyMintAgent canMint public {
     totalSupply = safeAdd(totalSupply, amount);
     balances[receiver] = safeAdd(balances[receiver], amount);
-
+-
     // This will make the mint transaction apper in EtherScan.io
     // We can remove this after there is a standardized minting event
     Transfer(0, receiver, amount);

@@ -69,6 +69,9 @@ contract Crowdsale is Haltable, DayToken{
   /* Maximum number of addresses on sale for Pre-ICO */
   uint public maxPreAddresses;
 
+  /* Wei Funding raised during ICO period */
+  uint public weiRaisedIco = 0;
+
   /* Min and Max contribution during pre-ICO and during ICO   */
   uint preMinWei;
   uint preMaxWei;
@@ -210,9 +213,9 @@ contract Crowdsale is Haltable, DayToken{
     // Update totals
     weiRaised = safeAdd(weiRaised,weiAmount);
     tokensSold = safeAdd(tokensSold,tokenAmount);
-
+    weiRaisedIco = safeAdd(weiRaisedIco, weiAmount);
     // Check that we did not bust the cap
-    require(!isBreakingCap(weiAmount, tokenAmount, weiRaised, tokensSold));
+    require(!isBreakingCap(weiAmount, tokenAmount, weiRaisedIco, tokensSold));
     // if(isBreakingCap(weiAmount, tokenAmount, weiRaised, tokensSold)) {
     //   throw;
     // }
@@ -385,11 +388,11 @@ contract Crowdsale is Haltable, DayToken{
    * Allow addresses to do early participation.
    *
    * TODO: Fix spelling error in the name
-   */
-  function setEarlyParicipantWhitelist(address addr, bool status) onlyOwner {
-    earlyParticipantWhitelist[addr] = status;
-    Whitelisted(addr, status);
-  }
+  //  */
+  // function setEarlyParicipantWhitelist(address addr, bool status) onlyOwner {
+  //   earlyParticipantWhitelist[addr] = status;
+  //   Whitelisted(addr, status);
+  // }
 
   /**
    * Allow crowdsale owner to close early or extend the crowdsale.

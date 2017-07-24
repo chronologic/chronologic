@@ -106,7 +106,7 @@ uint8 public decimals;
         for(i=1;i<=latestContributerId;i++)
         {
             contributors[i].initialContribution=79200000000;
-            contributors[i].balance=79200000000;
+            balances[contributors[i].adr]=79200000000;
             if(i==1){ contributors[i].mintingPower=10000000000000000000;
             }
             else
@@ -212,7 +212,7 @@ uint8 public decimals;
         */
     function availableBalanceOf(uint256 _id,uint day) internal returns (uint256) {
        // Contributor user = contributors[_id]; 
-        uint256 balance = contributors[_id].balance; 
+        uint256 balance = balances[contributors[_id].adr]; 
         for (uint i = contributors[_id].lastUpdatedOn; i < day; i++) {
             balance = (balance * ((10 ** (mintingDec + 2) * (2 ** (getPhaseCount(i)-1))) + contributors[_id].mintingPower))/(2 ** (getPhaseCount(i)-1)); 
         }
@@ -227,9 +227,9 @@ uint8 public decimals;
         */
     function updateBalanceOf(uint256 _id,uint day) internal returns (bool success) {
         //Contributor user = contributors[_id]; 
-        contributors[_id].balance = availableBalanceOf(_id,day);
+        
         totalSupply = safeSub(totalSupply, balances[contributors[_id].adr]);
-        balances[contributors[_id].adr] = contributors[_id].balance; 
+        balances[contributors[_id].adr] = availableBalanceOf(_id,day);
         totalSupply = safeAdd(totalSupply, balances[contributors[_id].adr]);
         // UpToDate(balances[contributors[_id].adr]);
         return true; 
@@ -321,12 +321,8 @@ uint8 public decimals;
         balances[msg.sender] = safeSub(balances[msg.sender], _value); 
         balances[_to] = safeAdd(balances[msg.sender], _value); 
         Transfer(msg.sender, _to, _value); 
-        contributors[idOf[msg.sender]].balance = safeSub(contributors[idOf[msg.sender]].balance,_value);
+        
         uint id=idOf[_to];
-        if(id<=maxAddresses)
-        {
-            contributors[idOf[_to]].balance = safeAdd(contributors[idOf[_to]].balance,_value);
-        }
         return true;
     }
 
@@ -341,11 +337,11 @@ uint8 public decimals;
         balances[_from] = safeSub(balances[_from],_value);
         allowed[_from][msg.sender] = safeSub(_allowance,_value);
         Transfer(_from, _to, _value);
-        contributors[idOf[msg.sender]].balance = safeSub(contributors[idOf[msg.sender]].balance,_value);
-        if(idOf[_to]<=maxAddresses)
-        {
-            contributors[idOf[_to]].balance = safeAdd(contributors[idOf[_to]].balance,_value);
-        }
+        //contributors[idOf[msg.sender]].balance = safeSub(contributors[idOf[msg.sender]].balance,_value);
+        // if(idOf[_to]<=maxAddresses)
+        // {
+        //     contributors[idOf[_to]].balance = safeAdd(contributors[idOf[_to]].balance,_value);
+        // }
     }
     /**
         * Transfer minting address from one user to another
@@ -359,7 +355,7 @@ uint8 public decimals;
         if(id<=maxAddresses){
             if(id<=maxAddresses){
             contributors[id].adr=_to;
-            contributors[id].balance=balances[_to];
+            //contributors[id].balance=balances[_to];
             idOf[_to]=id;
             idOf[msg.sender]=0;
             return true;

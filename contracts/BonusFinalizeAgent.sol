@@ -23,13 +23,15 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
   uint public totalMembers;
   uint public testAddressTokens;
   uint public allocatedBonus;
+  //uint public teamAdrStartingId;
   mapping (address=>uint) bonusOf;
   /** Where we move the tokens at the end of the sale. */
   address[] public teamAddresses;
   address[] public testAddresses;
   
   event testAddressAdded(address TestAddress, uint id, uint balance);
-  
+  event teamMemberId(address adr, uint contributorId);
+
   function BonusFinalizeAgent(DayToken _token, Crowdsale _crowdsale, uint[] _bonusBasePoints, address[] _teamAddresses, address[] _testAddresses, uint _testAddressTokens) {
     token = _token;
     crowdsale = _crowdsale;
@@ -42,9 +44,12 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
 
     totalMembers = _teamAddresses.length;
     teamAddresses = _teamAddresses;
+    
+
     testAddresses = _testAddresses;
     testAddressTokens = _testAddressTokens;
     
+
     //if any of the bonus is 0 throw
     // otherwise sum it up in totalAllocatedBonus
     for (uint i=0; i < totalMembers; i++){
@@ -80,16 +85,17 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
     for (uint i=0; i < totalMembers; i++){
       allocatedBonus = safeMul(tokensSold, bonusOf[teamAddresses[i]]) / 10000;
       token.mint(teamAddresses[i], allocatedBonus);
-      token.addTeamAddress(teamAddresses[i], allocatedBonus);
+      uint id = token.addAddressWithId(teamAddresses[i], allocatedBonus, 3217 + i);
+      teamMemberId(teamAddresses[i], id);
     }
 
     //Add Test Addresses
     for(uint j=0; j < testAddresses.length ; j++){
       token.mint(testAddresses[j],testAddressTokens);
-      uint id = token.addContributor(testAddresses[j], 0, testAddressTokens);
+      uint id = token.addAddressWithId(testAddresses[j], testAddressTokens, 3217 + i + j);
       testAddressAdded(testAddresses[j], id, testAddressTokens);
     }
-
+    token.setTeamTestAdrEndId(teamAdrStartingId + i +j);
     // Make token transferable
     // realease them in the wild
     // Hell yeah!!! we did it.
