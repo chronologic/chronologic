@@ -5,6 +5,7 @@ var MultiSigWallet = artifacts.require("./MultiSigWallet.sol");
 var Crowdsale = artifacts.require("./AddressCappedCrowdsale.sol");
 var FinalizeAgent = artifacts.require("./BonusFinalizeAgent.sol");
 
+// GAS: 9,761,324
 
 
 var debug = true;
