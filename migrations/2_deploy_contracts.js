@@ -79,7 +79,8 @@ module.exports = function(deployer, network, accounts) {
     // 2% to each member. 
     // Number of entries count must match with the count of _teamAddresses members
     //var _testAddressTokens;
-    var _testAddressTokens = 5;
+    var _testAddressTokens = 88;
+    var _teamBonus = 5;
     // list of team mebers address respective to the above percentage.
     // alternatively you can just get all the bonus in one account & then distribute 
     // using some MultiSigWallet manually
@@ -191,12 +192,12 @@ module.exports = function(deployer, network, accounts) {
     }).then(function(Instance) {
         //console.log(Instance);
         tokenInstance = Instance;
-        if (debug) console.log("CrowdsaleToken Parameters are:");
+        if (debug) console.log("DayToken Parameters are:");
         if (debug) console.log(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell);
-        if (debug) console.log("CrowdsaleToken address is: ", tokenInstance.address);
+        if (debug) console.log("DayToken address is: ", tokenInstance.address);
         if (showURL) console.log("Token URL is: " + getEtherScanUrl(network, tokenInstance.address, "token"));
         if (showURL) console.log("Transaction URL is: " + getEtherScanUrl(network, tokenInstance.transactionHash, "tx"));
-        if (showABI) console.log("CrowdsaleToken ABI is: ", JSON.stringify(tokenInstance.abi));
+        if (showABI) console.log("DayToken ABI is: ", JSON.stringify(tokenInstance.abi));
         if (debug) console.log("===============================================");
         if (debug) console.log("\n\n");
         if (debug) console.log("*************  Deploying FlatPricing  ************** \n");
@@ -234,11 +235,11 @@ module.exports = function(deployer, network, accounts) {
         if (debug) console.log("===============================================");
         if (debug) console.log("\n\n");
         if (debug) console.log("*************  Deploying BonusFinalizeAgent  ************** \n");
-        return FinalizeAgent.new(tokenInstance.address, crowdsaleInstance.address, _testAddresses, _teamAddresses, _testAddressTokens);
+        return FinalizeAgent.new(tokenInstance.address, crowdsaleInstance.address, _testAddresses, _teamAddresses, _testAddressTokens, _teamBonus);
     }).then(function(Instance) {
         finalizeAgentInstance = Instance;
         if (debug) console.log("BonusFinalizeAgent Parameters are:");
-        if (debug) console.log(tokenInstance.address, crowdsaleInstance.address, _testAddresses, _teamAddresses, _testAddressTokens);
+        if (debug) console.log(tokenInstance.address, crowdsaleInstance.address, _testAddresses, _teamAddresses, _testAddressTokens, _teamBonus);
         if (debug) console.log("BonusFinalizeAgent address is: ", finalizeAgentInstance.address);
         if (showURL) console.log("FinalizeAgent URL is: " + getEtherScanUrl(network, finalizeAgentInstance.address, "address"));
         if (showURL) console.log("Transaction URL is: " + getEtherScanUrl(network, finalizeAgentInstance.transactionHash, "tx"));
@@ -248,17 +249,17 @@ module.exports = function(deployer, network, accounts) {
         console.log("\n*************  Setting up Agents  ************** \n");
         return tokenInstance.setMintAgent(crowdsaleInstance.address, true);
     }).then(function() {
-        console.log("AddressCappedCrowdsale is set as Mint Agent in CrowdsaleToken. Moving ahead...");
+        console.log("AddressCappedCrowdsale is set as Mint Agent in DayToken. Moving ahead...");
         return tokenInstance.setMintAgent(finalizeAgentInstance.address, true);
     }).then(function() {
-        console.log("BonusFinalizeAgent is set as Mint Agent in CrowdsaleToken. Moving ahead...");
+        console.log("BonusFinalizeAgent is set as Mint Agent in DayToken. Moving ahead...");
         return tokenInstance.setReleaseAgent(finalizeAgentInstance.address);
     }).then(function() {
-        console.log("BonusFinalizeAgent is set as Release Agent in CrowdsaleToken. Moving ahead...");
+        console.log("BonusFinalizeAgent is set as Release Agent in DayToken. Moving ahead...");
 
         return tokenInstance.setTransferAgent(crowdsaleInstance.address, true);
     }).then(function() {
-        console.log("AddressCappedCrowdsale is set as Transfer Agent in CrowdsaleToken. Moving ahead...");
+        console.log("AddressCappedCrowdsale is set as Transfer Agent in DayToken. Moving ahead...");
 
         return crowdsaleInstance.setFinalizeAgent(finalizeAgentInstance.address);
     }).then(function() {

@@ -24,7 +24,7 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
   uint public testAddressTokens;
   uint public allocatedBonus;
   //uint public teamAdrStartingId;
-  mapping (address=>uint) bonusOf;
+  uint public teamBonus;
   /** Where we move the tokens at the end of the sale. */
   address[] public teamAddresses;
   address[] public testAddresses;
@@ -32,36 +32,23 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
   event testAddressAdded(address TestAddress, uint id, uint balance);
   event teamMemberId(address adr, uint contributorId);
 
-  function BonusFinalizeAgent(DayToken _token, Crowdsale _crowdsale,  address[] _teamAddresses, address[] _testAddresses, uint _testAddressTokens) {
+  function BonusFinalizeAgent(DayToken _token, Crowdsale _crowdsale,  address[] _teamAddresses, address[] _testAddresses, uint _testAddressTokens, uint _teamBonus) {
     token = _token;
     crowdsale = _crowdsale;
 
     //crowdsale address must not be 0
     require(address(crowdsale) != 0);
 
-    //bonus & team address array size must match
-    //require(_bonusBasePoints.length == _teamAddresses.length);
-
     totalMembers = _teamAddresses.length;
     teamAddresses = _teamAddresses;
-    
+    teamBonus = _teamBonus;
 
     testAddresses = _testAddresses;
     testAddressTokens = _testAddressTokens;
-    
-
-    // //if any of the bonus is 0 throw
-    // // otherwise sum it up in totalAllocatedBonus
-    // for (uint i=0; i < totalMembers; i++){
-    //   require(_bonusBasePoints[i] != 0);
-    //   //if(_bonusBasePoints[i] == 0) throw;
-    // }
 
     //if any of the address is 0 or invalid throw
-    //otherwise initialize the bonusOf array
     for (uint j=0;j < totalMembers;j++){
       require(_teamAddresses[j] != 0);
-      //if(_teamAddresses[j] == 0) throw;
     }
   }
 
@@ -82,7 +69,7 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
     
 
     for (uint i=0; i < totalMembers; i++){
-      allocatedBonus = safeMul(tokensSold, bonusOf[teamAddresses[i]]) / 10000;
+      allocatedBonus = safeMul(tokensSold, teamBonus) / 10000;
       token.mint(teamAddresses[i], allocatedBonus);
       uint id = token.addAddressWithId(teamAddresses[i], 3217 + i);
       teamMemberId(teamAddresses[i], id);

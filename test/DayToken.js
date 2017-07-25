@@ -11,14 +11,13 @@ contract('DayToken', function(accounts) {
     var _tokenMintable = true;
     var decimals = _tokenDecimals;
     var _maxAddresses = 3333;
-   // var _now = 
-   // var _day = 84;
     var _minMintingPower = 5000000000000000000;
     var _maxMintingPower = 10000000000000000000;
     var _halvingCycle = 88;
     var _initalBlockTimestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp;;
     var _mintingDec = 19;
     var _bounty = 100000000;
+    var _minBalanceToSell = 8888;
     it('Creation: should return the correct totalSupply after construction', async function() {
         let instance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, accounts, { gas: 45123880 });
         let totalSupply = await instance.totalSupply();
@@ -220,8 +219,8 @@ contract('DayToken', function(accounts) {
     });
     it('Balance: Should return correct Minting Power by Address', async function() {
         let instance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, accounts, { gas: 45123880 });
-       let MintingPower0 = (await instance.getMintingPowerByAddress(accounts[0])).valueOf();
-       assert.equal(MintingPower0, 0);
+        let MintingPower0 = (await instance.getMintingPowerByAddress(accounts[0])).valueOf();
+        assert.equal(MintingPower0, 0);
         let MintingPower1 = (await instance.getMintingPowerByAddress(accounts[1])).valueOf();
         assert.equal(MintingPower1, 10000000000000000000);
         let MintingPower2 = (await instance.getMintingPowerByAddress(accounts[27])).valueOf();
@@ -271,7 +270,7 @@ contract('DayToken', function(accounts) {
         let balance21 = (await instance.balanceOf(accounts[25], -1)).valueOf();
         assert.isAtMost(79989029703 - balance21, 10);
     });
-     it('Balance: should throw an error when trying to update all balances multiple times on same day', async function() {
+    it('Balance: should throw an error when trying to update all balances multiple times on same day', async function() {
         let instance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, accounts, { gas: 45123880 });
         let call1 = (await instance.updateAllBalances(2));
         try {
