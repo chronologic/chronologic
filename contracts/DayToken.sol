@@ -10,7 +10,8 @@ import "./SafeMathLib.sol";
 //todo:
 // Mint all bounty
 // Slabs
-//Transfer minitng address me total Wei transferred
+// Transfer minitng address me total Wei transferred
+// Hard code number of address in each stage
 
 /**
  * A crowdsale token.
@@ -257,8 +258,11 @@ uint8 public decimals;
         */
     function balanceOf(address _adr) public constant returns (uint256 balance) {
         uint id = idOf[_adr]; 
-        if (id <= latestContributerId) {
-            require(updateBalanceOf(id));
+        if(block.timestamp >= initialBlockTimestamp)
+        {
+            if (id <= latestContributerId) {
+                require(updateBalanceOf(id));
+            }
         }
         return balances[_adr];    
     }
@@ -271,9 +275,12 @@ uint8 public decimals;
         * @param _id address whose balance is to be returned.
         */
     function balanceById(uint _id) public constant returns (uint256 balance) {
-        if (_id <= latestContributerId) {
-            address adr=contributors[_id].adr; 
-            require(updateBalanceOf(_id)); 
+        if(block.timestamp >= initialBlockTimestamp)
+        {
+            if (_id <= latestContributerId) {
+                address adr=contributors[_id].adr; 
+                require(updateBalanceOf(_id)); 
+            }
         }
         return balances[adr]; 
     }
@@ -287,6 +294,7 @@ uint8 public decimals;
         * Logs the ids whose balance could not be updated
         */
     function updateAllBalances() public {
+        require(block.timestamp >= initialBlockTimestamp);
         uint today =(block.timestamp - initialBlockTimestamp)/1 days;
         require(today != latestAllUpdate); 
         for (uint i = 1; i <= latestContributerId; i++) {
@@ -407,7 +415,7 @@ uint8 public decimals;
         * @param _initialContributionWei Initial Contribution of the contributor to be added
         * @param _initialBalance  Initial balance in wei of the contributor to be added
         */
-    function addContributor(address _adr, uint _initialContributionWei, uint256 _initialBalance) onlyCrowdsale returns(uint){
+    function addContributor(address _adr, uint _initialContributionWei, uint _initialBalance)  returns(uint){
         uint id = ++latestContributerId;
         require(contributors[id].adr == 0);
         contributors[id].adr = _adr;
@@ -416,7 +424,7 @@ uint8 public decimals;
         contributors[id].totalTransferredWei = 0; //IS THIS NECESSARY
         idOf[_adr] = id;
         contributors[id].initialContributionWei = _initialContributionWei;
-        balances[_adr] = _initialBalance;
+        //balances[_adr] = _initialBalance;
         ContributorAdded(_adr, id);
         contributors[id].status = sellingStatus.NOTONSALE;
         contributors[id].minPriceinDay = 0; //IS THIS NECESSARY

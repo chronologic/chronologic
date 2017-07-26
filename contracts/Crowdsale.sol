@@ -244,13 +244,13 @@ contract Crowdsale is Haltable, SafeMathLib{
    * @param weiPrice Price of a single full token in wei
    *
    */
-  function preallocate(address receiver, uint fullTokens, uint weiPrice) public onlyOwner {
+  function preallocate(address receiver, uint fullTokens, uint weiPrice) public onlyOwner{
 
     uint tokenAmount = fullTokens * 10**uint(token.decimals());
     uint weiAmount = weiPrice * fullTokens; // This can be also 0, we give out tokens for free
 
     require(weiAmount >= preMinWei);
-    require(weiAmount >= preMaxWei);
+    require(weiAmount <= preMaxWei);
 
     weiRaised = safeAdd(weiRaised,weiAmount);
     tokensSold = safeAdd(tokensSold,tokenAmount);

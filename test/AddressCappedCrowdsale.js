@@ -1,11 +1,11 @@
 'use strict';
 
-const assertJump = require('./helpers/assertJump');
-const timer = require('./helpers/timer');
+const assertJump = require("./helpers/assertJump");
+const timer = require("./helpers/timer");
 var Token = artifacts.require("./DayToken.sol");
 var Crowdsale = artifacts.require("./AddressCappedCrowdsale.sol");
 var FinalizeAgent = artifacts.require("./BonusFinalizeAgent.sol");
-var MultisigWallet = artifacts.require('./MultisigWallet.sol');
+var MultisigWallet = artifacts.require("./MultisigWallet.sol");
 var Pricing = artifacts.require("./FlatPricing.sol");
 
 
@@ -45,7 +45,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
     var _minMintingPower = 5000000000000000000;
     var _maxMintingPower = 10000000000000000000;
     var _halvingCycle = 88;
-    var _initalBlockTimestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp;;
+    var _initalBlockTimestamp = getUnixTimestamp('2017-08-7 09:00:00 GMT');
     var _mintingDec = 19;
     var _bounty = etherInWei(1);
     var _minBalanceToSell = 8888;
@@ -60,40 +60,27 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
     var _countdownInSeconds = 100;
 
 
-    // var _startTime = _now + _countdownInSeconds;
-    // var _saleDurationInSeconds = 1000;
-    // var _endTime = _startTime + _saleDurationInSeconds;
-    // var _minimumFundingGoal = etherInWei(13);
-
-    var _startTime = getUnixTimestamp('2017-07-23 09:00:00 GMT');
-    var _endTime = getUnixTimestamp('2017-08-7 09:00:00 GMT');
-    var _minimumFundingGoal = etherInWei(1500);
-    var _cap = etherInWei(38383);
+    var _startTime = _now + _countdownInSeconds;
+    var _saleDurationInSeconds = 1000;
+    var _endTime = _startTime + _saleDurationInSeconds;
+    var _minimumFundingGoal = etherInWei(13);
+    var _cap = etherInWei(35);
     var _preMinWei = etherInWei(33);
     var _preMaxWei = etherInWei(333);
     var _minWei = etherInWei(1);
     var _maxWei = etherInWei(333);
-    var _maxPreAddresses = 33;
-    var _maxIcoAddresses = 3216;
-
-    // var _cap = etherInWei(30);
-    // var _preMinWei = etherInWei(33);
-    // var _preMaxWei = etherInWei(333);
-    // var _minWei = etherInWei(1);
-    // var _maxWei = etherInWei(333);
-    // var _maxPreAddresses = 33;
-    // var _maxIcoAddresses = 3216;
+    var _maxPreAddresses = 3;
+    var _maxIcoAddresses = 3;
 
 
     //BonusFinalizeAgent Parameters
     var _teamBonus = 5;
-    var _teamAddresses = [accounts[0], accounts[1], accounts[2]];
+    var _teamAddresses = [accounts[4], accounts[5], accounts[6]];
     var _testAddressTokens = 88;
-    var _testAddresses = [accounts[3], accounts[4], accounts[6]];
+    var _testAddresses = [accounts[7], accounts[8], accounts[9]];
 
     //Flat pricing Parameters
     var _oneTokenInWei = tokenPriceInWeiFromTokensPerEther(24);
-    //console.log(_oneTokenInWei);
     var _tokenDecimals = 8;
 
     var tokenInstance = null;
@@ -106,9 +93,8 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
         pricingInstance = await Pricing.new(_oneTokenInWei, { from: accounts[0] });
         multisigWalletInstance = await MultisigWallet.new(_listOfOwners, _minRequired);
-        finalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, multisigWalletInstance.address, _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus);
-        console.log("I AM HERR");
-        crowdsaleInstance = await Crowdsale.new(tokenInstance.address, pricingInstance.address, multisigWalletInstance.address, _startTime, _endTime, _minimumFundingGoal, _cap, _preMinWei, _preMaxWei, _minWei, _maxWei, _maxPreAddresses, _maxIcoAddresses);
+        finalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, multisigWalletInstance.address, _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus, { from: accounts[0] });
+        crowdsaleInstance = await Crowdsale.new(tokenInstance.address, pricingInstance.address, multisigWalletInstance.address, _startTime, _endTime, _minimumFundingGoal, _cap, _preMinWei, _preMaxWei, _minWei, _maxWei, _maxPreAddresses, _maxIcoAddresses, { from: accounts[0] });
     });
 
     it('Setup: Crowdsale address should be set as mint agent in Token properly', async function() {
@@ -130,6 +116,11 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         await tokenInstance.setTransferAgent(crowdsaleInstance.address, true);
         assert.equal(await tokenInstance.transferAgents.call(crowdsaleInstance.address), true);
     });
+
+    // it('Setup: DayToken address should be set as transfer agent in Token properly', async function() {
+    //     await tokenInstance.setTransferAgent(tokenInstance.address, true);
+    //     assert.equal(await tokenInstance.transferAgents.call(crowdsaleInstance.address), true);
+    // });
 
     it('Setup: BonusFinalizeAgent address should be set as finalize agent in Crowdsale properly', async function() {
         await crowdsaleInstance.setFinalizeAgent(finalizeAgentInstance.address);
@@ -198,20 +189,84 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         assert.equal(await crowdsaleInstance.isFinalizerSane(), true, "Finalizer not sane. Can't continue.");
         assert.equal(await crowdsaleInstance.isPricingSane(), true, "Pricing not sane. Can't continue.");
 
-
         var buyer = accounts[3];
-        var tokensPurchased = 50000;
-        var tokenPriceInWei = tokenPriceInWeiFromTokensPerEther(2000);
+        var tokensPurchased = 1000;
+        var tokenPriceInWei = tokenPriceInWeiFromTokensPerEther(24);
 
         await crowdsaleInstance.preallocate(buyer, tokensPurchased, tokenPriceInWei, { from: accounts[0] });
         assert.equal(web3.toBigNumber(await tokenInstance.balanceOf(buyer)).toNumber(), tokenInSmallestUnit(tokensPurchased, _tokenDecimals), "Assert 1 Failed");
         assert.equal(web3.toBigNumber(await crowdsaleInstance.tokensSold.call()).toNumber(), tokenInSmallestUnit(tokensPurchased, _tokenDecimals), "Assert 2 Failed");
         assert.equal(web3.toBigNumber(await crowdsaleInstance.weiRaised.call()).toNumber(), tokensPurchased * tokenPriceInWei, "Assert 3 Failed");
     });
+    it('Pre-allocate: Pre allocating the tokens to offline investor must fail if not within range', async function() {
+        await tokenInstance.setMintAgent(crowdsaleInstance.address, true);
+        await tokenInstance.setMintAgent(finalizeAgentInstance.address, true);
+        await tokenInstance.setReleaseAgent(finalizeAgentInstance.address);
+        await tokenInstance.setTransferAgent(crowdsaleInstance.address, true);
+        await crowdsaleInstance.setFinalizeAgent(finalizeAgentInstance.address);
+        assert.equal(await crowdsaleInstance.isFinalizerSane(), true, "Finalizer not sane. Can't continue.");
+        assert.equal(await crowdsaleInstance.isPricingSane(), true, "Pricing not sane. Can't continue.");
+
+        var buyer = accounts[3];
+        var tokensPurchased = 200;
+        var tokenPriceInWei = tokenPriceInWeiFromTokensPerEther(24);
+
+        try {
+            await crowdsaleInstance.preallocate(buyer, tokensPurchased, tokenPriceInWei, { from: accounts[0] });
+        } catch (error) {
+            return assertJump(error);
+        }
+
+
+        buyer = accounts[5];
+        tokensPurchased = 333 * 24;
+
+        try {
+            await crowdsaleInstance.preallocate(buyer, tokensPurchased, tokenPriceInWei, { from: accounts[0] });
+        } catch (error) {
+            return assertJump(error);
+        }
+    });
+
+    it('Pre-allocate: Should throw if maximum number of pre-ICO contributors is exceeded', async function() {
+        await tokenInstance.setMintAgent(crowdsaleInstance.address, true);
+        await tokenInstance.setMintAgent(finalizeAgentInstance.address, true);
+        await tokenInstance.setReleaseAgent(finalizeAgentInstance.address);
+        await tokenInstance.setTransferAgent(crowdsaleInstance.address, true);
+        await crowdsaleInstance.setFinalizeAgent(finalizeAgentInstance.address);
+        assert.equal(await crowdsaleInstance.isFinalizerSane(), true, "Finalizer not sane. Can't continue.");
+        assert.equal(await crowdsaleInstance.isPricingSane(), true, "Pricing not sane. Can't continue.");
+
+        var buyer = accounts[3];
+        var tokensPurchased = 1000;
+        var tokenPriceInWei = tokenPriceInWeiFromTokensPerEther(24);
+
+        await crowdsaleInstance.preallocate(buyer, tokensPurchased, tokenPriceInWei, { from: accounts[0] });
+
+        buyer = accounts[5];
+        tokensPurchased = 1000;
+
+        await crowdsaleInstance.preallocate(buyer, tokensPurchased, tokenPriceInWei, { from: accounts[0] });
+
+        buyer = accounts[6];
+        tokensPurchased = 1000;
+
+        await crowdsaleInstance.preallocate(buyer, tokensPurchased, tokenPriceInWei, { from: accounts[0] });
+
+        buyer = accounts[7];
+        tokensPurchased = 200;
+
+        try {
+            await crowdsaleInstance.preallocate(buyer, tokensPurchased, tokenPriceInWei, { from: accounts[0] });
+        } catch (error) {
+            return assertJump(error);
+        }
+
+    });
 
     it('Update: Owner must be able to update pricing strategy', async function() {
         let oldPricingStrategy = await crowdsaleInstance.pricingStrategy.call();
-        let newPricingInstance = await Pricing.new(_tranches);
+        let newPricingInstance = await Pricing.new(_oneTokenInWei);
         await crowdsaleInstance.setPricingStrategy(newPricingInstance.address);
         let newPricingStrategy = await crowdsaleInstance.pricingStrategy.call();
         assert.equal(newPricingStrategy, newPricingInstance.address);
@@ -228,7 +283,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
 
     it('Update: Non-owner should not be able to set pricing strategy', async function() {
         try {
-            let newPricingInstance = await Pricing.new(_tranches);
+            let newPricingInstance = await Pricing.new(_oneTokenInWei);
             await crowdsaleInstance.setPricingStrategy(newPricingInstance.address, { from: accounts[2] });
         } catch (error) {
             return assertJump(error);
@@ -238,7 +293,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
 
     it('Update: Owner must be able to update FinalizeAgent', async function() {
         let oldFinalizeAgent = await crowdsaleInstance.finalizeAgent.call();
-        let newFinalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, crowdsaleInstance.address, _teamBonusPoints, _teamAddresses);
+        let newFinalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, multisigWalletInstance.address, _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus);
         await crowdsaleInstance.setFinalizeAgent(newFinalizeAgentInstance.address);
         let newFinalizeAgent = await crowdsaleInstance.finalizeAgent.call();
         assert.equal(newFinalizeAgent, newFinalizeAgentInstance.address);
@@ -255,48 +310,8 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
 
     it('Update: Non-owner should not be able to set finalize agent', async function() {
         try {
-            let newFinalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, crowdsaleInstance.address, _teamBonusPoints, _teamAddresses);
+            let newFinalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, multisigWalletInstance.address, _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus);
             await crowdsaleInstance.setFinalizeAgent(newFinalizeAgentInstance.address, { from: accounts[2] });
-        } catch (error) {
-            return assertJump(error);
-        }
-        assert.fail('should have thrown exception before');
-    });
-
-    it('Whitelist: Owner must be able to update early participants whitelist', async function() {
-        await crowdsaleInstance.setEarlyParicipantWhitelist(accounts[4], true);
-        assert.equal(await crowdsaleInstance.earlyParticipantWhitelist.call(accounts[4]), true);
-    });
-
-    it('Whitelist: Non-owner should not be able to set finalize agent', async function() {
-        try {
-            await crowdsaleInstance.setEarlyParicipantWhitelist.call(accounts[4], true, { from: accounts[2] });
-        } catch (error) {
-            return assertJump(error);
-        }
-        assert.fail('should have thrown exception before');
-    });
-
-    it('Whitelist: Only whitelisted address should be able to contribute even before the funding start.', async function() {
-        await tokenInstance.setMintAgent(crowdsaleInstance.address, true);
-        await tokenInstance.setMintAgent(finalizeAgentInstance.address, true);
-        await tokenInstance.setReleaseAgent(finalizeAgentInstance.address);
-        await tokenInstance.setTransferAgent(crowdsaleInstance.address, true);
-        await crowdsaleInstance.setFinalizeAgent(finalizeAgentInstance.address);
-        assert.equal(await crowdsaleInstance.isFinalizerSane(), true, "Finalizer not sane. Can't continue.");
-        assert.equal(await crowdsaleInstance.isPricingSane(), true, "Pricing not sane. Can't continue.");
-        try {
-            await crowdsaleInstance.buy({ from: accounts[3], value: web3.toWei('2', 'ether') });
-        } catch (error) {
-            return assertJump(error);
-        }
-
-        await crowdsaleInstance.setEarlyParicipantWhitelist.call(accounts[3], true);
-        await crowdsaleInstance.buy({ from: accounts[3], value: web3.toWei('2', 'ether') });
-        assert.equal(await tokenInstance.balanceOf(accounts[3]), tokenInSmallestUnit(3000, _tokenDecimals));
-        assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('2', 'ether'));
-        try {
-            await crowdsaleInstance.buy({ from: accounts[4], value: web3.toWei('2', 'ether') });
         } catch (error) {
             return assertJump(error);
         }
@@ -316,17 +331,14 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         await timer(_countdownInSeconds);
 
         await crowdsaleInstance.buy({ from: accounts[3], value: web3.toWei('2', 'ether') });
-        assert.equal(await tokenInstance.balanceOf(accounts[3]), tokenInSmallestUnit(3000, _tokenDecimals));
+        assert.equal((await tokenInstance.balanceOf(accounts[3])).valueOf(), tokenInSmallestUnit(48, _tokenDecimals));
         assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('2', 'ether'));
 
 
         await crowdsaleInstance.buy({ from: accounts[5], value: web3.toWei('10', 'ether') });
-        assert.equal(await tokenInstance.balanceOf(accounts[5]), tokenInSmallestUnit(15000, _tokenDecimals));
+        assert.equal((await tokenInstance.balanceOf(accounts[5])).valueOf(), tokenInSmallestUnit(240, _tokenDecimals));
         assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('12', 'ether'));
 
-        await crowdsaleInstance.buy({ from: accounts[4], value: web3.toWei('0.001', 'ether') });
-        assert.equal(await tokenInstance.balanceOf(accounts[4]), Math.floor(tokenInSmallestUnit(1.1, _tokenDecimals)));
-        assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('12.001', 'ether'));
     });
 
     it('Funding: Open contribution using buyWithCustomerId must succeed', async function() {
@@ -341,17 +353,15 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         await timer(_countdownInSeconds);
 
         await crowdsaleInstance.buyWithCustomerId(3, { from: accounts[3], value: web3.toWei('2', 'ether') });
-        assert.equal(await tokenInstance.balanceOf(accounts[3]), tokenInSmallestUnit(3000, _tokenDecimals));
+        assert.equal(await tokenInstance.balanceOf(accounts[3]), tokenInSmallestUnit(48, _tokenDecimals));
         assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('2', 'ether'));
 
 
         await crowdsaleInstance.buyWithCustomerId(5, { from: accounts[5], value: web3.toWei('10', 'ether') });
-        assert.equal(await tokenInstance.balanceOf(accounts[5]), tokenInSmallestUnit(15000, _tokenDecimals));
+        assert.equal(await tokenInstance.balanceOf(accounts[5]), tokenInSmallestUnit(240, _tokenDecimals));
         assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('12', 'ether'));
 
-        await crowdsaleInstance.buyWithCustomerId(4, { from: accounts[4], value: web3.toWei('0.001', 'ether') });
-        assert.equal(await tokenInstance.balanceOf(accounts[4]), Math.floor(tokenInSmallestUnit(1.1, _tokenDecimals)));
-        assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('12.001', 'ether'));
+
     });
 
     it('Funding: Open contribution using investWithCustomerId must succeed', async function() {
@@ -366,15 +376,13 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         await timer(_countdownInSeconds);
 
         await crowdsaleInstance.investWithCustomerId(accounts[3], 3, { from: accounts[3], value: web3.toWei('2', 'ether') });
-        assert.equal(await tokenInstance.balanceOf(accounts[3]), tokenInSmallestUnit(3000, _tokenDecimals));
+        assert.equal(await tokenInstance.balanceOf(accounts[3]), tokenInSmallestUnit(48, _tokenDecimals));
         assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('2', 'ether'));
 
         await crowdsaleInstance.investWithCustomerId(accounts[5], 5, { from: accounts[5], value: web3.toWei('10', 'ether') });
-        assert.equal(await tokenInstance.balanceOf(accounts[5]), tokenInSmallestUnit(15000, _tokenDecimals));
+        assert.equal(await tokenInstance.balanceOf(accounts[5]), tokenInSmallestUnit(240, _tokenDecimals));
         assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('12', 'ether'));
-        await crowdsaleInstance.investWithCustomerId(accounts[4], 4, { from: accounts[4], value: web3.toWei('0.001', 'ether') });
-        assert.equal(await tokenInstance.balanceOf(accounts[4]), Math.floor(tokenInSmallestUnit(1.1, _tokenDecimals)));
-        assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('12.001', 'ether'));
+
     });
 
     it('Funding: Minimum funding target must be hit', async function() {
@@ -389,21 +397,19 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         await timer(_countdownInSeconds);
 
         await crowdsaleInstance.buy({ from: accounts[2], value: web3.toWei('2', 'ether') });
-        assert.equal(await tokenInstance.balanceOf(accounts[2]), tokenInSmallestUnit(3000, _tokenDecimals));
+        assert.equal((await tokenInstance.balanceOf(accounts[2])).valueOf(), tokenInSmallestUnit(48, _tokenDecimals));
         assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('2', 'ether'));
 
 
         await crowdsaleInstance.buy({ from: accounts[3], value: web3.toWei('10', 'ether') });
-        assert.equal(await tokenInstance.balanceOf(accounts[3]), tokenInSmallestUnit(15000, _tokenDecimals));
+        assert.equal((await tokenInstance.balanceOf(accounts[3])).valueOf(), tokenInSmallestUnit(240, _tokenDecimals));
         assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('12', 'ether'));
 
-        await crowdsaleInstance.buy({ from: accounts[4], value: web3.toWei('0.001', 'ether') });
-        assert.equal(await tokenInstance.balanceOf(accounts[4]), tokenInSmallestUnit(1.1, _tokenDecimals));
-        assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('12.001', 'ether'));
+
 
         await crowdsaleInstance.buy({ from: accounts[5], value: web3.toWei('3.14', 'ether') });
-        assert.equal(await tokenInstance.balanceOf(accounts[5]), tokenInSmallestUnit(3454, _tokenDecimals));
-        assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('15.141', 'ether'));
+        assert.equal((await tokenInstance.balanceOf(accounts[5])).valueOf(), tokenInSmallestUnit(75.36, _tokenDecimals));
+        assert.equal((web3.eth.getBalance(multisigWalletInstance.address)).valueOf(), web3.toWei('15.14', 'ether'));
 
         assert.equal(await crowdsaleInstance.isMinimumGoalReached(), true);
 
@@ -420,26 +426,20 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
 
         await timer(_countdownInSeconds);
 
-        await crowdsaleInstance.buy({ from: accounts[1], value: web3.toWei('8', 'ether') });
-        assert.equal(await tokenInstance.balanceOf(accounts[1]), tokenInSmallestUnit(12000, _tokenDecimals));
-        assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('8', 'ether'));
+        await crowdsaleInstance.buy({ from: accounts[1], value: web3.toWei('10', 'ether') });
+        assert.equal(await tokenInstance.balanceOf(accounts[1]), tokenInSmallestUnit(240, _tokenDecimals));
+        assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('10', 'ether'));
 
-        await crowdsaleInstance.buy({ from: accounts[2], value: web3.toWei('8', 'ether') });
-        assert.equal(await tokenInstance.balanceOf(accounts[2]), tokenInSmallestUnit(10400, _tokenDecimals));
-        assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('16', 'ether'));
+        await crowdsaleInstance.buy({ from: accounts[2], value: web3.toWei('10', 'ether') });
+        assert.equal(await tokenInstance.balanceOf(accounts[2]), tokenInSmallestUnit(240, _tokenDecimals));
+        assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('20', 'ether'));
 
-        await crowdsaleInstance.buy({ from: accounts[3], value: web3.toWei('8', 'ether') });
-        assert.equal(await tokenInstance.balanceOf(accounts[3]), tokenInSmallestUnit(8400, _tokenDecimals));
-        assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('24', 'ether'));
-
-        // let weiRaised = await crowdsaleInstance.weiRaised.call();
-        // let weiCap = await crowdsaleInstance.weiCap.call();
-        // console.log("weiRaised is: " + weiRaised);
-        // console.log("weiCap is: " + weiCap);
-        //assert.equal(await crowdsaleInstance.isCrowdsaleFull(), true);
+        await crowdsaleInstance.buy({ from: accounts[3], value: web3.toWei('10', 'ether') });
+        assert.equal(await tokenInstance.balanceOf(accounts[3]), tokenInSmallestUnit(240, _tokenDecimals));
+        assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('30', 'ether'));
 
         try {
-            await crowdsaleInstance.buy({ from: accounts[4], value: web3.toWei('8', 'ether') });
+            await crowdsaleInstance.buy({ from: accounts[4], value: web3.toWei('5', 'ether') });
         } catch (error) {
             return assertJump(error);
         }
@@ -447,6 +447,73 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
 
     });
 
+
+    it('Funding: It should throw if the same address tries to buy again', async function() {
+        await tokenInstance.setMintAgent(crowdsaleInstance.address, true);
+        await tokenInstance.setMintAgent(finalizeAgentInstance.address, true);
+        await tokenInstance.setReleaseAgent(finalizeAgentInstance.address);
+        await tokenInstance.setTransferAgent(crowdsaleInstance.address, true);
+        await crowdsaleInstance.setFinalizeAgent(finalizeAgentInstance.address);
+        assert.equal(await crowdsaleInstance.isFinalizerSane(), true, "Finalizer not sane. Can't continue.");
+        assert.equal(await crowdsaleInstance.isPricingSane(), true, "Pricing not sane. Can't continue.");
+
+        await timer(_countdownInSeconds);
+
+        await crowdsaleInstance.buy({ from: accounts[1], value: web3.toWei('10', 'ether') });
+        assert.equal(await tokenInstance.balanceOf(accounts[1]), tokenInSmallestUnit(240, _tokenDecimals));
+        assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('10', 'ether'));
+
+        try {
+            await crowdsaleInstance.buy({ from: accounts[1], value: web3.toWei('5', 'ether') });
+        } catch (error) {
+            return assertJump(error);
+        }
+    });
+
+
+    it('Funding: Funding should be within range: Max and Min', async function() {
+        await tokenInstance.setMintAgent(crowdsaleInstance.address, true);
+        await tokenInstance.setMintAgent(finalizeAgentInstance.address, true);
+        await tokenInstance.setReleaseAgent(finalizeAgentInstance.address);
+        await tokenInstance.setTransferAgent(crowdsaleInstance.address, true);
+        await crowdsaleInstance.setFinalizeAgent(finalizeAgentInstance.address);
+        assert.equal(await crowdsaleInstance.isFinalizerSane(), true, "Finalizer not sane. Can't continue.");
+        assert.equal(await crowdsaleInstance.isPricingSane(), true, "Pricing not sane. Can't continue.");
+
+        await timer(_countdownInSeconds);
+
+        try {
+            await crowdsaleInstance.buy({ from: accounts[1], value: web3.toWei('0.2', 'ether') });
+        } catch (error) {
+            return assertJump(error);
+        }
+
+        try {
+            await crowdsaleInstance.buy({ from: accounts[1], value: web3.toWei('350', 'ether') });
+        } catch (error) {
+            return assertJump(error);
+        }
+    });
+
+    it('Funding: Should throw if maximum number of ICO contributors is exceeded', async function() {
+        await tokenInstance.setMintAgent(crowdsaleInstance.address, true);
+        await tokenInstance.setMintAgent(finalizeAgentInstance.address, true);
+        await tokenInstance.setReleaseAgent(finalizeAgentInstance.address);
+        await tokenInstance.setTransferAgent(crowdsaleInstance.address, true);
+        await crowdsaleInstance.setFinalizeAgent(finalizeAgentInstance.address);
+        assert.equal(await crowdsaleInstance.isFinalizerSane(), true, "Finalizer not sane. Can't continue.");
+        assert.equal(await crowdsaleInstance.isPricingSane(), true, "Pricing not sane. Can't continue.");
+
+        await crowdsaleInstance.buy({ from: accounts[1], value: web3.toWei('10', 'ether') });
+        await crowdsaleInstance.buy({ from: accounts[2], value: web3.toWei('10', 'ether') });
+        await crowdsaleInstance.buy({ from: accounts[3], value: web3.toWei('10', 'ether') });
+
+        try {
+            await crowdsaleInstance.buy({ from: accounts[4], value: web3.toWei('10', 'ether') });
+        } catch (error) {
+            return assertJump(error);
+        }
+    });
 
 
 });
