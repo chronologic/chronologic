@@ -1,31 +1,9 @@
 'use strict';
 
-const assertJump = require("./helpers/assertJump");
-const timer = require("./helpers/timer");
+const assertJump = require('./helpers/assertJump');
+const timer = require('./helpers/timer');
 var Token = artifacts.require("./DayTokenTest.sol");
-
-
-
-function etherInWei(x) {
-    return web3.toBigNumber(web3.toWei(x, 'ether')).toNumber();
-}
-
-
-function tokenPriceInWeiFromTokensPerEther(x) {
-    if (x == 0) return 0;
-    return Math.floor(web3.toWei(1, 'ether') / x);
-}
-
-function tokenInSmallestUnit(tokens, _tokenDecimals) {
-    return Math.floor(tokens * Math.pow(10, _tokenDecimals));
-}
-
-function getUnixTimestamp(timestamp) {
-    var startTimestamp = new Date(timestamp);
-    return Math.floor(startTimestamp.getTime() / 1000);
-}
 contract('DayToken', function(accounts) {
-    //Token Parameters
     var _tokenName = "Etheriya";
     var _tokenSymbol = "RIYA";
     var _tokenDecimals = 8;
@@ -36,62 +14,18 @@ contract('DayToken', function(accounts) {
     var _minMintingPower = 5000000000000000000;
     var _maxMintingPower = 10000000000000000000;
     var _halvingCycle = 88;
-    var _initalBlockTimestamp = getUnixTimestamp('2017-08-7 09:00:00 GMT');
+    var _initalBlockTimestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp;;
     var _mintingDec = 19;
-    var _bounty = etherInWei(1);
+    var _bounty = 100000000;
     var _minBalanceToSell = 8888;
-
-    //Multi Sig Wallet Parameters
-    var _minRequired = 2;
-    var _dayLimit = 2;
-    var _listOfOwners = [accounts[1], accounts[2], accounts[3]];
-
-    //AddressCappedCrowdsale Parameters
-    var _now = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
-    var _countdownInSeconds = 100;
-
-
-    var _startTime = _now + _countdownInSeconds;
-    var _saleDurationInSeconds = 1000;
-    var _endTime = _startTime + _saleDurationInSeconds;
-    var _minimumFundingGoal = etherInWei(13);
-    var _cap = etherInWei(35);
-    var _preMinWei = etherInWei(33);
-    var _preMaxWei = etherInWei(333);
-    var _minWei = etherInWei(1);
-    var _maxWei = etherInWei(333);
-    var _maxPreAddresses = 3;
-    var _maxIcoAddresses = 3;
-    // var _tranches = [33, 2000000000000000000,
-    //     39, 1000000000000000000,
-    //     89, 2000000000000000000,
-    //     334, 500000000000000000,
-    //     889, 100000000000000000,
-    //     3216, 0
-    // ];
-
-    //BonusFinalizeAgent Parameters
-    var _teamBonus = 5;
-    var _teamAddresses = [accounts[4], accounts[5], accounts[6]];
-    var _testAddressTokens = 88;
-    var _testAddresses = [accounts[7], accounts[8], accounts[9]];
-
-    //Flat pricing Parameters
-    var _oneTokenInWei = tokenPriceInWeiFromTokensPerEther(24);
-    var _tokenDecimals = 8;
-
-    var tokenInstance = null;
-    var pricingInstance = null;
-    var finalizeAgentInstance = null;
-    var multisigWalletInstance = null;
-    var crowdsaleInstance = null;
 
 
     beforeEach(async() => {
         tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
-        // for (i = 1; i <= 15; i++) {
-        //     id = await tokenInstance.addContributor(accounts[i], 20, 792000000000000000000);
-        // }
+        pricingInstance = await Pricing.new(_oneTokenInWei, { from: accounts[0] });
+        multisigWalletInstance = await MultisigWallet.new(_listOfOwners, _minRequired);
+        finalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, multisigWalletInstance.address, _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus);
+        crowdsaleInstance = await Crowdsale.new(tokenInstance.address, pricingInstance.address, multisigWalletInstance.address, _startTime, _endTime, _minimumFundingGoal, _cap, _preMinWei, _preMaxWei, _minWei, _maxWei, _maxPreAddresses, _maxIcoAddresses);
     });
 
     it('Creation: should return the correct totalSupply after construction', async function() {
@@ -181,9 +115,6 @@ contract('DayToken', function(accounts) {
         assert.fail('should have thrown before');
     });
 
-    // it('Transfer: Should allow contributor to sell minting address with conditions', async function() {
-
-    //     }
     // it('Transfer: should return correct balances after transfering from another account', async function() {
     //     let tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, accounts, { gas:45123880 } );
     //     await tokenInstance.approve(accounts[1], 100000000 * Math.pow(10, decimals));
@@ -284,17 +215,17 @@ contract('DayToken', function(accounts) {
 
     });
     it('Balance: Should return correct Minting Power by Address', async function() {
-        let MintingPower0 = (await tokenInstance.getMintingPowerByAddress(accounts[0]), 2).valueOf();
+        let MintingPower0 = (await tokenInstance.getMintingPowerByAddress(accounts[0])).valueOf();
         assert.equal(MintingPower0, 0);
-        let MintingPower1 = (await tokenInstance.getMintingPowerByAddress(accounts[1]), 10).valueOf();
+        let MintingPower1 = (await tokenInstance.getMintingPowerByAddress(accounts[1])).valueOf();
         assert.equal(MintingPower1, 10000000000000000000);
-        let MintingPower2 = (await tokenInstance.getMintingPowerByAddress(accounts[19]), 28).valueOf();
+        let MintingPower2 = (await tokenInstance.getMintingPowerByAddress(accounts[27])).valueOf();
         assert.equal(MintingPower2, 9959495949594959496);
     });
     it('Balance: Should return correct Minting Power by ID', async function() {
-        let MintingPower1 = (await tokenInstance.getMintingPowerById(1, 2)).valueOf();
+        let MintingPower1 = (await tokenInstance.getMintingPowerById(1)).valueOf();
         assert.equal(MintingPower1, 10000000000000000000);
-        let MintingPower2 = (await tokenInstance.getMintingPowerById(7, 10)).valueOf();
+        let MintingPower2 = (await tokenInstance.getMintingPowerById(7)).valueOf();
         assert.equal(MintingPower2, 9989498949894989499);
     });
     it('Balance: Should return correct Balance by address', async function() {

@@ -6,7 +6,7 @@ import "./PricingStrategy.sol";
 import "./FinalizeAgent.sol";
 import "./DayToken.sol";
 
-//CHANGE MIN WEI + Add tranches
+
 /**
 
  * Abstract base contract for token sales.
@@ -27,26 +27,6 @@ contract Crowdsale is Haltable, SafeMathLib{
 
   /* The token we are selling */
   DayToken public token;
- 
-  // //Tranche Code
-  // uint public constant MAX_TRANCHES = 10;
-
-  //  struct Tranche {
-  //     // Amount in weis when this tranche becomes active
-  //     uint amount;
-  //     // How many tokens per wei you will get while this tranche is active
-  //     uint price;
-  // }
-
-  // // Store tranches in a fixed array, so that it can be seen in a blockchain explorer
-  // // Tranche 0 is always (0, 0)
-  // // (TODO: change this when we confirm dynamic arrays are explorable)
-  // Tranche[10] public tranches;
-
-  // // How many active tranches we have
-  // uint public trancheCount;
-
-  //Tranche Code Ends
 
   /* How we are going to price our offering */
   PricingStrategy public pricingStrategy;
@@ -181,25 +161,6 @@ contract Crowdsale is Haltable, SafeMathLib{
     minWei = _minWei;
     maxWei = _maxWei;
     maxPreAddresses = _maxPreAddresses;
-
-
-    // // Need to have tuples, length check
-    // require(!(_tranches.length % 2 == 1 || _tranches.length >= MAX_TRANCHES*2));
-    // trancheCount = _tranches.length / 2;
-    // uint highestAmount = 0;
-    // for(uint i=0; i<_tranches.length/2; i++) {
-    //   tranches[i].amount = _tranches[i*2];
-    //   tranches[i].price = _tranches[i*2+1];
-    //   // No invalid steps
-    //   require(!((highestAmount != 0) && (tranches[i].amount >= highestAmount)));
-    //   highestAmount = tranches[i].amount;
-    //}
-
-    // We need to start from zero, otherwise we blow up our deployment
-    //require(tranches[0].amount == 0);
-
-    // Last tranche price must be zero, terminating the crowdale
-    //require(tranches[trancheCount-1].price == 0);
   }
 
   /**
@@ -232,18 +193,6 @@ contract Crowdsale is Haltable, SafeMathLib{
     uint weiAmount = msg.value;
     
     DayToken dayToken = DayToken(token);
-
-    
-
-/*
-33-38: Min 88 ETH contribution required
-39-88: Min 33 ETH contribution required
-89-333: Min 8 ETH contribution required
-334-888: Min 3 ETH contribution required
-
-Tranches:
-{33,88,39,33,89,8,334,3,889,1,maxICOAddress,0}
-*/
 
     require(weiAmount >= minWei && weiAmount <= maxWei);
     uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, weiRaised, tokensSold, receiver, token.decimals());
@@ -569,25 +518,6 @@ Tranches:
   function isCrowdsale() public constant returns (bool) {
     return true;
   }
-
-  /// @dev Get the current tranche or bail out if we are not in the tranche periods.
-  /// @param contributorId ID of the incoming contributor
-  // /// @return {[type]} [description]
-  // function getCurrentTranche(uint contributorId) private constant returns (Tranche) {
-  //   uint i;
-  //   for(i=0; i < tranches.length; i++) {
-  //     if(contributorId < tranches[i].amount) {
-  //       return tranches[i-1];
-  //     }
-  //   }
-  // }
-
-  // /// @dev Get the current price.
-  // /// @param contributorId ID of the incoming contributor
-  // /// @return The current price or 0 if we are outside trache ranges
-  // function getCurrentPrice(uint contributorId) public constant returns (uint result) {
-  //   return getCurrentTranche(contributorId).price;
-  // }
 
   //
   // Modifiers

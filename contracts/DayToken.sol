@@ -417,7 +417,7 @@ uint8 public decimals;
         */
     function addContributor(address _adr, uint _initialContributionWei, uint _initialBalance)  returns(uint){
         uint id = ++latestContributerId;
-        require(idOf[_adr] == 0);
+        require(contributors[id].adr == 0);
         contributors[id].adr = _adr;
         contributors[id].lastUpdatedOn = 0; //IS THIS NECESSARY
         setInitialMintingPowerOf(id);
