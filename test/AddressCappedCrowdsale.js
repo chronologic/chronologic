@@ -439,11 +439,11 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         assert.equal(web3.eth.getBalance(multisigWalletInstance.address), web3.toWei('30', 'ether'));
 
         try {
-            await crowdsaleInstance.buy({ from: accounts[4], value: web3.toWei('5', 'ether') });
+            await crowdsaleInstance.buy({ from: accounts[4], value: web3.toWei('6', 'ether') });
         } catch (error) {
             return assertJump(error);
         }
-
+        assert.fail('should have thrown exception before');
 
     });
 
@@ -468,6 +468,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         } catch (error) {
             return assertJump(error);
         }
+        assert.fail('should have thrown exception before');
     });
 
 
@@ -493,6 +494,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         } catch (error) {
             return assertJump(error);
         }
+        assert.fail('should have thrown exception before');
     });
 
     it('Funding: Should throw if maximum number of ICO contributors is exceeded', async function() {
@@ -513,7 +515,25 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         } catch (error) {
             return assertJump(error);
         }
+        assert.fail('should have thrown exception before');
     });
+    it('Funding: Should throw if ICO period is over', async function() {
+        await tokenInstance.setMintAgent(crowdsaleInstance.address, true);
+        await tokenInstance.setMintAgent(finalizeAgentInstance.address, true);
+        await tokenInstance.setReleaseAgent(finalizeAgentInstance.address);
+        await tokenInstance.setTransferAgent(crowdsaleInstance.address, true);
+        await crowdsaleInstance.setFinalizeAgent(finalizeAgentInstance.address);
+        assert.equal(await crowdsaleInstance.isFinalizerSane(), true, "Finalizer not sane. Can't continue.");
+        assert.equal(await crowdsaleInstance.isPricingSane(), true, "Pricing not sane. Can't continue.");
 
+        await timer((_countdownInSeconds * 22));
+
+        try {
+            await crowdsaleInstance.buy({ from: accounts[4], value: web3.toWei('10', 'ether') });
+        } catch (error) {
+            return assertJump(error);
+        }
+        assert.fail('should have thrown exception before');
+    });
 
 });
