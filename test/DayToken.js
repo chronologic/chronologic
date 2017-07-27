@@ -89,9 +89,9 @@ contract('DayToken', function(accounts) {
 
     beforeEach(async() => {
         tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
-        for (i = 1; i <= 15; i++) {
-            id = await tokenInstance.addContributor(accounts[i], 20, 792000000000000000000);
-        }
+        // for (i = 1; i <= 15; i++) {
+        //     id = await tokenInstance.addContributor(accounts[i], 20, 792000000000000000000);
+        // }
     });
 
     it('Creation: should return the correct totalSupply after construction', async function() {
