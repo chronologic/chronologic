@@ -61,9 +61,14 @@ module.exports = function(deployer, network, accounts) {
     var _maxWei = etherInWei(333);
     var _maxPreAddresses = 33;
     var _maxIcoAddresses = 3216;
-
-
-    /**
+    // var _tranches = [33, 88000000000000000000,
+    //     39, 33000000000000000000,
+    //     89, 8000000000000000000,
+    //     334, 3000000000000000000,
+    //     889, 1000000000000000000,
+    //     3216, 0
+    //];
+    /** 
      * Flat Pricing Parameters
      * ====================================
      * Here you have to specify the rate, No. of day tokens per ether.
@@ -318,4 +323,5 @@ module.exports = function(deployer, network, accounts) {
     function tokenInSmallestUnit(tokens, _tokenDecimals) {
         return tokens * Math.pow(10, _tokenDecimals);
     }
+    console.log("Project Deployment Successfully Completed. Proceed to run tests.....");
 }
