@@ -2,6 +2,7 @@
 
 const assertJump = require('./helpers/assertJump');
 const timer = require('./helpers/timer');
+
 var Token = artifacts.require("./DayTokenTest.sol");
 contract('DayToken', function(accounts) {
     var _tokenName = "Etheriya";
