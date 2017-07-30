@@ -1,5 +1,6 @@
 The below information is only on the basis of visual review of DayToken.sol and inherited files and not actual tests:
 
+Review done on commit : 0a57c10ed3901196bfa59352db115c743b9963df
 
 #1 VERY HIGH IMPORTANCE and BIG BUG : missing modifier for addContributor function.
 Because of missing modifier any person who reads the code can add his/her account as contributer without paying anything which should only be allowed for crowdsale contract
