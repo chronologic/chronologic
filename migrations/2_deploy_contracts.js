@@ -81,6 +81,7 @@ module.exports = function(deployer, network, accounts) {
     //var _testAddressTokens;
     var _testAddressTokens = 88;
     var _teamBonus = 5;
+    var _totalBountyInDay = 8888;
     // list of team mebers address respective to the above percentage.
     // alternatively you can just get all the bonus in one account & then distribute 
     // using some MultiSigWallet manually
@@ -235,11 +236,11 @@ module.exports = function(deployer, network, accounts) {
         if (debug) console.log("===============================================");
         if (debug) console.log("\n\n");
         if (debug) console.log("*************  Deploying BonusFinalizeAgent  ************** \n");
-        return FinalizeAgent.new(tokenInstance.address, crowdsaleInstance.address, _testAddresses, _teamAddresses, _testAddressTokens, _teamBonus);
+        return FinalizeAgent.new(tokenInstance.address, crowdsaleInstance.address, _testAddresses, _teamAddresses, _testAddressTokens, _teamBonus, _totalBountyInDay);
     }).then(function(Instance) {
         finalizeAgentInstance = Instance;
         if (debug) console.log("BonusFinalizeAgent Parameters are:");
-        if (debug) console.log(tokenInstance.address, crowdsaleInstance.address, _testAddresses, _teamAddresses, _testAddressTokens, _teamBonus);
+        if (debug) console.log(tokenInstance.address, crowdsaleInstance.address, _testAddresses, _teamAddresses, _testAddressTokens, _teamBonus, _totalBountyInDay);
         if (debug) console.log("BonusFinalizeAgent address is: ", finalizeAgentInstance.address);
         if (showURL) console.log("FinalizeAgent URL is: " + getEtherScanUrl(network, finalizeAgentInstance.address, "address"));
         if (showURL) console.log("Transaction URL is: " + getEtherScanUrl(network, finalizeAgentInstance.transactionHash, "tx"));

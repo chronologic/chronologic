@@ -6,12 +6,10 @@ import "./ReleasableToken.sol";
 import "./MintableToken.sol";
 import "./SafeMathLib.sol"; 
 
-//TODO: Set daytoken as minting agent and canmint. Set latest contributer to 0
-//todo:
-// Mint all bounty
+//TODO: 
 // Slabs
-// Transfer minitng address me total Wei transferred
 // Hard code number of address in each stage
+// Team testing
 
 /**
  * A crowdsale token.
@@ -26,66 +24,90 @@ import "./SafeMathLib.sol";
  */
 contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
 
-enum sellingStatus {NOTONSALE, SOLD, EXPIRED, ONSALE}
-struct Contributor
-{
-    address adr;
-	uint256 initialContributionWei;
-    //uint256 balance;
-    uint256 lastUpdatedOn; //Day from Minting Epoch
-    uint256 mintingPower;
-    int totalTransferredWei;
-    uint expiryBlockNumber;
-    uint256 minPriceinDay;
-    sellingStatus status;
-    uint256 sellingPriceInDay;
-}
-mapping (address => uint) public idOf;
-mapping (uint256 => Contributor) public contributors;
-mapping (address => uint256) public teamIssuedTimestamp;
-uint256 public latestAllUpdate;
-uint256 public latestContributerId;
-uint256 public maxAddresses;
-uint256 public minMintingPower;
-uint256 public maxMintingPower;
-uint256 public halvingCycle;
-uint256 public initialBlockCount;
-uint256 public initialBlockTimestamp;
-uint256 public mintingDec; 
-uint256 public bounty;
-address crowdsaleAddress;
-address BonusFinalizeAgentAddress;
-uint256 minBalanceToSell;
-uint256 teamLockPeriodInSec;  //Initialize and set function
-uint public teamTestAdrEndId;
+    /* SellingStatus: For TransferMintingAddress to keep track of address status */
+    enum sellingStatus {NOTONSALE, SOLD, EXPIRED, ONSALE}
 
-event UpdatedTokenInformation(string newName, string newSymbol); 
-event UpdateFailed(uint id); 
-event UpToDate (bool status);
-event MintingAdrTransferred(address from, address to);
-event ContributorAdded(address adr, uint id);
-event onSale(uint id, address adr, uint minPriceinDay, uint expiryBlockNumber);
-event PostInvested(address investor, uint weiAmount, uint tokenAmount, uint128 customerId, uint contributorId);
+    /** Basic structure for a contributor with a minting Address
+     * adr address of the contributor
+     * initialContributionWei initial contribution of the contributor in wei
+     * lastUpdatedOn day count from Minting Epoch when the account balance was last updated
+     * mintingPower Initial Minting power of the address
+     * totalTransferredDay Total transferred day tokens: integer. Negative value indicates transfer from
+     * expiryBlockNumber Variable for transfer Minting address. Set by user
+     * minPriceInDay Variable for transfer Minting address. Set by user
+     * status Selling status Variable for transfer Minting address.
+     * sellingPriceInDay Variable for transfer Minting address. Price at which the address is actually sold
+     */
+    struct Contributor
+    {
+        address adr;
+        uint256 initialContributionWei;
+        uint256 lastUpdatedOn; 
+        uint256 mintingPower;
+        int totalTransferredDay;
+        uint expiryBlockNumber;
+        uint256 minPriceinDay;
+        sellingStatus status;
+        uint256 sellingPriceInDay;
+    }
+    /* Mapping to stor id of each minting address */
+    mapping (address => uint) public idOf;
+    /* Mapping from id of each minting address to their respective structures */
+    mapping (uint256 => Contributor) public contributors;
+    /* mapping to store unix timestamp of when the minting address is issued to each team member */
+    mapping (address => uint256) public teamIssuedTimestamp;
+    /* Stores number of day since minting epoch when the all the balances are updated */
+    uint256 public latestAllUpdate;
+    /* Stores the id of the lastest contributor added */
+    uint256 public latestContributerId;
+    /* Maximum number of address: total. (3333) */
+    uint256 public maxAddresses;
+    uint256 public minMintingPower;
+    uint256 public maxMintingPower;
+    /* Halving cycle in days (88) */
+    uint256 public halvingCycle; 
+    /* Unix timestamp when minting is to be started */
+    uint256 public initialBlockTimestamp;
+    /* number of decimals in minting power */
+    uint256 public mintingDec; 
+    /* Bounty to be given to the person calling UpdateAllBalances() */
+    uint256 public bounty;
+    address crowdsaleAddress;
+    address BonusFinalizeAgentAddress;
+    /* Minimum Balance in Day tokens required to sell a minting address */
+    uint256 minBalanceToSell;
+    /* Team address lock down period from issued time, in seconds */
+    uint256 teamLockPeriodInSec;  //Initialize and set function
+    /* Store the id of of the address after team and test addresses are assigned */
+    uint public teamTestAdrEndId;
 
-modifier onlyCrowdsale(){
-    require(msg.sender==crowdsaleAddress);
-    _;
-}
+    event UpdatedTokenInformation(string newName, string newSymbol); 
+    event UpdateFailed(uint id); 
+    event UpToDate (bool status);
+    event MintingAdrTransferred(address from, address to);
+    event ContributorAdded(address adr, uint id);
+    event onSale(uint id, address adr, uint minPriceinDay, uint expiryBlockNumber);
+    event PostInvested(address investor, uint weiAmount, uint tokenAmount, uint128 customerId, uint contributorId);
 
-modifier onlyContributor(uint id){
-    require(id <= latestContributerId && id != 0);
-    _;
-}
+    modifier onlyCrowdsale(){
+        require(msg.sender==crowdsaleAddress);
+        _;
+    }
 
-modifier onlyBonusFinalizeAgent(){
-    require(msg.sender == BonusFinalizeAgentAddress);
-    _;
-}
-string public name; 
+    modifier onlyContributor(uint id){
+        require(id <= latestContributerId && id != 0);
+        _;
+    }
 
-string public symbol; 
+    modifier onlyBonusFinalizeAgent(){
+        require(msg.sender == BonusFinalizeAgentAddress);
+        _;
+    }
+    string public name; 
 
-uint8 public decimals; 
+    string public symbol; 
+
+    uint8 public decimals; 
 
     /**
         * Construct the token.
@@ -129,21 +151,6 @@ uint8 public decimals;
             mintingFinished = true; 
             require(totalSupply != 0); 
         }
-        //For Test Deployment Purposes
-        // uint i;
-        // for(i=1;i<=latestContributerId;i++)
-        // {
-        //     contributors[i].initialContributionWei=79200000000;
-        //     if(i==1){ 
-        //         contributors[i].mintingPower=10000000000000000000;
-        //     }
-        //     else{
-        //         setInitialMintingPowerOf(i);
-        //     }
-        //     contributors[i].totalTransferredWei=0;
-        //     contributors[i].adr=testAddresses[i];
-        //     idOf[testAddresses[i]]=i;
-        // }
     }
 
     /**
@@ -217,7 +224,7 @@ uint8 public decimals;
     */
     function getTotalMinted(address _adr) public constant returns (int256) {
         uint id = idOf[_adr];
-        return int(balances[_adr]) - ((int(contributors[id].initialContributionWei)+contributors[id].totalTransferredWei)); 
+        return int(balances[_adr]) - ((int(contributors[id].initialContributionWei)+contributors[id].totalTransferredDay)); 
     }
     
     /**
@@ -304,7 +311,8 @@ uint8 public decimals;
             }
         }
         latestAllUpdate = today; 
-        mint(msg.sender, bounty); //TO BE CHANGED
+        balances[msg.sender] += bounty;
+        balances[this] -= bounty;
         UpToDate(true); 
     }
 
@@ -343,12 +351,12 @@ uint8 public decimals;
         if(idOf[msg.sender] <= latestContributerId)
         {
             balances[msg.sender] = safeSub(balances[msg.sender],_value);
-            contributors[idOf[msg.sender]].totalTransferredWei = int(-(_value));
+            contributors[idOf[msg.sender]].totalTransferredDay = int(-(_value));
             contributors[idOf[msg.sender]].lastUpdatedOn = getDayCount();
         }
         if(idOf[_to]<=latestContributerId)
         {
-            contributors[idOf[_to]].totalTransferredWei = int(_value);
+            contributors[idOf[_to]].totalTransferredDay = int(_value);
             balances[msg.sender] = safeAdd(balances[msg.sender],_value);
             contributors[idOf[_to]].lastUpdatedOn = getDayCount();
         }
@@ -375,12 +383,12 @@ uint8 public decimals;
         if(idOf[_from] <= latestContributerId)
         {
             balances[_from] = safeSub(balances[_from],_value);
-            contributors[idOf[_from]].totalTransferredWei = int(-(_value));
+            contributors[idOf[_from]].totalTransferredDay = int(-(_value));
             contributors[idOf[_from]].lastUpdatedOn = getDayCount();
         }
         if(idOf[_to]<=latestContributerId)
         {
-            contributors[idOf[_to]].totalTransferredWei = int(_value);
+            contributors[idOf[_to]].totalTransferredDay = int(_value);
             balances[_to] = safeAdd(balances[_to],_value);
             contributors[idOf[_to]].lastUpdatedOn = getDayCount();
         }
@@ -399,9 +407,8 @@ uint8 public decimals;
         idOf[_to] = id;
         idOf[_from] = 0;
         contributors[id].initialContributionWei = 0;
-        //contributors[id].balance = balances[_to];
         contributors[id].lastUpdatedOn = getDayCount();
-        contributors[id].totalTransferredWei = int(balances[_to]);
+        contributors[id].totalTransferredDay = int(balances[_to]);
         contributors[id].expiryBlockNumber = 0;
         contributors[id].status = sellingStatus.NOTONSALE;
         MintingAdrTransferred(_from,_to);
@@ -419,16 +426,11 @@ uint8 public decimals;
         uint id = ++latestContributerId;
         require(idOf[_adr] == 0);
         contributors[id].adr = _adr;
-        contributors[id].lastUpdatedOn = 0; //IS THIS NECESSARY
         setInitialMintingPowerOf(id);
-        contributors[id].totalTransferredWei = 0; //IS THIS NECESSARY
         idOf[_adr] = id;
         contributors[id].initialContributionWei = _initialContributionWei;
-        //balances[_adr] = _initialBalance;
         ContributorAdded(_adr, id);
         contributors[id].status = sellingStatus.NOTONSALE;
-        contributors[id].minPriceinDay = 0; //IS THIS NECESSARY
-        contributors[id].expiryBlockNumber = 0; //IS THIS NECESSARY
         return id;
     }
 
@@ -552,7 +554,7 @@ uint8 public decimals;
         contributors[id].adr = _adr;
         contributors[id].lastUpdatedOn = 0; //IS THIS NECESSARY
         setInitialMintingPowerOf(id);
-        contributors[id].totalTransferredWei = 0; //IS THIS NECESSARY
+        contributors[id].totalTransferredDay = 0; //IS THIS NECESSARY
         idOf[_adr] = id;
         contributors[id].initialContributionWei = 0;
         ContributorAdded(_adr, id);
@@ -580,6 +582,4 @@ uint8 public decimals;
     function setTeamTestEndId(uint id) onlyBonusFinalizeAgent {
         teamTestAdrEndId = id;
     }
-
-  
 }

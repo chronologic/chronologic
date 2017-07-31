@@ -40,14 +40,14 @@ contract('BonusFinalizeAgent', function(accounts) {
     var _initalBlockTimestamp = getUnixTimestamp('2017-08-7 09:00:00 GMT');
     var _mintingDec = 19;
     var _bounty = 100000000;
-
+    var _totalBountyInDay = 8888;
     var _minBalanceToSell = 8888;
     var DayToken = null;
     var bonusAgent = null;
 
     beforeEach(async() => {
         DayToken = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
-        bonusAgent = await bonusContract.new(DayToken.address, accounts[5], _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus);
+        bonusAgent = await bonusContract.new(DayToken.address, accounts[5], _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus, _totalBountyInDay);
     });
 
     it('Creation: BonusFinalizeAgent must be able to initialized properly.', async function() {

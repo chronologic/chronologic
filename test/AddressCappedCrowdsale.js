@@ -78,6 +78,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
     var _teamAddresses = [accounts[4], accounts[5], accounts[6]];
     var _testAddressTokens = 88;
     var _testAddresses = [accounts[7], accounts[8], accounts[9]];
+    var _totalBountyInDay = 8888;
 
     //Flat pricing Parameters
     var _oneTokenInWei = tokenPriceInWeiFromTokensPerEther(24);
@@ -93,7 +94,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
         pricingInstance = await Pricing.new(_oneTokenInWei, { from: accounts[0] });
         multisigWalletInstance = await MultisigWallet.new(_listOfOwners, _minRequired);
-        finalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, multisigWalletInstance.address, _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus, { from: accounts[0] });
+        finalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, multisigWalletInstance.address, _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus, _totalBountyInDay, { from: accounts[0] });
         crowdsaleInstance = await Crowdsale.new(tokenInstance.address, pricingInstance.address, multisigWalletInstance.address, _startTime, _endTime, _minimumFundingGoal, _cap, _preMinWei, _preMaxWei, _minWei, _maxWei, _maxPreAddresses, _maxIcoAddresses, { from: accounts[0] });
     });
 
@@ -293,7 +294,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
 
     it('Update: Owner must be able to update FinalizeAgent', async function() {
         let oldFinalizeAgent = await crowdsaleInstance.finalizeAgent.call();
-        let newFinalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, multisigWalletInstance.address, _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus);
+        let newFinalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, multisigWalletInstance.address, _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus, _totalBountyInDay);
         await crowdsaleInstance.setFinalizeAgent(newFinalizeAgentInstance.address);
         let newFinalizeAgent = await crowdsaleInstance.finalizeAgent.call();
         assert.equal(newFinalizeAgent, newFinalizeAgentInstance.address);
@@ -310,7 +311,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
 
     it('Update: Non-owner should not be able to set finalize agent', async function() {
         try {
-            let newFinalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, multisigWalletInstance.address, _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus);
+            let newFinalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, multisigWalletInstance.address, _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus, _totalBountyInDay);
             await crowdsaleInstance.setFinalizeAgent(newFinalizeAgentInstance.address, { from: accounts[2] });
         } catch (error) {
             return assertJump(error);

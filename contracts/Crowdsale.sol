@@ -8,7 +8,6 @@ import "./DayToken.sol";
 
 
 /**
-
  * Abstract base contract for token sales.
  *
  * Handle
@@ -191,16 +190,12 @@ contract Crowdsale is Haltable, SafeMathLib{
       throw;
     }
     uint weiAmount = msg.value;
-    
     DayToken dayToken = DayToken(token);
-
     require(weiAmount >= minWei && weiAmount <= maxWei);
     uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, weiRaised, tokensSold, receiver, token.decimals());
-    
-
     require(tokenAmount != 0);
+    // Add a contributor structure
     uint id = dayToken.addContributor(receiver, weiAmount, tokenAmount);
-
     if(investedAmountOf[receiver] == 0) {
         // A new investor
         investorCount++;
@@ -214,11 +209,9 @@ contract Crowdsale is Haltable, SafeMathLib{
     weiRaised = safeAdd(weiRaised,weiAmount);
     tokensSold = safeAdd(tokensSold,tokenAmount);
     weiRaisedIco = safeAdd(weiRaisedIco, weiAmount);
+
     // Check that we did not bust the cap
     require(!isBreakingCap(weiAmount, tokenAmount, weiRaisedIco, tokensSold));
-    // if(isBreakingCap(weiAmount, tokenAmount, weiRaised, tokensSold)) {
-    //   throw;
-    // }
 
     assignTokens(receiver, tokenAmount);
 
@@ -268,25 +261,13 @@ contract Crowdsale is Haltable, SafeMathLib{
   }
 
   /**
-   * Allow anonymous contributions to this crowdsale.
-   */
-  // function investWithSignedAddress(address addr, uint128 customerId, uint8 v, bytes32 r, bytes32 s) public payable {
-  //    bytes32 hash = sha256(addr);
-  //    if (ecrecover(hash, v, r, s) != signerAddress) throw;
-  //    require(customerId != 0);
-  //    //if(customerId == 0) throw;  // UUIDv4 sanity check
-  //    investInternal(addr, customerId);
-  // }
-
-  /**
    * Track who is the customer making the payment so we can send thank you email.
    */
   function investWithCustomerId(address addr, uint128 customerId) public payable {
     require(!requiredSignedAddress);
-    //if(requiredSignedAddress) throw; // Crowdsale allows only server-side signed participants
     
     require(customerId != 0);
-    //if(customerId == 0) throw;  // UUIDv4 sanity check
+    
     investInternal(addr, customerId);
   }
 
@@ -295,21 +276,11 @@ contract Crowdsale is Haltable, SafeMathLib{
    */
   function invest(address addr) public payable {
     require(!requireCustomerId);
-    //if(requireCustomerId) throw; // Crowdsale needs to track partipants for thank you email
     
     require(!requiredSignedAddress);
-    //if(requiredSignedAddress) throw; // Crowdsale allows only server-side signed participants
+    
     investInternal(addr, 0);
   }
-
-  /**
-   * Invest to tokens, recognize the payer and clear his address.
-   *
-   */
-  
-  // function buyWithSignedAddress(uint128 customerId, uint8 v, bytes32 r, bytes32 s) public payable {
-  //   investWithSignedAddress(msg.sender, customerId, v, r, s);
-  // }
 
   /**
    * Invest to tokens, recognize the payer.
@@ -337,9 +308,6 @@ contract Crowdsale is Haltable, SafeMathLib{
 
     // Already finalized
     require(!finalized);
-    // if(finalized) {
-    //   throw;
-    // }
 
     // Finalizing is optional. We only call it if we are given a finalizing agent.
     if(address(finalizeAgent) != 0) {
@@ -359,9 +327,6 @@ contract Crowdsale is Haltable, SafeMathLib{
 
     // Don't allow setting bad agent
     require(finalizeAgent.isFinalizeAgent());
-    // if(!finalizeAgent.isFinalizeAgent()) {
-    //   throw;
-    // }
   }
 
   /**
@@ -372,28 +337,6 @@ contract Crowdsale is Haltable, SafeMathLib{
     requireCustomerId = value;
     InvestmentPolicyChanged(requireCustomerId, requiredSignedAddress, signerAddress);
   }
-
-  /**
-   * Set policy if all investors must be cleared on the server side first.
-   *
-   * This is e.g. for the accredited investor clearing.
-   *
-   */
-  // function setRequireSignedAddress(bool value, address _signerAddress) onlyOwner {
-  //   requiredSignedAddress = value;
-  //   signerAddress = _signerAddress;
-  //   InvestmentPolicyChanged(requireCustomerId, requiredSignedAddress, signerAddress);
-  // }
-
-  /**
-   * Allow addresses to do early participation.
-   *
-   * TODO: Fix spelling error in the name
-  //  */
-  // function setEarlyParicipantWhitelist(address addr, bool status) onlyOwner {
-  //   earlyParticipantWhitelist[addr] = status;
-  //   Whitelisted(addr, status);
-  // }
 
   /**
    * Allow crowdsale owner to close early or extend the crowdsale.
@@ -425,9 +368,6 @@ contract Crowdsale is Haltable, SafeMathLib{
 
     // Don't allow setting bad agent
     require(pricingStrategy.isPricingStrategy());
-    // if(!pricingStrategy.isPricingStrategy()) {
-    //   throw;
-    // }
   }
 
   /**
@@ -439,7 +379,7 @@ contract Crowdsale is Haltable, SafeMathLib{
    */
   function setMultisig(address addr) public onlyOwner {
 
-    // Change
+    // Change Multisig wallet address
     if(investorCount > MAX_INVESTMENTS_BEFORE_MULTISIG_CHANGE) {
       throw;
     }
@@ -454,7 +394,6 @@ contract Crowdsale is Haltable, SafeMathLib{
    */
   function loadRefund() public payable inState(State.Failure) {
     require(msg.value != 0);
-    //if(msg.value == 0) throw;
     loadedRefund = safeAdd(loadedRefund,msg.value);
   }
 
@@ -464,7 +403,6 @@ contract Crowdsale is Haltable, SafeMathLib{
   function refund() public inState(State.Refunding) {
     uint256 weiValue = investedAmountOf[msg.sender];
     require(weiValue != 0);
-    //if (weiValue == 0) throw;
     investedAmountOf[msg.sender] = 0;
     weiRefunded = safeAdd(weiRefunded,weiValue);
     Refund(msg.sender, weiValue);
@@ -526,7 +464,6 @@ contract Crowdsale is Haltable, SafeMathLib{
   /** Modified allowing execution only if the crowdsale is currently running.  */
   modifier inState(State state) {
     require(getState() == state);
-    //if(getState() != state) throw;
     _;
   }
 
@@ -551,6 +488,7 @@ contract Crowdsale is Haltable, SafeMathLib{
    * @return true if taking this investment would break our cap rules
    */
   function isBreakingCap(uint weiAmount, uint tokenAmount, uint weiRaisedTotal, uint tokensSoldTotal) constant returns (bool limitBroken);
+
   /**
    * Check if the current crowdsale is full and we can no longer sell any tokens.
    */
