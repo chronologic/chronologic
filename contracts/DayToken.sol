@@ -8,7 +8,6 @@ import "./SafeMathLib.sol";
 
 //TODO: 
 // Slabs
-// Hard code number of address in each stage
 // Team testing
 
 /**
@@ -466,7 +465,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         contributors[id].minPriceinDay = _minPriceInDay;
         contributors[id].expiryBlockNumber = _expiryBlockNumber;
         contributors[id].status = sellingStatus.ONSALE;
-        transfer(this, minBalanceToSell); //CONFIRM THIS CAREFully
+        balances[this] += minBalanceToSell;
+        balances[msg.sender] -= minBalanceToSell;
         contributors[id].lastUpdatedOn = getDayCount();
         return true;
     }
@@ -499,7 +499,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         require(contributors[_offerId].status == sellingStatus.ONSALE);
         require(_offerInDay >= contributors[_offerId].minPriceinDay);
         //first get the offered DayToken in the token contract & then transfer the total sum (minBalanceToSend+_offerInDay) to the seller
-        transfer(this, _offerInDay);
+        balances[this] += _offerInDay;
+        balances[msg.sender] -= minBalanceToSell + _offerInDay;
         if(transferMintingAddress(contributors[_offerId].adr, msg.sender)) 
         {
             //mark the offer as sold & let seller pull the proceed to his own account.
@@ -550,17 +551,13 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     /** Function to add a team address as a contributor and store it's time issued to calculate vesting period
         * Called by BonusFinalizeAgent
         */
-    function addAddressWithId(address _adr, uint id) onlyBonusFinalizeAgent returns (uint){                //VISIBILITY?
+    function addAddressWithId(address _adr, uint id) onlyBonusFinalizeAgent returns (uint){               
         contributors[id].adr = _adr;
-        contributors[id].lastUpdatedOn = 0; //IS THIS NECESSARY
         setInitialMintingPowerOf(id);
-        contributors[id].totalTransferredDay = 0; //IS THIS NECESSARY
         idOf[_adr] = id;
         contributors[id].initialContributionWei = 0;
         ContributorAdded(_adr, id);
-        contributors[id].status = sellingStatus.NOTONSALE;
-        contributors[id].minPriceinDay = 0; //IS THIS NECESSARY
-        contributors[id].expiryBlockNumber = 0; //IS THIS NECESSARY  
+        contributors[id].status = sellingStatus.NOTONSALE; 
         teamIssuedTimestamp[_adr] = block.timestamp;
         return id;
     }
@@ -570,7 +567,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * @param customerId Server side id of the customer
         */
     function postAllocate(address receiver, uint128 customerId) public onlyOwner {
-        if(latestContributerId == 3216)
+        if(latestContributerId == 3227)
         {
             latestContributerId = teamTestAdrEndId - 1;
         }

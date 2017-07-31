@@ -79,19 +79,19 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
     for (uint i=0; i < totalMembers; i++){
       allocatedBonus = safeMul(tokensSold, teamBonus) / 10000;
       token.mint(teamAddresses[i], allocatedBonus);
-      uint id = token.addAddressWithId(teamAddresses[i], 3217 + i);
+      uint id = token.addAddressWithId(teamAddresses[i], 3228 + i);
       teamMemberId(teamAddresses[i], id);
     }
 
     //Add Test Addresses
     for(uint j=0; j < testAddresses.length ; j++){
       token.mint(testAddresses[j],testAddressTokens);
-      id = token.addAddressWithId(testAddresses[j],  3217 + i + j);
+      id = token.addAddressWithId(testAddresses[j],  3228 + i + j);
       testAddressAdded(testAddresses[j], id, testAddressTokens);
     }
     
     // function to set the ending id of team + test addresses
-    token.setTeamTestEndId(3217 + i +j);
+    token.setTeamTestEndId(3228 + i +j);
 
 
     // Make token transferable
