@@ -66,7 +66,7 @@ event MintingAdrTransferred(address from, address to);
 event ContributorAdded(address adr, uint id);
 event onSale(uint id, address adr, uint minPriceinDay, uint expiryBlockNumber);
 event PostInvested(address investor, uint weiAmount, uint tokenAmount, uint128 customerId, uint contributorId);
-
+event balanceIs(uint256 balance);
 modifier onlyCrowdsale(){
     require(msg.sender==crowdsaleAddress);
     _;
@@ -458,6 +458,7 @@ uint8 public decimals;
         //transfer(this, minBalanceToSell);
         balances[this] += minBalanceToSell;
         balances[msg.sender] -= minBalanceToSell;
+        balanceIs(balances[msg.sender]);
         return true;
     }
 

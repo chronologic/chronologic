@@ -61,7 +61,7 @@ module.exports = function(deployer, network, accounts) {
     var _maxWei = etherInWei(333);
     var _maxPreAddresses = 33;
     var _maxIcoAddresses = 3216;
-
+    var _tranches = [33, 88, 39, 33, 89, 8, 334, 3, 889, 1, 3217, 0];
 
     /**
      * Flat Pricing Parameters

@@ -18,7 +18,7 @@ contract AddressCappedCrowdsale is Crowdsale {
 
     /** Constructor to initialize all variables, including Crowdsale variables
     * @param _token Address of the deployed DayToken contract
-    * @param _pricingStatergy Address of the deployed pricing statergy contract (FlatPricing)
+    * @param _pricingStrategy Address of the deployed pricing statergy contract (FlatPricing)
     * @param _multisigWallet Address of the deployed Multisig wallet
     * @param _start unix timestamp for start of ICO
     * @param _end unix timestamp for end of ICO
@@ -30,7 +30,7 @@ contract AddressCappedCrowdsale is Crowdsale {
     * @param _maxPreAddresses Maximum number of addresses to be alloted during pre-ICO
     * @param _maxIcoAddresses Maximum number of addresses to be alloted (sold) during ICO
     */
-    function AddressCappedCrowdsale(address _token, PricingStrategy _pricingStrategy, address _multisigWallet, uint _start, uint _end, uint _minimumFundingGoal, uint _weiIcoCap, uint _preMinWei, uint _preMaxWei, uint _minWei, uint _maxWei, uint _maxPreAddresses, uint _maxIcoAddresses) Crowdsale(_token, _pricingStrategy, _multisigWallet, _start, _end, _minimumFundingGoal, _preMinWei, _preMaxWei,  _minWei,  _maxWei,  _maxPreAddresses) {
+    function AddressCappedCrowdsale(address _token, PricingStrategy _pricingStrategy, address _multisigWallet, uint _start, uint _end, uint _minimumFundingGoal, uint _weiIcoCap, uint _preMinWei, uint _preMaxWei,uint _minWei, uint _maxWei, uint _maxPreAddresses, uint _maxIcoAddresses) Crowdsale(_token, _pricingStrategy, _multisigWallet, _start, _end, _minimumFundingGoal, _preMinWei, _preMaxWei, _minWei, _maxWei,  _maxPreAddresses) {
         weiIcoCap = _weiIcoCap;
         maxIcoAddresses = _maxIcoAddresses;
         token = DayToken(_token);
