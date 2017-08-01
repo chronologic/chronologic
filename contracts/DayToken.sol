@@ -281,10 +281,10 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * @param _id address whose balance is to be returned.
         */
     function balanceById(uint _id) public constant returns (uint256 balance) {
+        address adr=contributors[_id].adr; 
         if(block.timestamp >= initialBlockTimestamp)
         {
             if (_id <= latestContributerId) {
-                address adr=contributors[_id].adr; 
                 require(updateBalanceOf(_id)); 
             }
         }
@@ -327,7 +327,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     /**
         * Returns totalSupply of DAY tokens.
         */
-    function getTotalSupply() public constant returns (uint256){
+    function getTotalSupply() public constant returns (uint){
         return totalSupply;
     }
 
@@ -342,21 +342,20 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         {
             require(block.timestamp - teamIssuedTimestamp[msg.sender] >= 15780000);
         }
-        require (!(balanceOf(msg.sender) < _value || _value == 0)); 
-        require (!(balanceOf(_to) + _value < balanceOf(_to))); 
+        require (!(_value == 0)); 
         balances[msg.sender] = safeSub(balances[msg.sender], _value); 
         balances[_to] = safeAdd(balances[msg.sender], _value); 
         Transfer(msg.sender, _to, _value); 
         if(idOf[msg.sender] <= latestContributerId)
         {
-            balances[msg.sender] = safeSub(balances[msg.sender],_value);
+            //balances[msg.sender] = safeSub(balances[msg.sender],_value);
             contributors[idOf[msg.sender]].totalTransferredDay = int(-(_value));
             contributors[idOf[msg.sender]].lastUpdatedOn = getDayCount();
         }
         if(idOf[_to]<=latestContributerId)
         {
             contributors[idOf[_to]].totalTransferredDay = int(_value);
-            balances[msg.sender] = safeAdd(balances[msg.sender],_value);
+            //balances[msg.sender] = safeAdd(balances[msg.sender],_value);
             contributors[idOf[_to]].lastUpdatedOn = getDayCount();
         }
         return true;
@@ -370,10 +369,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
             require(block.timestamp - teamIssuedTimestamp[_from] >= 15780000);
         }
         uint _allowance = allowed[_from][msg.sender];
-        require (!(balanceOf(_from) >= _value   // From a/c has balance
-                    && _allowance >= _value    // Transfer approved
+        require (!( _allowance >= _value    // Transfer approved
                     && _value > 0              // Non-zero transfer
-                    && balanceOf(_to) + _value > balanceOf(_to)  // Overflow check
                 )); 
         balances[_to] = safeAdd(balances[_to],_value);
         balances[_from] = safeSub(balances[_from],_value);
@@ -381,16 +378,17 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         Transfer(_from, _to, _value);
         if(idOf[_from] <= latestContributerId)
         {
-            balances[_from] = safeSub(balances[_from],_value);
+            //balances[_from] = safeSub(balances[_from],_value);
             contributors[idOf[_from]].totalTransferredDay = int(-(_value));
             contributors[idOf[_from]].lastUpdatedOn = getDayCount();
         }
         if(idOf[_to]<=latestContributerId)
         {
             contributors[idOf[_to]].totalTransferredDay = int(_value);
-            balances[_to] = safeAdd(balances[_to],_value);
+            //balances[_to] = safeAdd(balances[_to],_value);
             contributors[idOf[_to]].lastUpdatedOn = getDayCount();
         }
+        return true;
     }
 
     /**
@@ -419,7 +417,6 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * Can only be added by Crowdsale.
         * @param _adr Address of the contributor to be added  
         * @param _initialContributionWei Initial Contribution of the contributor to be added
-        * @param _initialBalance  Initial balance in wei of the contributor to be added
         */
     function addContributor(address _adr, uint _initialContributionWei, uint _initialBalance)  returns(uint){
         uint id = ++latestContributerId;
@@ -536,7 +533,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         if(block.number > contributors[id].expiryBlockNumber && contributors[id].status == sellingStatus.ONSALE)
         {
             contributors[id].status = sellingStatus.EXPIRED;
-        }
+        }hnk
         require(contributors[id].status == sellingStatus.EXPIRED);
         balances[this] -= minBalanceToSell;
         balances[msg.sender] += minBalanceToSell;

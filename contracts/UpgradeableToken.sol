@@ -60,7 +60,7 @@ contract UpgradeableToken is StandardToken {
     // }
 
     // Validate input value.
-    if (value == 0) throw;
+    require(value!=0);
 
     balances[msg.sender] = safeSub(balances[msg.sender],value);
 
