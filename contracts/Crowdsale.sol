@@ -126,7 +126,7 @@ contract Crowdsale is Haltable, SafeMathLib{
   // Crowdsale end time has been changed
   event EndsAtChanged(uint endsAt);
 
-  function Crowdsale(address _token, PricingStrategy _pricingStrategy, address _multisigWallet, uint _start, uint _end, uint _minimumFundingGoal, uint _preMinWei, uint _preMaxWei, uint _minWei, uint _maxWei, uint _maxPreAddresses) {
+  function Crowdsale(address _token, PricingStrategy _pricingStrategy, address _multisigWallet, uint _start, uint _end, uint _minimumFundingGoal, uint _preMinWei, uint _preMaxWei, uint _maxWei, uint _maxPreAddresses) {
 
     owner = msg.sender;
 
@@ -157,7 +157,6 @@ contract Crowdsale is Haltable, SafeMathLib{
 
     preMinWei = _preMinWei;
     preMaxWei = _preMaxWei;
-    minWei = _minWei;
     maxWei = _maxWei;
     maxPreAddresses = _maxPreAddresses;
   }
@@ -189,8 +188,12 @@ contract Crowdsale is Haltable, SafeMathLib{
       // Unwanted state
       throw;
     }
+    
     uint weiAmount = msg.value;
     DayToken dayToken = DayToken(token);
+    //require(dayToken.latestContributerId() >= 33);
+    //minWei = calculateMinPrice();
+    minWei = 1000000000000000000;
     require(weiAmount >= minWei && weiAmount <= maxWei);
     uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, weiRaised, tokensSold, receiver, token.decimals());
     require(tokenAmount != 0);
@@ -221,7 +224,26 @@ contract Crowdsale is Haltable, SafeMathLib{
     // Tell us invest was success
     Invested(receiver, weiAmount, tokenAmount, customerId, id);
   }
-
+  // function calculateMinPrice() returns (uint256){
+  //   DayToken dayToken = DayToken(token);
+  //   uint256 minPrice;
+  //   uint256 id = dayToken.latestContributerId();
+  //   if(id >= 33 && id <= 38){
+  //   minPrice = 88;
+  //   }
+  //   else if(id >= 39 && id<=88){
+  //   minPrice = 33;
+  //   }
+  //   else if(id >= 89 && id <= 333){
+  //   minPrice = 8;
+  //   }
+  //   else if(id >= 334 && id <= 888){
+  //   minPrice = 3;
+  //   }
+  //   else {
+  //   minPrice = 1;
+  //   }
+  // }
   /**
    * Preallocate tokens for the early investors.
    *

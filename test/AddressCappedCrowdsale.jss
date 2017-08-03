@@ -95,7 +95,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         pricingInstance = await Pricing.new(_oneTokenInWei, { from: accounts[0] });
         multisigWalletInstance = await MultisigWallet.new(_listOfOwners, _minRequired);
         finalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, multisigWalletInstance.address, _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus, _totalBountyInDay, { from: accounts[0] });
-        crowdsaleInstance = await Crowdsale.new(tokenInstance.address, pricingInstance.address, multisigWalletInstance.address, _startTime, _endTime, _minimumFundingGoal, _cap, _preMinWei, _preMaxWei, _minWei, _maxWei, _maxPreAddresses, _maxIcoAddresses, { from: accounts[0] });
+        crowdsaleInstance = await Crowdsale.new(tokenInstance.address, pricingInstance.address, multisigWalletInstance.address, _startTime, _endTime, _minimumFundingGoal, _cap, _preMinWei, _preMaxWei, _maxWei, _maxPreAddresses, _maxIcoAddresses, { from: accounts[0] });
     });
 
     it('Setup: Crowdsale address should be set as mint agent in Token properly', async function() {
@@ -536,5 +536,21 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         }
         assert.fail('should have thrown exception before');
     });
+    it('Timestamp', async function() {
+        console.log(web3.eth.getBlock(web3.eth.blockNumber).timestamp);
+        let balance1 = (await tokenInstance.getTimestamp1()).valueOf();
+        console.log("Timestamp1 is", balance1);
 
+        await timer(500);
+        await web3.eth.sendTransaction({ from: accounts[1], to: accounts[2], value: web3.toWei(0.05, "ether") });
+        console.log(web3.eth.getBlock(web3.eth.blockNumber).timestamp);
+        let balance2 = (await tokenInstance.getTimestamp2()).valueOf();
+        console.log("timestamp2 is", balance2);
+
+        await timer(500);
+        await web3.eth.sendTransaction({ from: accounts[1], to: accounts[2], value: web3.toWei(0.05, "ether") });
+        console.log(web3.eth.getBlock(web3.eth.blockNumber).timestamp);
+        let balance3 = (await tokenInstance.getTimestamp2()).valueOf();
+        console.log("timestamp3 is", balance3);
+    });
 });

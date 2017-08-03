@@ -43,6 +43,8 @@ struct Contributor
 mapping (address => uint) public idOf;
 mapping (uint256 => Contributor) public contributors;
 mapping (address => uint256) public teamIssuedTimestamp;
+mapping (address => bool) public soldAddresses;
+mapping (address => uint256) public sellingPriceInDayOf;
 uint256 public latestAllUpdate;
 uint256 public latestContributerId;
 uint256 public maxAddresses;
@@ -211,12 +213,12 @@ uint8 public decimals;
         * Can calculate balance based on last updated. *!MAXIMUM 3 DAYS!*. A difference of more than 3 days will lead to crashing of the contract.
         * @param _id id whose balnce is to be calculated
         */
-    function availableBalanceOf(uint256 _id, uint day) constant returns (uint256) {
+    function availableBalanceOf(uint256 _id) constant returns (uint256) {
         uint256 balance = balances[contributors[_id].adr]; 
-        for (uint i = contributors[_id].lastUpdatedOn; i < day; i++) {
+        for (uint i = contributors[_id].lastUpdatedOn; i < getDayCount(); i++) {
             balance = (balance * ((10 ** (mintingDec + 2) * (2 ** (getPhaseCount(i)-1))) + contributors[_id].mintingPower))/(2 ** (getPhaseCount(i)-1)); 
         }
-        balance = balance/10 ** ((mintingDec + 2) * (day - contributors[_id].lastUpdatedOn)); 
+        balance = balance/10 ** ((mintingDec + 2) * (getDayCount() - contributors[_id].lastUpdatedOn)); 
         return balance; 
     }
 
@@ -226,11 +228,11 @@ uint8 public decimals;
         * Only for internal calls. Not public.
         * @param _id id whose balance is to be updated.
         */
-    function updateBalanceOf(uint256 _id,uint day) internal returns (bool success) {
+    function updateBalanceOf(uint256 _id) internal returns (bool success) {
         totalSupply = safeSub(totalSupply, balances[contributors[_id].adr]);
-        balances[contributors[_id].adr] = availableBalanceOf(_id, day);
+        balances[contributors[_id].adr] = availableBalanceOf(_id);
         totalSupply = safeAdd(totalSupply, balances[contributors[_id].adr]);
-        contributors[_id].lastUpdatedOn = day;
+        contributors[_id].lastUpdatedOn = getDayCount();
         return true; 
     }
 
@@ -241,14 +243,10 @@ uint8 public decimals;
         * For public calls.
         * @param _adr address whose balance is to be returned.
         */
-    function balanceOf(address _adr, int day) public constant returns (uint256 balance) {
+    function balanceOf(address _adr) public constant returns (uint256 balance) {
         uint id = idOf[_adr]; 
-        if(day <0 )
-        {
-            return balances[_adr];
-        }
         if (id <= latestContributerId) {
-            require(updateBalanceOf(id, uint(day)));
+            require(updateBalanceOf(id));
         }
         return balances[_adr];    
     }
@@ -260,14 +258,9 @@ uint8 public decimals;
         * For public calls.
         * @param _id address whose balance is to be returned.
         */
-    function balanceById(uint _id, int day) public constant returns (uint256 balance) {
-       
-        if(day <0 )
-        {
-            return balances[contributors[_id].adr];
-        }
+    function balanceById(uint _id) public constant returns (uint256 balance) {
         if (_id <= latestContributerId) {
-            require(updateBalanceOf(_id, uint(day)));
+            require(updateBalanceOf(_id));
         }
         return balances[contributors[_id].adr];
     }
@@ -280,12 +273,12 @@ uint8 public decimals;
         * For public calls.
         * Logs the ids whose balance could not be updated
         */
-    function updateAllBalances(uint day) public {
-        //require(block.timestamp >= initialBlockTimestamp);
-        uint today = day;
+    function updateAllBalances() public {
+        require(block.timestamp >= initialBlockTimestamp);
+        uint today = getDayCount();
         require(today != latestAllUpdate); 
         for (uint i = 1; i <= latestContributerId; i++) {
-            if (updateBalanceOf(i, day)) {}
+            if (updateBalanceOf(i)) {}
             else {
                 UpdateFailed(i); 
             }
@@ -388,7 +381,6 @@ uint8 public decimals;
         idOf[_to] = id;
         idOf[_from] = 0;
         contributors[id].initialContributionWei = 0;
-        //contributors[id].balance = balances[_to];
         contributors[id].lastUpdatedOn = getDayCount();
         contributors[id].totalTransferredWei = int(balances[_to]);
         contributors[id].expiryBlockNumber = 0;
@@ -444,11 +436,12 @@ uint8 public decimals;
         * @param _minPriceInDay Minimum price in DAY tokens set by the seller
         * @param _expiryBlockNumber Expiry Block Number set by the seller
         */
-    function sellMintingAddress(uint256 _minPriceInDay, uint _expiryBlockNumber) constant returns (bool){
-        // if(teamIssuedTimestamp[msg.sender] != 0)
-        // {
-        //     require(block.timestamp - teamIssuedTimestamp[msg.sender] >= teamLockPeriodInSec);
-        // }
+    function sellMintingAddress(uint256 _minPriceInDay, uint _expiryBlockNumber) public returns (bool){
+        balanceIs(balances[msg.sender]);
+        if(teamIssuedTimestamp[msg.sender] != 0)
+        {
+            require(block.timestamp - teamIssuedTimestamp[msg.sender] >= teamLockPeriodInSec);
+        }
         uint id = idOf[msg.sender];
         require(contributors[id].status == sellingStatus.NOTONSALE);
         require(balances[msg.sender] >= minBalanceToSell);
@@ -457,7 +450,7 @@ uint8 public decimals;
         contributors[id].status = sellingStatus.ONSALE;
         //transfer(this, minBalanceToSell);
         balances[this] += minBalanceToSell;
-        balances[msg.sender] -= minBalanceToSell;
+        balances[msg.sender] = safeSub(balances[msg.sender], minBalanceToSell);
         balanceIs(balances[msg.sender]);
         return true;
     }
@@ -482,37 +475,39 @@ uint8 public decimals;
         * @param _offerId ID number of the address to be bought by the buyer
         * @param _offerInDay Offer given by the buyer in number of DAY tokens
         */
-    function buyMintingAddress(uint _offerId, uint256 _offerInDay) public {
-        if(contributors[_offerId].status != sellingStatus.NOTONSALE && block.number > contributors[_offerId].expiryBlockNumber )
-        {
-            contributors[_offerId].status = sellingStatus.EXPIRED;
-        }
+    function buyMintingAddress(uint _offerId, uint256 _offerInDay) public returns(bool){
+        // if(contributors[_offerId].status != sellingStatus.NOTONSALE && block.number > contributors[_offerId].expiryBlockNumber )
+        // {
+        //     contributors[_offerId].status = sellingStatus.EXPIRED;
+        // }
+        address soldAddress = contributors[_offerId].adr;
         require(contributors[_offerId].status == sellingStatus.ONSALE);
         require(_offerInDay >= contributors[_offerId].minPriceinDay);
         //first get the offered DayToken in the token contract & then transfer the total sum (minBalanceToSend+_offerInDay) to the seller
-        transfer(this, _offerInDay);
-        if(transferMintingAddress(contributors[_offerId].adr, msg.sender)) 
-        {
+        balances[this] = safeAdd(balances[this], _offerInDay);
+        balances[msg.sender] = safeSub(balances[msg.sender], _offerInDay);
+        if(transferMintingAddress(contributors[_offerId].adr, msg.sender)) {
             //mark the offer as sold & let seller pull the proceed to his own account.
-            contributors[_offerId].status = sellingStatus.SOLD;
-            contributors[_offerId].sellingPriceInDay = _offerInDay;
+            sellingPriceInDayOf[soldAddress] = _offerInDay;
+            soldAddresses[soldAddress] = true; 
         }
-        
+        return true;
     }
     
     /** Funtion to allow seller to get back his deposited amount of day tokens(minBalanceToSell) and offer made by buyer after successful sale.
         * Throws if sale is not successful
         * Resets all slae-related variables to 0 and status to NOTONSALE
         */
-    function fetchSuccessfulSaleProceed() onlyContributor(idOf[msg.sender]) public  returns(bool) {
-        require(contributors[idOf[msg.sender]].status == sellingStatus.SOLD);
-        balances[this] -= minBalanceToSell + contributors[idOf[msg.sender]].sellingPriceInDay;
-        balances[msg.sender] += minBalanceToSell + contributors[idOf[msg.sender]].sellingPriceInDay;
-        contributors[idOf[msg.sender]].lastUpdatedOn = getDayCount();
-        contributors[idOf[msg.sender]].status = sellingStatus.NOTONSALE;
-        contributors[idOf[msg.sender]].minPriceinDay = 0;
-        contributors[idOf[msg.sender]].sellingPriceInDay = 0;
-        contributors[idOf[msg.sender]].expiryBlockNumber = 0;
+    function fetchSuccessfulSaleProceed() public  returns(bool) {
+        require(soldAddresses[msg.sender] == true);
+        balances[this] -= minBalanceToSell + sellingPriceInDayOf[msg.sender];
+        balances[msg.sender] += minBalanceToSell + sellingPriceInDayOf[msg.sender];
+        soldAddresses[msg.sender] = false;
+        // contributors[idOf[msg.sender]].lastUpdatedOn = getDayCount();
+        // contributors[idOf[msg.sender]].status = sellingStatus.NOTONSALE;
+        // contributors[idOf[msg.sender]].minPriceinDay = 0;
+        // contributors[idOf[msg.sender]].sellingPriceInDay = 0;
+        // contributors[idOf[msg.sender]].expiryBlockNumber = 0;
         return true;
                 
     }
@@ -521,9 +516,9 @@ uint8 public decimals;
         * Allowed only after expiryBlockNumber
         * Throws if any other state other than EXPIRED
         */
-    function refundFailedAuctionAmount() onlyContributor(idOf[msg.sender]) public returns(bool){
+    function refundFailedAuctionAmount(uint block) onlyContributor(idOf[msg.sender]) public returns(bool){
         uint id = idOf[msg.sender];
-        if(block.number > contributors[id].expiryBlockNumber && contributors[id].status == sellingStatus.ONSALE)
+        if(block > contributors[id].expiryBlockNumber && contributors[id].status == sellingStatus.ONSALE)
         {
             contributors[id].status = sellingStatus.EXPIRED;
         }
@@ -533,7 +528,6 @@ uint8 public decimals;
         contributors[idOf[msg.sender]].lastUpdatedOn = getDayCount();
         contributors[idOf[msg.sender]].status = sellingStatus.NOTONSALE;
         contributors[idOf[msg.sender]].minPriceinDay = 0;
-        contributors[idOf[msg.sender]].sellingPriceInDay = 0;
         contributors[idOf[msg.sender]].expiryBlockNumber = 0;
         return true;
     }
@@ -574,5 +568,12 @@ uint8 public decimals;
         teamTestAdrEndId = id;
     }
 
-  
+    function getTimestamp() public returns (uint){
+        return block.timestamp;
+    }
+
+    function balanceOfWithoutUpdate(address _adr) public returns (uint){
+        return balances[_adr];
+    }
+
 }

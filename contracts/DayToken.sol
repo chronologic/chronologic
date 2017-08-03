@@ -7,7 +7,7 @@ import "./MintableToken.sol";
 import "./SafeMathLib.sol"; 
 
 //TODO: 
-// Slabs
+// Slabs: uncomment
 // Team testing
 
 /**
@@ -533,7 +533,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         if(block.number > contributors[id].expiryBlockNumber && contributors[id].status == sellingStatus.ONSALE)
         {
             contributors[id].status = sellingStatus.EXPIRED;
-        }hnk
+        }
         require(contributors[id].status == sellingStatus.EXPIRED);
         balances[this] -= minBalanceToSell;
         balances[msg.sender] += minBalanceToSell;
@@ -575,5 +575,11 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
 
     function setTeamTestEndId(uint id) onlyBonusFinalizeAgent {
         teamTestAdrEndId = id;
+    }
+    function getTimestamp1() public constant returns (uint){
+        return block.timestamp;
+    }
+    function getTimestamp2() public constant returns (uint){
+        return block.timestamp;
     }
 }
