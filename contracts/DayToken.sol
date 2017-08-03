@@ -533,7 +533,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         if(block.number > contributors[id].expiryBlockNumber && contributors[id].status == sellingStatus.ONSALE)
         {
             contributors[id].status = sellingStatus.EXPIRED;
-        }hnk
+        }
         require(contributors[id].status == sellingStatus.EXPIRED);
         balances[this] -= minBalanceToSell;
         balances[msg.sender] += minBalanceToSell;
