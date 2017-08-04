@@ -186,8 +186,8 @@ uint8 public decimals;
         * Returns minting power of a particular address.
         * @param _adr Address whose minting power is to be returned
         */
-    function getMintingPowerByAddress(address _adr,uint256 _day) public constant returns (uint256 mintingPower) {
-        return contributors[idOf[_adr]].mintingPower/(2**(getPhaseCount(_day)-1)); 
+    function getMintingPowerByAddress(address _adr) public constant returns (uint256 mintingPower) {
+        return contributors[idOf[_adr]].mintingPower/(2**(getPhaseCount(getDayCount())-1)); 
     }
 
     /**
@@ -572,7 +572,7 @@ uint8 public decimals;
         return block.timestamp;
     }
 
-    function balanceOfWithoutUpdate(address _adr) public returns (uint){
+    function balanceOfWithoutUpdate(address _adr) constant public returns (uint){
         return balances[_adr];
     }
 
