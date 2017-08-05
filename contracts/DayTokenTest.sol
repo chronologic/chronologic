@@ -28,39 +28,67 @@ import "./SafeMathLib.sol";
 contract DayTokenTest is  ReleasableToken, MintableToken, UpgradeableToken {
 
 enum sellingStatus {NOTONSALE, SOLD, EXPIRED, ONSALE}
+/** Basic structure for a contributor with a minting Address
+     * adr address of the contributor
+     * initialContributionWei initial contribution of the contributor in wei
+     * lastUpdatedOn day count from Minting Epoch when the account balance was last updated
+     * mintingPower Initial Minting power of the address
+     * totalTransferredDay Total transferred day tokens: integer. Negative value indicates transfer from
+     * expiryBlockNumber Variable for transfer Minting address. Set by user
+     * minPriceInDay Variable for transfer Minting address. Set by user
+     * status Selling status Variable for transfer Minting address.
+     * sellingPriceInDay Variable for transfer Minting address. Price at which the address is actually sold
+     */
 struct Contributor
 {
     address adr;
 	uint256 initialContributionWei;
-    //uint256 balance;
     uint256 lastUpdatedOn; //Day from Minting Epoch
     uint256 mintingPower;
-    int totalTransferredWei;
+    int totalTransferredDay;
     uint expiryBlockNumber;
     uint256 minPriceinDay;
     sellingStatus status;
     uint256 sellingPriceInDay;
 }
-mapping (address => uint) public idOf;
-mapping (uint256 => Contributor) public contributors;
-mapping (address => uint256) public teamIssuedTimestamp;
+
+/* Mapping to stor id of each minting address */
+    mapping (address => uint) public idOf;
+    /* Mapping from id of each minting address to their respective structures */
+    mapping (uint256 => Contributor) public contributors;
+    /* mapping to store unix timestamp of when the minting address is issued to each team member */
+    mapping (address => uint256) public teamIssuedTimestamp;
+
+
+
+
 mapping (address => bool) public soldAddresses;
 mapping (address => uint256) public sellingPriceInDayOf;
-uint256 public latestAllUpdate;
-uint256 public latestContributerId;
-uint256 public maxAddresses;
-uint256 public minMintingPower;
-uint256 public maxMintingPower;
-uint256 public halvingCycle;
-uint256 public initialBlockCount;
-uint256 public initialBlockTimestamp;
-uint256 public mintingDec; 
-uint256 public bounty;
-address crowdsaleAddress;
-address BonusFinalizeAgentAddress;
-uint256 minBalanceToSell;
-uint256 teamLockPeriodInSec;  //Initialize and set function
-uint public teamTestAdrEndId;
+
+/* Stores number of day since minting epoch when the all the balances are updated */
+    uint256 public latestAllUpdate;
+    /* Stores the id of the lastest contributor added */
+    uint256 public latestContributerId;
+    /* Maximum number of address: total. (3333) */
+    uint256 public maxAddresses;
+    uint256 public minMintingPower;
+    uint256 public maxMintingPower;
+    /* Halving cycle in days (88) */
+    uint256 public halvingCycle; 
+    /* Unix timestamp when minting is to be started */
+    uint256 public initialBlockTimestamp;
+    /* number of decimals in minting power */
+    uint256 public mintingDec; 
+    /* Bounty to be given to the person calling UpdateAllBalances() */
+    uint256 public bounty;
+    address crowdsaleAddress;
+    address BonusFinalizeAgentAddress;
+    /* Minimum Balance in Day tokens required to sell a minting address */
+    uint256 minBalanceToSell;
+    /* Team address lock down period from issued time, in seconds */
+    uint256 teamLockPeriodInSec;  //Initialize and set function
+    /* Store the id of of the address after team and test addresses are assigned */
+    uint public teamTestAdrEndId;
 
 event UpdatedTokenInformation(string newName, string newSymbol); 
 event UpdateFailed(uint id); 
@@ -108,11 +136,10 @@ uint8 public decimals;
         // also remember to call setUpgradeMaster()
         owner = msg.sender; 
         name = _name; 
-        symbol = _symbol; 
-        totalSupply = _initialSupply; 
+        symbol = _symbol;  = _initialSupply; 
         decimals = _decimals; 
         // Create initially all balance on the team multisig
-        balances[owner] = totalSupply; 
+        balances[owner]; 
         maxAddresses = _maxAddresses;
         minMintingPower = _minMintingPower;
         maxMintingPower = _maxMintingPower;
@@ -124,13 +151,13 @@ uint8 public decimals;
         bounty = _bounty;
         minBalanceToSell = _minBalanceToSell;
         
-        if (totalSupply > 0) {
-            Minted(owner, totalSupply); 
+        i > 0) {
+            Minted(owne); 
         }
 
         if (!_mintable) {
             mintingFinished = true; 
-            require(totalSupply != 0); 
+            requi != 0); 
         }
     }
 
@@ -229,10 +256,8 @@ uint8 public decimals;
         * Only for internal calls. Not public.
         * @param _id id whose balance is to be updated.
         */
-    function updateBalanceOf(uint256 _id) internal returns (bool success) {
-        totalSupply = safeSub(totalSupply, balances[contributors[_id].adr]);
-        balances[contributors[_id].adr] = availableBalanceOf(_id);
-        totalSupply = safeAdd(totalSupply, balances[contributors[_id].adr]);
+    function updateBalanceOf(uint256 _id) internal returns (bool success) { = safeS, balances[contributors[_id].adr]);
+        balances[contributors[_id].adr] = availableBalanceOf(_id); = safeA, balances[contributors[_id].adr]);
         contributors[_id].lastUpdatedOn = getDayCount();
         return true; 
     }
@@ -300,10 +325,10 @@ uint8 public decimals;
     }
 
     /**
-        * Returns totalSupply of DAY tokens.
+        * Retur of DAY tokens.
         */
     function getTotalSupply() public constant returns (uint256){
-        return totalSupply;
+        retu;
     }
 
     /**
@@ -406,8 +431,7 @@ uint8 public decimals;
         idOf[_adr] = id;
         contributors[id].initialContributionWei = _initialContributionWei;
         //balances[_adr] = _initialBalance;
-        balances[_adr] = _initialBalance;
-        totalSupply += _initialBalance;
+        balances[_adr] = _initialBalance; += _initialBalance;
         ContributorAdded(_adr, id);
         contributors[id].status = sellingStatus.NOTONSALE;
         contributors[id].minPriceinDay = 0; //IS THIS NECESSARY
