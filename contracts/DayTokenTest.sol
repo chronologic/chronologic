@@ -229,6 +229,8 @@ uint8 public decimals;
         * @param _id id whose balance is to be updated.
         */
     function updateBalanceOf(uint256 _id) internal returns (bool success) {
+        if(contributors[_id].lastUpdatedOn == getDayCount())
+        {return false;}
         totalSupply = safeSub(totalSupply, balances[contributors[_id].adr]);
         balances[contributors[_id].adr] = availableBalanceOf(_id);
         totalSupply = safeAdd(totalSupply, balances[contributors[_id].adr]);
@@ -246,7 +248,7 @@ uint8 public decimals;
     function balanceOf(address _adr) public constant returns (uint256 balance) {
         uint id = idOf[_adr]; 
         if (id <= latestContributerId) {
-            require(updateBalanceOf(id));
+            bool status = updateBalanceOf(id);
         }
         return balances[_adr];    
     }
@@ -283,8 +285,7 @@ uint8 public decimals;
                 UpdateFailed(i); 
             }
         }
-        latestAllUpdate = today; 
-        //mint(msg.sender, bounty); //TO BE CHANGED
+        latestAllUpdate = today;
         balances[msg.sender] += bounty;
         balances[this] -= bounty;
         UpToDate(true); 
@@ -572,7 +573,7 @@ uint8 public decimals;
         return block.timestamp;
     }
 
-    function balanceOfWithoutUpdate(address _adr) constant public returns (uint){
+    function balanceOfWithoutUpdate(address _adr) public returns (uint){
         return balances[_adr];
     }
 

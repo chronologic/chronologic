@@ -38,7 +38,7 @@ contract('DayTokenTest', function(accounts) {
     var _initalBlockTimestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
     var _mintingDec = 19;
     var _bounty = 100000000;
-    var _minBalanceToSell = tokenInSmallestUnit(88, _tokenDecimals);
+    var _minBalanceToSell = 8800000000;
     var tokenInstance = null;
     var i;
     var id;
@@ -245,35 +245,35 @@ contract('DayTokenTest', function(accounts) {
     //     let MintingPower2 = (await tokenInstance.getMintingPowerByAddress(accounts[14], 5)).valueOf();
     //     assert.equal(MintingPower2, 9980492196878751501);
     // });
-    it('Balance: Should return correct Minting Power by ID', async function() {
-        tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
-        for (i = 1; i <= 15; i++) {
-            id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
-        }
-        let MintingPower1 = (await tokenInstance.getMintingPowerById(1, 1)).valueOf();
-        assert.equal(MintingPower1, 10000000000000000000);
-        let MintingPower2 = (await tokenInstance.getMintingPowerById(14, 200)).valueOf();
-        assert.equal(MintingPower2, 2495123049219687875);
-    });
-    it('Balance: Should return correct -Balance by address', async function() {
-        tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
-        for (i = 1; i <= 15; i++) {
-            id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
-        }
-        await timer((_dayInSec * 2) - 1);
-        await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
-        let balance1 = (await tokenInstance.balanceOf(accounts[1])).valueOf();
-        assert.equal(balance1, 79992000000);
-        await timer((_dayInSec * 1) - 1);
-        await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
-        let balance2 = (await tokenInstance.balanceOf(accounts[14])).valueOf();
-        assert.equal(balance2, 80788799093);
-        await timer((_dayInSec * 1) - 1);
-        await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
-        let balance3 = (await tokenInstance.balanceOf(accounts[2])).valueOf();
-        assert.equal(balance3, 81599475491);
+    // it('Balance: Should return correct Minting Power by ID', async function() {
+    //     tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
+    //     for (i = 1; i <= 15; i++) {
+    //         id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
+    //     }
+    //     let MintingPower1 = (await tokenInstance.getMintingPowerById(1, 1)).valueOf();
+    //     assert.equal(MintingPower1, 10000000000000000000);
+    //     let MintingPower2 = (await tokenInstance.getMintingPowerById(14, 200)).valueOf();
+    //     assert.equal(MintingPower2, 2495123049219687875);
+    // });
+    // it('Balance: Should return correct -Balance by address', async function() {
+    //     tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
+    //     for (i = 1; i <= 15; i++) {
+    //         id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
+    //     }
+    //     await timer((_dayInSec * 2) - 1);
+    //     await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
+    //     let balance1 = (await tokenInstance.balanceOf(accounts[1])).valueOf();
+    //     assert.equal(balance1, 79992000000);
+    //     await timer((_dayInSec * 1) - 1);
+    //     await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
+    //     let balance2 = (await tokenInstance.balanceOf(accounts[14])).valueOf();
+    //     assert.equal(balance2, 80788799093);
+    //     await timer((_dayInSec * 1) - 1);
+    //     await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
+    //     let balance3 = (await tokenInstance.balanceOf(accounts[2])).valueOf();
+    //     assert.equal(balance3, 81599475491);
 
-    });
+    // });
     // it('Balance: Should return correct Balance by ID', async function() {
     //     _initalBlockTimestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
     //     tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
@@ -296,56 +296,75 @@ contract('DayTokenTest', function(accounts) {
     //     //console.log(balance3);
     //     assert.equal(balance3, 81599475491);
     // });
-    it('Balance: Should Update all balances and provide bounty to caller', async function() {
+    // it('Balance: Should Update all balances and provide bounty to caller', async function() {
+    //     _initalBlockTimestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
+    //     tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
+    //     for (i = 1; i <= 15; i++) {
+    //         id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
+    //     }
+
+    //     await timer((_dayInSec * 2) - 1);
+    //     await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
+    //     let call1 = (await tokenInstance.updateAllBalances({ from: accounts[0] }));
+    //     let balance1 = (await tokenInstance.balanceOf(accounts[14])).valueOf();
+    //     assert.isAtMost(79990454981 - balance1, 10);
+    //     let bounty = (await tokenInstance.balanceOf(accounts[0])).valueOf();
+    //     assert.equal(bounty, 100000000);
+    //     let balance2 = (await tokenInstance.balanceOf(accounts[10])).valueOf();
+    //     assert.isAtMost(79990930372 - balance2, 10);
+
+    //     await timer((_dayInSec * 2) - 1);
+    //     await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
+    //     let call2 = (await tokenInstance.updateAllBalances({ from: accounts[0] }));
+    //     let balance11 = (await tokenInstance.balanceOf(accounts[14])).valueOf();
+    //     assert.isAtMost(81595111071 - balance11, 10);
+    //     let bounty1 = (await tokenInstance.balanceOf(accounts[0])).valueOf();
+    //     assert.equal(bounty1, 200000000);
+    //     let balance21 = (await tokenInstance.balanceOf(accounts[10])).valueOf();
+    //     assert.isAtMost(81596565861 - balance21, 10);
+    // });
+    // it('Balance: should throw an error when trying to update all balances multiple times on same day', async function() {
+    //     _initalBlockTimestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
+    //     tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
+    //     for (i = 1; i <= 15; i++) {
+    //         id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
+    //     }
+    //     await timer((_dayInSec * 2) - 1);
+    //     await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
+    //     let call1 = (await tokenInstance.updateAllBalances());
+    //     try {
+    //         await tokenInstance.updateAllBalances();
+
+    //     } catch (error) {
+    //         return assertJump(error);
+    //     }
+    //     assert.fail('should have thrown before');
+    // });
+    it('Transfer Address: Should let people put their minting address on sale with required amount transferred', async function() {
+        _initalBlockTimestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
+        var _initialBlockNumber = web3.eth.blockNumber;
         tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
         for (i = 1; i <= 15; i++) {
             id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
         }
-
         await timer((_dayInSec * 2) - 1);
         await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
-        let call1 = (await tokenInstance.updateAllBalances({ from: accounts[0] }));
-
-        let balance1 = (await tokenInstance.balanceOf(accounts[14])).valueOf();
-        //assert.equal(balance1, 79992000000);
+        let balance1 = (await tokenInstance.balanceOf(accounts[1])).valueOf();
         console.log(balance1);
-        let bounty = (await tokenInstance.balanceOf(accounts[0])).valueOf();
-        assert.equal(bounty, 100000000);
-        let balance2 = (await tokenInstance.balanceOf(accounts[10], -1)).valueOf();
-        //assert.isAtMost(79989029703 - balance2, 10);
-        console.log(balance2);
-        let call2 = (await tokenInstance.updateAllBalances(2));
-        let balance11 = (await tokenInstance.balanceOf(accounts[14], -1)).valueOf(); // -1 to indicate that we want to check balance without updating it again
-        assert.isAtMost(80781120361 - balance11, 10);
-        let bounty1 = (await tokenInstance.balanceOf(accounts[0], -1)).valueOf();
-        assert.equal(bounty1, 200000000);
-        let balance21 = (await tokenInstance.balanceOf(accounts[10], -1)).valueOf();
-        assert.isAtMost(80789520018 - balance21, 10);
+        console.log(await tokenInstance.getDayCount());
+        let call = (await tokenInstance.sellMintingAddress(20, _initialBlockNumber + 10, { from: accounts[1] })).valueOf();
+        console.log(await tokenInstance.getDayCount());
+        console.log((await tokenInstance.balanceOf(accounts[1])).valueOf());
+        assert.equal(await tokenInstance.balanceOfWithoutUpdate.call(accounts[1]), balance1 - 8800000000);
+        assert.equal(await tokenInstance.balanceOfWithoutUpdate.call(tokenInstance.address), 8800000000);
+        try {
+            (await tokenInstance.sellMintingAddress(20, 100, { from: accounts[1] })).valueOf();
+
+        } catch (error) {
+            return assertJump(error);
+        }
+        assert.fail('should have thrown before');
     });
-    // it('Balance: should throw an error when trying to update all balances multiple times on same day', async function() {
-    //     let call1 = (await tokenInstance.updateAllBalances(2));
-    //     try {
-    //         await tokenInstance.updateAllBalances(2);
-
-    //     } catch (error) {
-    //         return assertJump(error);
-    //     }
-    //     assert.fail('should have thrown before');
-    // });
-    // it('Transfer Address: Should let people put their minting address on sale with required amount transferred', async function() {
-    //     let balance1 = (await tokenInstance.balanceOf(accounts[1], -1)).valueOf();
-    //     let call = (await tokenInstance.sellMintingAddress(20, 100, { from: accounts[1] })).valueOf();
-    //     let balance_new = (await tokenInstance.balanceOf(accounts[1], -1)).valueOf();
-    //     assert.equal((await tokenInstance.balanceOf(accounts[1], -1)).valueOf(), balance1 - tokenInSmallestUnit(88, _tokenDecimals));
-    //     assert.equal((await tokenInstance.balanceOf(tokenInstance.address, -1)).valueOf(), tokenInSmallestUnit(88, _tokenDecimals));
-    //     try {
-    //         (await tokenInstance.sellMintingAddress(20, 100, { from: accounts[1] })).valueOf();
-
-    //     } catch (error) {
-    //         return assertJump(error);
-    //     }
-    //     assert.fail('should have thrown before');
-    // });
     // it('Transfer Address: Should let people buy a minting address on sale with required min amount', async function() {
     //     let call = (await tokenInstance.sellMintingAddress(tokenInSmallestUnit(20, _tokenDecimals), 100, { from: accounts[1] })).valueOf();
     //     let call1 = (await tokenInstance.buyMintingAddress(1, tokenInSmallestUnit(20, _tokenDecimals), { from: accounts[2] }));

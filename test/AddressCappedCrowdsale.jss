@@ -542,7 +542,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         console.log("Timestamp1 is", balance1);
 
         await timer(500);
-        await web3.eth.sendTransaction({ from: accounts[1], to: accounts[2], value: web3.toWei(0.05, "ether") });
+        await web3.eth.sendTransaction({ from: accounts[1], to: accounts[2], value: web3.toWei(0.000000000000000005, "ether") });
         console.log(web3.eth.getBlock(web3.eth.blockNumber).timestamp);
         let balance2 = (await tokenInstance.getTimestamp2()).valueOf();
         console.log("timestamp2 is", balance2);
