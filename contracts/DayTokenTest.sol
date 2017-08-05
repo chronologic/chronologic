@@ -12,6 +12,7 @@ import "./SafeMathLib.sol";
 // Slabs
 // Transfer minitng address me total Wei transferred
 // Hard code number of address in each stage
+// Check for lastUpdated on
 
 /**
  * A crowdsale token.
@@ -229,8 +230,6 @@ uint8 public decimals;
         * @param _id id whose balance is to be updated.
         */
     function updateBalanceOf(uint256 _id) internal returns (bool success) {
-        if(contributors[_id].lastUpdatedOn == getDayCount())
-        {return false;}
         totalSupply = safeSub(totalSupply, balances[contributors[_id].adr]);
         balances[contributors[_id].adr] = availableBalanceOf(_id);
         totalSupply = safeAdd(totalSupply, balances[contributors[_id].adr]);
@@ -452,6 +451,7 @@ uint8 public decimals;
         //transfer(this, minBalanceToSell);
         balances[this] += minBalanceToSell;
         balances[msg.sender] = safeSub(balances[msg.sender], minBalanceToSell);
+        contributors[id].lastUpdatedOn = getDayCount();
         balanceIs(balances[msg.sender]);
         return true;
     }

@@ -347,16 +347,10 @@ contract('DayTokenTest', function(accounts) {
         for (i = 1; i <= 15; i++) {
             id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
         }
-        await timer((_dayInSec * 2) - 1);
-        await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
         let balance1 = (await tokenInstance.balanceOf(accounts[1])).valueOf();
-        console.log(balance1);
-        console.log(await tokenInstance.getDayCount());
         let call = (await tokenInstance.sellMintingAddress(20, _initialBlockNumber + 10, { from: accounts[1] })).valueOf();
-        console.log(await tokenInstance.getDayCount());
-        console.log((await tokenInstance.balanceOf(accounts[1])).valueOf());
-        assert.equal(await tokenInstance.balanceOfWithoutUpdate.call(accounts[1]), balance1 - 8800000000);
-        assert.equal(await tokenInstance.balanceOfWithoutUpdate.call(tokenInstance.address), 8800000000);
+        assert.equal((await tokenInstance.balanceOf(accounts[1])).valueOf(), balance1 - 8800000000);
+        assert.equal((await tokenInstance.balanceOf(tokenInstance.address)).valueOf(), 8800000000);
         try {
             (await tokenInstance.sellMintingAddress(20, 100, { from: accounts[1] })).valueOf();
 
@@ -365,19 +359,30 @@ contract('DayTokenTest', function(accounts) {
         }
         assert.fail('should have thrown before');
     });
-    // it('Transfer Address: Should let people buy a minting address on sale with required min amount', async function() {
-    //     let call = (await tokenInstance.sellMintingAddress(tokenInSmallestUnit(20, _tokenDecimals), 100, { from: accounts[1] })).valueOf();
-    //     let call1 = (await tokenInstance.buyMintingAddress(1, tokenInSmallestUnit(20, _tokenDecimals), { from: accounts[2] }));
-    //     assert.equal((await tokenInstance.balanceOf(accounts[2], -1)).valueOf(), tokenInSmallestUnit(792, _tokenDecimals) - tokenInSmallestUnit(20, _tokenDecimals));
-    //     assert.equal((await tokenInstance.balanceOf(tokenInstance.address, -1)).valueOf(), tokenInSmallestUnit(88, _tokenDecimals) + tokenInSmallestUnit(20, _tokenDecimals));
-    //     try {
-    //         (await tokenInstance.buyMintingAddress(1, tokenInSmallestUnit(20, _tokenDecimals), { from: accounts[2] }));
+    it('Transfer Address: Should let people buy a minting address on sale with required min amount', async function() {
+        _initalBlockTimestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
+        var _initialBlockNumber = web3.eth.blockNumber;
+        tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
+        for (i = 1; i <= 15; i++) {
+            id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
+        }
+        let call = (await tokenInstance.sellMintingAddress(tokenInSmallestUnit(20, _tokenDecimals), _initialBlockNumber + 10, { from: accounts[1] })).valueOf();
+        let call1 = (await tokenInstance.buyMintingAddress(1, tokenInSmallestUnit(20, _tokenDecimals), { from: accounts[2] }));
+        console.log("Im here");
+        assert.equal((await tokenInstance.balanceOf(accounts[2])).valueOf(), tokenInSmallestUnit(792, _tokenDecimals) - tokenInSmallestUnit(20, _tokenDecimals));
+        console.log("Im here");
+        assert.equal((await tokenInstance.balanceOf(tokenInstance.address)).valueOf(), tokenInSmallestUnit(88, _tokenDecimals) + tokenInSmallestUnit(20, _tokenDecimals));
+        console.log("Im here");
+        try {
+            (await tokenInstance.buyMintingAddress(1, tokenInSmallestUnit(20, _tokenDecimals), { from: accounts[2] }));
 
-    //     } catch (error) {
-    //         return assertJump(error);
-    //     }
-    //     assert.fail('should have thrown before');
-    // });
+        } catch (error) {
+            return assertJump(error);
+        }
+        console.log("Im here");
+        assert.fail('should have thrown before');
+    });
+
     // it('Transfer Address: Should let seller get sale proceeds', async function() {
     //     let balance1 = (await tokenInstance.balanceOf(accounts[1], -1)).valueOf();
     //     let call = (await tokenInstance.sellMintingAddress(tokenInSmallestUnit(20, _tokenDecimals), 100, { from: accounts[1] })).valueOf();
