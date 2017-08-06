@@ -2,8 +2,8 @@
 
 const assertJump = require('./helpers/assertJump');
 const timer = require('./helpers/timer');
-var Token = artifacts.require("./DayToken.sol");
-contract('DayToken', function(accounts) {
+var Token = artifacts.require("./DayTokenTest.sol");
+contract('DayTokenTest', function(accounts) {
 
 
     function etherInWei(x) {
@@ -238,21 +238,33 @@ contract('DayToken', function(accounts) {
 
     });
     it('Balance: Should return correct Minting Power by Address', async function() {
-        let MintingPower0 = (await tokenInstance.getMintingPowerByAddress(accounts[2], 3)).valueOf();
-        assert.equal(MintingPower0, 9998499399759903962);
-        let MintingPower1 = (await tokenInstance.getMintingPowerByAddress(accounts[1], 1)).valueOf();
-        assert.equal(MintingPower1, 10000000000000000000);
-        let MintingPower2 = (await tokenInstance.getMintingPowerByAddress(accounts[14], 5)).valueOf();
-        assert.equal(MintingPower2, 9980492196878751501);
-    });
-    it('Balance: Should return correct Minting Power by ID', async function() {
+        _initalBlockTimestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
         tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
         for (i = 1; i <= 15; i++) {
             id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
         }
-        let MintingPower1 = (await tokenInstance.getMintingPowerById(1, 1)).valueOf();
+        await timer((_dayInSec * 2) - 1);
+        await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
+        console.log("SS");
+        let MintingPower0 = (await tokenInstance.getMintingPowerByAddress(accounts[2])).valueOf();
+        assert.equal(MintingPower0, 9998499399759903962);
+        console.log("SS");
+        let MintingPower1 = (await tokenInstance.getMintingPowerByAddress(accounts[1])).valueOf();
         assert.equal(MintingPower1, 10000000000000000000);
-        let MintingPower2 = (await tokenInstance.getMintingPowerById(14, 200)).valueOf();
+        let MintingPower2 = (await tokenInstance.getMintingPowerByAddress(accounts[14])).valueOf();
+        assert.equal(MintingPower2, 9980492196878751501);
+    });
+    it('Balance: Should return correct Minting Power by ID', async function() {
+        _initalBlockTimestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
+        tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
+        for (i = 1; i <= 15; i++) {
+            id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
+        }
+        await timer((_dayInSec * 2) - 1);
+        await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
+        let MintingPower1 = (await tokenInstance.getMintingPowerById(1)).valueOf();
+        assert.equal(MintingPower1, 10000000000000000000);
+        let MintingPower2 = (await tokenInstance.getMintingPowerById(14)).valueOf();
         assert.equal(MintingPower2, 2495123049219687875);
     });
     it('Balance: Should return correct -Balance by address', async function() {
@@ -345,7 +357,9 @@ contract('DayToken', function(accounts) {
         for (i = 1; i <= 15; i++) {
             id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
         }
+        console.log("SS");
         let call = (await tokenInstance.sellMintingAddress(tokenInSmallestUnit(20, _tokenDecimals), _initialBlockNumber + 10, { from: accounts[1] })).valueOf();
+        console.log("SS");
         let call1 = (await tokenInstance.buyMintingAddress(1, tokenInSmallestUnit(20, _tokenDecimals), { from: accounts[2] }));
         assert.equal((await tokenInstance.balanceOf(accounts[2])).valueOf(), tokenInSmallestUnit(792, _tokenDecimals) - tokenInSmallestUnit(20, _tokenDecimals));
         assert.equal((await tokenInstance.balanceOf(tokenInstance.address)).valueOf(), tokenInSmallestUnit(88, _tokenDecimals) + tokenInSmallestUnit(20, _tokenDecimals));

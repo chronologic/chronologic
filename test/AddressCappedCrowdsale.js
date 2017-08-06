@@ -536,21 +536,4 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         }
         assert.fail('should have thrown exception before');
     });
-    it('Timestamp', async function() {
-        console.log(web3.eth.getBlock(web3.eth.blockNumber).timestamp);
-        let balance1 = (await tokenInstance.getTimestamp1()).valueOf();
-        console.log("Timestamp1 is", balance1);
-
-        await timer(500);
-        await web3.eth.sendTransaction({ from: accounts[1], to: accounts[2], value: web3.toWei(0.000000000000000005, "ether") });
-        console.log(web3.eth.getBlock(web3.eth.blockNumber).timestamp);
-        let balance2 = (await tokenInstance.getTimestamp2()).valueOf();
-        console.log("timestamp2 is", balance2);
-
-        await timer(500);
-        await web3.eth.sendTransaction({ from: accounts[1], to: accounts[2], value: web3.toWei(0.05, "ether") });
-        console.log(web3.eth.getBlock(web3.eth.blockNumber).timestamp);
-        let balance3 = (await tokenInstance.getTimestamp2()).valueOf();
-        console.log("timestamp3 is", balance3);
-    });
 });
