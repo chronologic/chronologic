@@ -6,11 +6,7 @@ import "./ReleasableToken.sol";
 import "./MintableToken.sol";
 import "./SafeMathLib.sol"; 
 
-//TODO: Set daytoken as minting agent and canmint. Set latest contributer to 0
-//todo:
-// Mint all bounty
-// Slabs
-// Transfer minitng address me total Wei transferred
+//todo
 // Hard code number of address in each stage
 // Check for lastUpdated on
 
@@ -71,7 +67,9 @@ mapping (address => uint256) public sellingPriceInDayOf;
     uint256 public latestContributerId;
     /* Maximum number of address: total. (3333) */
     uint256 public maxAddresses;
+    /* Min Minting power with 19 decimals: 0.5% : 5000000000000000000 */
     uint256 public minMintingPower;
+    /* Max Minting power with 19 decimals: 1% : 10000000000000000000 */
     uint256 public maxMintingPower;
     /* Halving cycle in days (88) */
     uint256 public halvingCycle; 
@@ -81,14 +79,14 @@ mapping (address => uint256) public sellingPriceInDayOf;
     uint256 public mintingDec; 
     /* Bounty to be given to the person calling UpdateAllBalances() */
     uint256 public bounty;
-    address crowdsaleAddress;
-    address BonusFinalizeAgentAddress;
     /* Minimum Balance in Day tokens required to sell a minting address */
     uint256 minBalanceToSell;
     /* Team address lock down period from issued time, in seconds */
     uint256 teamLockPeriodInSec;  //Initialize and set function
     /* Store the id of of the address after team and test addresses are assigned */
     uint public teamTestAdrEndId;
+    address crowdsaleAddress;
+    address BonusFinalizeAgentAddress;
 
 event UpdatedTokenInformation(string newName, string newSymbol); 
 event UpdateFailed(uint id); 
@@ -215,7 +213,7 @@ uint8 public decimals;
         * @param _adr Address whose minting power is to be returned
         */
     function getMintingPowerByAddress(address _adr) public constant returns (uint256 mintingPower) {
-        return contributors[idOf[_adr]].mintingPower/(2**(getPhaseCount(getDayCount()-1))); 
+        return contributors[idOf[_adr]].mintingPower/(2**(getPhaseCount(getDayCount())-1)); 
     }
 
     /**
@@ -223,7 +221,7 @@ uint8 public decimals;
         * @param _id Contribution id whose minting power is to be returned
         */
     function getMintingPowerById(uint _id) public constant returns (uint256 mintingPower) {
-        return contributors[_id].mintingPower/(2**(getPhaseCount(getDayCount()-1))); 
+        return contributors[_id].mintingPower/(2**(getPhaseCount(getDayCount())-1)); 
     }
 
     /**
@@ -348,10 +346,10 @@ uint8 public decimals;
         * @param _value Number of Day tokens to be transferred
         */
     function transfer(address _to, uint _value) public returns (bool success) {
-        if(teamIssuedTimestamp[msg.sender] != 0)
-        {
-            require(block.timestamp - teamIssuedTimestamp[msg.sender] >= 15780000);
-        }
+        // if(teamIssuedTimestamp[msg.sender] != 0)
+        // {
+        //     require(block.timestamp - teamIssuedTimestamp[msg.sender] >= 15780000);
+        // }
         require (!(_value == 0));
         balances[msg.sender] = safeSub(balances[msg.sender], _value); 
         balances[_to] = safeAdd(balances[msg.sender], _value); 
@@ -422,22 +420,31 @@ uint8 public decimals;
         * Can only be added by Crowdsale.
         * @param _adr Address of the contributor to be added  
         * @param _initialContributionWei Initial Contribution of the contributor to be added
-        * @param _initialBalance  Initial balance in wei of the contributor to be added
         */
-    function addContributor(address _adr, uint _initialContributionWei, uint _initialBalance)  returns(uint){
+    function addContributor(address _adr, uint _initialContributionWei)  returns(uint){
         uint id = ++latestContributerId;
         require(idOf[_adr] == 0);
         contributors[id].adr = _adr;
         setInitialMintingPowerOf(id);
         idOf[_adr] = id;
         contributors[id].initialContributionWei = _initialContributionWei;
-        balances[_adr] = _initialBalance;
-        totalSupply += _initialBalance;
         ContributorAdded(_adr, id);
         contributors[id].status = sellingStatus.NOTONSALE;
         return id;
     }
-
+       function addContributorNew(address _adr, uint _initialContributionWei, uint _initialBalance)  returns(uint){
+        uint id = ++latestContributerId;
+        require(idOf[_adr] == 0);
+        contributors[id].adr = _adr;
+        setInitialMintingPowerOf(id);
+        idOf[_adr] = id;
+        balances[_adr] = _initialBalance;
+        totalSupply += _initialBalance;
+        contributors[id].initialContributionWei = _initialContributionWei;
+        ContributorAdded(_adr, id);
+        contributors[id].status = sellingStatus.NOTONSALE;
+        return id;
+    }
     /** Function to be called once to add the deployed Crowdsale Contract
         */
     function addCrowdsaleAddress(address _adr) onlyOwner{
@@ -497,13 +504,13 @@ uint8 public decimals;
         * @param _offerInDay Offer given by the buyer in number of DAY tokens
         */
     function buyMintingAddress(uint _offerId, uint256 _offerInDay) public returns(bool){
-        if(contributors[_offerId].status != sellingStatus.NOTONSALE && block.number > contributors[_offerId].expiryBlockNumber )
-        {
-            contributors[_offerId].status = sellingStatus.EXPIRED;
-        }
+        // if(contributors[_offerId].status != sellingStatus.NOTONSALE && block.number > contributors[_offerId].expiryBlockNumber )
+        // {
+        //     contributors[_offerId].status = sellingStatus.EXPIRED;
+        // }
         address soldAddress = contributors[_offerId].adr;
         require(contributors[_offerId].status == sellingStatus.ONSALE);
-        require(_offerInDay >= contributors[_offerId].minPriceinDay);
+        //require(_offerInDay >= contributors[_offerId].minPriceinDay);
         //first get the offered DayToken in the token contract & then transfer the total sum (minBalanceToSend+_offerInDay) to the seller
         balances[this] = safeAdd(balances[this], _offerInDay);
         balances[msg.sender] = safeSub(balances[msg.sender], _offerInDay);
@@ -572,7 +579,7 @@ uint8 public decimals;
             latestContributerId = teamTestAdrEndId - 1;
         }
         require(released == true);
-        uint id = addContributor(receiver, 0, 0);
+        uint id = addContributor(receiver, 0);
         PostInvested(receiver, 0, 0, customerId, id);
     }
 
@@ -587,5 +594,4 @@ uint8 public decimals;
     function balanceOfWithoutUpdate(address _adr) public returns (uint){
         return balances[_adr];
     }
-
 }

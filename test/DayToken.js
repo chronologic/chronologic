@@ -42,10 +42,11 @@ contract('DayTokenTest', function(accounts) {
     var tokenInstance = null;
     var i;
     var id;
+    var call;
     beforeEach(async() => {
         tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
         for (i = 1; i <= 15; i++) {
-            id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
+            id = await tokenInstance.addContributorNew(accounts[i], 20, 79200000000);
         }
     });
 
@@ -80,23 +81,24 @@ contract('DayTokenTest', function(accounts) {
         assert.fail('should have thrown exception before');
     });
 
-    // it('Transfer: should return correct balances in receiver account after transfer', async function() {
-    //     let tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, accounts, { gas:45123880 } );
+    it('Transfer: should return correct balances in receiver account after transfer', async function() {
+        tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
+        for (i = 1; i <= 15; i++) {
+            id = await tokenInstance.addContributorNew(accounts[i], 20, 79200000000);
+        }
+        let balance0_old = (await tokenInstance.balanceOf(accounts[1])).valueOf();
+        assert.equal(balance0_old, 79200000000);
+        let balance1_old = (await tokenInstance.balanceOf(accounts[2])).valueOf();
+        assert.equal(balance1_old, 79200000000);
 
-    //     let balance0_old = await tokenInstance.balanceOf(accounts[0],1);
-    //     assert.equal(balance0_old, 100000000 * Math.pow(10, decimals), "balance0_old is not 100,000,000");
+        let call = await tokenInstance.transfer(accounts[2], 79200000000, { from: accounts[1] });
 
-    //     let balance1_old = await tokenInstance.balanceOf(accounts[1],1);
-    //     assert.equal(balance1_old, 0, "balance1_old is not 0");
+        let balance0_new = (await tokenInstance.balanceOf(accounts[1])).valueOf();
+        assert.equal(balance0_new, 0);
 
-    //     await tokenInstance.transfer(accounts[1], 100000000 * Math.pow(10, decimals));
-
-    //     let balance0_new = await tokenInstance.balanceOf(accounts[0],1);
-    //     assert.equal(balance0_new, 0, "balance0_new is not 0");
-
-    //     let balance1_new = await tokenInstance.balanceOf(accounts[1],1);
-    //     assert.equal(balance1_new, 100000000 * Math.pow(10, decimals), "balance1_new is not 100,000,000");
-    // });
+        let balance1_new = (await tokenInstance.balanceOf(accounts[2])).valueOf();
+        assert.equal(balance1_new, 79200000000);
+    });
 
     it('Transfer: should throw an error when trying to transfer more than balance', async function() {
         try {
@@ -133,22 +135,6 @@ contract('DayTokenTest', function(accounts) {
         }
         assert.fail('should have thrown before');
     });
-
-    // it('Transfer: should return correct balances after transfering from another account', async function() {
-    //     let tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, accounts, { gas:45123880 } );
-    //     await tokenInstance.approve(accounts[1], 100000000 * Math.pow(10, decimals));
-    //     await tokenInstance.transferFrom(accounts[0], accounts[2], 100000000 * Math.pow(10, decimals), { from: accounts[1] });
-
-    //     let balance0 = await tokenInstance.balanceOf(accounts[0]);
-    //     assert.equal(balance0, 0);
-
-    //     let balance1 = await tokenInstance.balanceOf(accounts[2]);
-    //     assert.equal(balance1, 100000000 * Math.pow(10, decimals));
-
-    //     let balance2 = await tokenInstance.balanceOf(accounts[1]);
-    //     assert.equal(balance2, 0);
-    // });
-
     it('Transfer: should throw an error when trying to transfer more than allowed', async function() {
         await tokenInstance.approve(accounts[1], 99 * Math.pow(10, decimals));
         try {
@@ -174,48 +160,6 @@ contract('DayTokenTest', function(accounts) {
         }
         assert.fail('should have thrown before');
     });
-
-    // // it('Approval: allow accounts[1] 100 to withdraw from accounts[0]. Withdraw 60 and then approve 0 & attempt transfer.', async function() {
-    // //     let tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, accounts, { gas:45123880 } );
-    // //     await tokenInstance.approve(accounts[1], 100 * Math.pow(10, decimals), { from: accounts[0] });
-    // //     await tokenInstance.transferFrom(accounts[0], accounts[2], 60 * Math.pow(10, decimals), { from: accounts[1] });
-    // //     await tokenInstance.approve(accounts[1], 0);
-    // //     try {
-    // //         await tokenInstance.transferFrom(accounts[0], accounts[2], 40 * Math.pow(10, decimals), { from: accounts[1] });
-    // //     } catch (error) {
-    // //         return assertJump(error);
-    // //     }
-    // //     assert.fail('should have thrown before');
-    // // });
-
-    // // it('Approval: msg.sender approves accounts[1] of 100 & withdraws 50 & 60 (2nd tx should fail)', async function() {
-    // //     let tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, accounts, { gas:45123880 } );
-    // //     await tokenInstance.approve(accounts[1], 100 * Math.pow(10, decimals));
-    // //     await tokenInstance.transferFrom(accounts[0], accounts[2], 50 * Math.pow(10, decimals), { from: accounts[1] });
-    // //     try {
-    // //         await tokenInstance.transferFrom(accounts[0], accounts[2], 60 * Math.pow(10, decimals), { from: accounts[1] });
-    // //     } catch (error) {
-    // //         return assertJump(error);
-    // //     }
-    // //     assert.fail('should have thrown before');
-    // // });
-
-    // // it('Approval: msg.sender approves accounts[1] of 100 & withdraws 50 twice successfully.', async function() {
-    // //     let tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, accounts, { gas:45123880 } );
-
-    // //     await tokenInstance.approve(accounts[1], 100 * Math.pow(10, decimals));
-    // //     let allowance_stage_1 = await tokenInstance.allowance(accounts[0], accounts[1]);
-    // //     assert.equal(allowance_stage_1, 100 * Math.pow(10, decimals), "Stage 1 allowance must be 100 tokens (10000000000)");
-
-    // //     await tokenInstance.transferFrom(accounts[0], accounts[2], 50 * Math.pow(10, decimals), { from: accounts[1] });
-    // //     let allowance_stage_2 = await tokenInstance.allowance(accounts[0], accounts[1]);
-    // //     assert.equal(allowance_stage_2, 50 * Math.pow(10, decimals), "Stage 2 allowance must be 50 tokens (5000000000)");
-
-    // //     await tokenInstance.transferFrom(accounts[0], accounts[2], 50 * Math.pow(10, decimals), { from: accounts[1] });
-    // //     let allowance_stage_3 = await tokenInstance.allowance(accounts[0], accounts[1]);
-    // //     assert.equal(allowance_stage_3, 0, "Stage 3 allowance must be 0 tokens");
-
-    // });
     it('Balance: Should return correct phase count', async function() {
         let phase = await tokenInstance.getPhaseCount(0);
         assert.equal(phase, 1);
@@ -232,7 +176,7 @@ contract('DayTokenTest', function(accounts) {
     it('Balance: Should return correct day count', async function() {
         tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
         for (i = 1; i <= 15; i++) {
-            id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
+            id = await tokenInstance.addContributorNew(accounts[i], 20, 79200000000);
         }
         let day = (await tokenInstance.getDayCount()).valueOf();
 
@@ -241,14 +185,12 @@ contract('DayTokenTest', function(accounts) {
         _initalBlockTimestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
         tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
         for (i = 1; i <= 15; i++) {
-            id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
+            id = await tokenInstance.addContributorNew(accounts[i], 20, 79200000000);
         }
         await timer((_dayInSec * 2) - 1);
         await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
-        console.log("SS");
         let MintingPower0 = (await tokenInstance.getMintingPowerByAddress(accounts[2])).valueOf();
         assert.equal(MintingPower0, 9998499399759903962);
-        console.log("SS");
         let MintingPower1 = (await tokenInstance.getMintingPowerByAddress(accounts[1])).valueOf();
         assert.equal(MintingPower1, 10000000000000000000);
         let MintingPower2 = (await tokenInstance.getMintingPowerByAddress(accounts[14])).valueOf();
@@ -258,19 +200,20 @@ contract('DayTokenTest', function(accounts) {
         _initalBlockTimestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
         tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
         for (i = 1; i <= 15; i++) {
-            id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
+            id = await tokenInstance.addContributorNew(accounts[i], 20, 79200000000);
         }
         await timer((_dayInSec * 2) - 1);
         await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
         let MintingPower1 = (await tokenInstance.getMintingPowerById(1)).valueOf();
         assert.equal(MintingPower1, 10000000000000000000);
         let MintingPower2 = (await tokenInstance.getMintingPowerById(14)).valueOf();
-        assert.equal(MintingPower2, 2495123049219687875);
+        assert.equal(MintingPower2, 9980492196878751501);
     });
-    it('Balance: Should return correct -Balance by address', async function() {
+    it('Balance: Should return correct Balance by address', async function() {
+        _initalBlockTimestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
         tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
         for (i = 1; i <= 15; i++) {
-            id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
+            id = await tokenInstance.addContributorNew(accounts[i], 20, 79200000000);
         }
         await timer((_dayInSec * 2) - 1);
         await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
@@ -291,7 +234,7 @@ contract('DayTokenTest', function(accounts) {
         _initalBlockTimestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
         tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
         for (i = 1; i <= 15; i++) {
-            id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
+            id = await tokenInstance.addContributorNew(accounts[i], 20, 79200000000);
         }
 
         await timer((_dayInSec * 2) - 1);
@@ -318,7 +261,7 @@ contract('DayTokenTest', function(accounts) {
         _initalBlockTimestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
         tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
         for (i = 1; i <= 15; i++) {
-            id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
+            id = await tokenInstance.addContributorNew(accounts[i], 20, 79200000000);
         }
         await timer((_dayInSec * 2) - 1);
         await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
@@ -336,7 +279,7 @@ contract('DayTokenTest', function(accounts) {
         var _initialBlockNumber = web3.eth.blockNumber;
         tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
         for (i = 1; i <= 15; i++) {
-            id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
+            id = await tokenInstance.addContributorNew(accounts[i], 20, 79200000000);
         }
         let balance1 = (await tokenInstance.balanceOf(accounts[1])).valueOf();
         let call = (await tokenInstance.sellMintingAddress(20, _initialBlockNumber + 10, { from: accounts[1] })).valueOf();
@@ -355,11 +298,9 @@ contract('DayTokenTest', function(accounts) {
         var _initialBlockNumber = web3.eth.blockNumber;
         tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
         for (i = 1; i <= 15; i++) {
-            id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
+            id = await tokenInstance.addContributorNew(accounts[i], 20, 79200000000);
         }
-        console.log("SS");
         let call = (await tokenInstance.sellMintingAddress(tokenInSmallestUnit(20, _tokenDecimals), _initialBlockNumber + 10, { from: accounts[1] })).valueOf();
-        console.log("SS");
         let call1 = (await tokenInstance.buyMintingAddress(1, tokenInSmallestUnit(20, _tokenDecimals), { from: accounts[2] }));
         assert.equal((await tokenInstance.balanceOf(accounts[2])).valueOf(), tokenInSmallestUnit(792, _tokenDecimals) - tokenInSmallestUnit(20, _tokenDecimals));
         assert.equal((await tokenInstance.balanceOf(tokenInstance.address)).valueOf(), tokenInSmallestUnit(88, _tokenDecimals) + tokenInSmallestUnit(20, _tokenDecimals));
@@ -377,10 +318,8 @@ contract('DayTokenTest', function(accounts) {
         var _initialBlockNumber = web3.eth.blockNumber;
         tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
         for (i = 1; i <= 15; i++) {
-            id = await tokenInstance.addContributor(accounts[i], 20, 79200000000);
+            id = await tokenInstance.addContributorNew(accounts[i], 20, 79200000000);
         }
-
-        let balance1 = (await tokenInstance.balanceOf(accounts[1])).valueOf();
         let call = (await tokenInstance.sellMintingAddress(tokenInSmallestUnit(20, _tokenDecimals), 100, { from: accounts[4] })).valueOf();
         let call1 = (await tokenInstance.buyMintingAddress(4, tokenInSmallestUnit(20, _tokenDecimals), { from: accounts[2] }));
         let call3 = (await tokenInstance.fetchSuccessfulSaleProceed({ from: accounts[4] })).valueOf();

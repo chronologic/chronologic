@@ -3,7 +3,7 @@
 const assertJump = require("./helpers/assertJump");
 const timer = require("./helpers/timer");
 var Token = artifacts.require("./DayToken.sol");
-var Crowdsale = artifacts.require("./AddressCappedCrowdsale.sol");
+var Crowdsale = artifacts.require("./AddressCappedCrowdsaleTest.sol");
 var FinalizeAgent = artifacts.require("./BonusFinalizeAgent.sol");
 var MultisigWallet = artifacts.require("./MultisigWallet.sol");
 var Pricing = artifacts.require("./FlatPricing.sol");
@@ -89,7 +89,8 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
     var finalizeAgentInstance = null;
     var multisigWalletInstance = null;
     var crowdsaleInstance = null;
-
+    var i;
+    var id;
     beforeEach(async() => {
         tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
         pricingInstance = await Pricing.new(_oneTokenInWei, { from: accounts[0] });
@@ -194,7 +195,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         var tokensPurchased = 1000;
         var tokenPriceInWei = tokenPriceInWeiFromTokensPerEther(24);
 
-        await crowdsaleInstance.preallocate(buyer, tokensPurchased, tokenPriceInWei, { from: accounts[0] });
+        await crowdsaleInstance.preallocate(buyer, tokensPurchased, tokenPriceInWei, { from: accounts[1] });
         assert.equal(web3.toBigNumber(await tokenInstance.balanceOf(buyer)).toNumber(), tokenInSmallestUnit(tokensPurchased, _tokenDecimals), "Assert 1 Failed");
         assert.equal(web3.toBigNumber(await crowdsaleInstance.tokensSold.call()).toNumber(), tokenInSmallestUnit(tokensPurchased, _tokenDecimals), "Assert 2 Failed");
         assert.equal(web3.toBigNumber(await crowdsaleInstance.weiRaised.call()).toNumber(), tokensPurchased * tokenPriceInWei, "Assert 3 Failed");

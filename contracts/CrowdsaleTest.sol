@@ -19,7 +19,7 @@ import "./DayToken.sol";
  * - different investment policies (require server side customer id, allow only whitelisted addresses)
  *
  */
-contract Crowdsale is Haltable, SafeMathLib{
+contract CrowdsaleTest is Haltable, SafeMathLib{
 
   /* Max investment count when we are still allowed to change the multisig address */
   uint public MAX_INVESTMENTS_BEFORE_MULTISIG_CHANGE = 5;
@@ -126,7 +126,7 @@ contract Crowdsale is Haltable, SafeMathLib{
   // Crowdsale end time has been changed
   event EndsAtChanged(uint endsAt);
 
-  function Crowdsale(address _token, PricingStrategy _pricingStrategy, address _multisigWallet, uint _start, uint _end, uint _minimumFundingGoal, uint _preMinWei, uint _preMaxWei, uint _maxWei, uint _maxPreAddresses) {
+  function CrowdsaleTest(address _token, PricingStrategy _pricingStrategy, address _multisigWallet, uint _start, uint _end, uint _minimumFundingGoal, uint _preMinWei, uint _preMaxWei, uint _maxWei, uint _maxPreAddresses) {
 
     owner = msg.sender;
 
@@ -191,8 +191,9 @@ contract Crowdsale is Haltable, SafeMathLib{
     
     uint weiAmount = msg.value;
     DayToken dayToken = DayToken(token);
-    require(dayToken.latestContributerId() >= 33);
-    minWei = calculateMinPrice();
+    //require(dayToken.latestContributerId() >= 33);
+    //minWei = calculateMinPrice();
+    minWei = 1000000000000000000;
     require(weiAmount >= minWei && weiAmount <= maxWei);
     uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, weiRaised, tokensSold, receiver, token.decimals());
     require(tokenAmount != 0);
@@ -228,19 +229,19 @@ contract Crowdsale is Haltable, SafeMathLib{
     uint256 minPrice;
     uint256 id = dayToken.latestContributerId();
     if(id >= 33 && id <= 38){
-      minPrice = 88;
+    minPrice = 88;
     }
     else if(id >= 39 && id<=88){
-      minPrice = 33;
+    minPrice = 33;
     }
     else if(id >= 89 && id <= 333){
-      minPrice = 8;
+    minPrice = 8;
     }
     else if(id >= 334 && id <= 888){
-      minPrice = 3;
+    minPrice = 3;
     }
     else {
-      minPrice = 1;
+    minPrice = 1;
     }
   }
   /**
@@ -258,7 +259,7 @@ contract Crowdsale is Haltable, SafeMathLib{
    * @param weiPrice Price of a single full token in wei
    *
    */
-  function preallocate(address receiver, uint fullTokens, uint weiPrice) onlyOwner public {
+  function preallocate(address receiver, uint fullTokens, uint weiPrice) public {
 
     uint tokenAmount = fullTokens * 10**uint(token.decimals());
     uint weiAmount = weiPrice * fullTokens; // This can be also 0, we give out tokens for free
