@@ -1,7 +1,8 @@
 
 # Day Token
 
-- [Whitepaper](https://chronologic.network/uploads/Chronologic_Whitepaper.pdf)
+- [Chronologic Website](https://chronologic.network)
+- [Chronologic Whitepaper](https://chronologic.network/uploads/Chronologic_Whitepaper.pdf)
 - [The Big Picture: TimeMints, ChronoPower & Proof-of-Time](https://blog.chronologic.network/the-big-picture-timemints-chronopower-proof-of-time-f881158b044d) blogpost.
 
 
