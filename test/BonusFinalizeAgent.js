@@ -44,9 +44,9 @@ contract('BonusFinalizeAgent', function(accounts) {
     var _minBalanceToSell = 8888;
     var DayToken = null;
     var bonusAgent = null;
-
+    var _dayInSecs = 84600;
     beforeEach(async() => {
-        DayToken = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
+        DayToken = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, _dayInSecs, { from: accounts[0] });
         bonusAgent = await bonusContract.new(DayToken.address, accounts[5], _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus, _totalBountyInDay);
     });
 

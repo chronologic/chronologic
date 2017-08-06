@@ -49,7 +49,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
     var _mintingDec = 19;
     var _bounty = etherInWei(1);
     var _minBalanceToSell = 8888;
-
+    var _dayInSecs = 84600;
     //Multi Sig Wallet Parameters
     var _minRequired = 2;
     var _dayLimit = 2;
@@ -92,7 +92,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
     var i;
     var id;
     beforeEach(async() => {
-        tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
+        tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, _dayInSecs, { from: accounts[0] });
         pricingInstance = await Pricing.new(_oneTokenInWei, { from: accounts[0] });
         multisigWalletInstance = await MultisigWallet.new(_listOfOwners, _minRequired);
         finalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, multisigWalletInstance.address, _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus, _totalBountyInDay, { from: accounts[0] });
