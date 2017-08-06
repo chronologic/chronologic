@@ -1,21 +1,16 @@
-# Ethereum based ERC20 compliant token
- An ERC20 compliant Token &amp; Crowdsale Application on Ethereum Platform written in truffle framework.
 
-
-
-
-# Status Network Token
-[![Build Status](https://travis-ci.org/status-im/status-network-token.svg?branch=master)](https://travis-ci.org/status-im/status-network-token)
+# Day Token
 
 - [Whitepaper](https://chronologic.network/uploads/Chronologic_Whitepaper.pdf)
 - [The Big Picture: TimeMints, ChronoPower & Proof-of-Time](https://blog.chronologic.network/the-big-picture-timemints-chronopower-proof-of-time-f881158b044d) blogpost.
 
 
 ## Technical definition
+An ERC20 compliant Token &amp; Crowdsale Application on Ethereum Platform written in truffle framework.
 
-At the technical level SGT & SNT are a ERC20-compliant tokens, derived from the [MiniMe Token](https://github.com/Giveth/minime) that allows for token cloning (forking), which will be useful for many future use-cases.
+At the technical level DayToken is a self-minting ERC20-compliant token. Details about the token can be found in the [Chronologic Whitepaper](https://chronologic.network/uploads/Chronologic_Whitepaper.pdf)
 
-Also built in the token is a vesting schedule for limiting SNT transferability over time. Status Project Founders tokens are vesting.
+Tests for the token are written using Mocha and Chai framework.
 
 ## Contracts
 
