@@ -255,6 +255,7 @@ uint8 public decimals;
         * @param _id id whose balance is to be updated.
         */
      function updateBalanceOf(uint256 _id) internal returns (bool success) {
+        require(getDayCount() - contributors[_id].lastUpdatedOn <= 3);
         totalSupply = safeSub(totalSupply, balances[contributors[_id].adr]);
         balances[contributors[_id].adr] = availableBalanceOf(_id);
         totalSupply = safeAdd(totalSupply, balances[contributors[_id].adr]);
@@ -318,7 +319,8 @@ uint8 public decimals;
             }
         }
         latestAllUpdate = today;
-        balances[msg.sender] += bounty;
+        balances[msg.sender] = safeAdd(balances[msg.sender], bounty);
+        //balances[this] = safeSub(balances[this], bounty); //BonusFinalize agent not called so not minted
         balances[this] -= bounty;
         UpToDate(true); 
     }
@@ -356,12 +358,12 @@ uint8 public decimals;
         Transfer(msg.sender, _to, _value); 
         if(idOf[msg.sender] <= latestContributerId)
         {
-            contributors[idOf[msg.sender]].totalTransferredWei = int(-(_value));
+            contributors[idOf[msg.sender]].totalTransferredWei = contributors[idOf[msg.sender]].totalTransferredWei + int(-(_value));
             contributors[idOf[msg.sender]].lastUpdatedOn = getDayCount();
         }
         if(idOf[_to]<=latestContributerId)
         {
-            contributors[idOf[_to]].totalTransferredWei = int(_value);
+            contributors[idOf[_to]].totalTransferredWei = contributors[idOf[msg.sender]].totalTransferredWei +  int(_value);
             contributors[idOf[_to]].lastUpdatedOn = getDayCount();
         }
         return true;
@@ -384,12 +386,12 @@ uint8 public decimals;
         Transfer(_from, _to, _value);
         if(idOf[_from] <= latestContributerId)
         {
-            contributors[idOf[_from]].totalTransferredWei = int(-(_value));
+            contributors[idOf[_from]].totalTransferredWei = contributors[idOf[msg.sender]].totalTransferredWei +  int(-(_value));
             contributors[idOf[_from]].lastUpdatedOn = getDayCount();
         }
         if(idOf[_to]<=latestContributerId)
         {
-            contributors[idOf[_to]].totalTransferredWei = int(_value);
+            contributors[idOf[_to]].totalTransferredWei = contributors[idOf[msg.sender]].totalTransferredWei +  int(_value);
             contributors[idOf[_to]].lastUpdatedOn = getDayCount();
         }
     }
@@ -408,7 +410,7 @@ uint8 public decimals;
         idOf[_from] = 0;
         contributors[id].initialContributionWei = 0;
         contributors[id].lastUpdatedOn = getDayCount();
-        contributors[id].totalTransferredWei = int(balances[_to]);
+        contributors[id].totalTransferredWei = contributors[idOf[msg.sender]].totalTransferredWei + int(balances[_to]);
         contributors[id].expiryBlockNumber = 0;
         contributors[id].status = sellingStatus.NOTONSALE;
         MintingAdrTransferred(_from,_to);
@@ -439,7 +441,7 @@ uint8 public decimals;
         setInitialMintingPowerOf(id);
         idOf[_adr] = id;
         balances[_adr] = _initialBalance;
-        totalSupply += _initialBalance;
+        totalSupply = safeAdd(totalSupply, _initialBalance);
         contributors[id].initialContributionWei = _initialContributionWei;
         ContributorAdded(_adr, id);
         contributors[id].status = sellingStatus.NOTONSALE;
@@ -477,7 +479,7 @@ uint8 public decimals;
         contributors[id].minPriceinDay = _minPriceInDay;
         contributors[id].expiryBlockNumber = _expiryBlockNumber;
         contributors[id].status = sellingStatus.ONSALE;
-        balances[this] += minBalanceToSell;
+        balances[this] = safeAdd(balances[this], minBalanceToSell);
         balances[msg.sender] = safeSub(balances[msg.sender], minBalanceToSell);
         contributors[id].lastUpdatedOn = getDayCount();
         return true;
@@ -528,8 +530,8 @@ uint8 public decimals;
         */
     function fetchSuccessfulSaleProceed() public  returns(bool) {
         require(soldAddresses[msg.sender] == true);
-        balances[this] -= minBalanceToSell + sellingPriceInDayOf[msg.sender];
-        balances[msg.sender] += minBalanceToSell + sellingPriceInDayOf[msg.sender];
+        balances[this] = safeSub(balances[this], minBalanceToSell + sellingPriceInDayOf[msg.sender]);
+        balances[msg.sender] = safeAdd(balances[msg.sender], minBalanceToSell + sellingPriceInDayOf[msg.sender]);
         soldAddresses[msg.sender] = false;
         return true;
                 
@@ -546,8 +548,8 @@ uint8 public decimals;
             contributors[id].status = sellingStatus.EXPIRED;
         }
         require(contributors[id].status == sellingStatus.EXPIRED);
-        balances[this] -= minBalanceToSell;
-        balances[msg.sender] += minBalanceToSell;
+        balances[this] = safeSub(balances[this], minBalanceToSell);
+        balances[msg.sender] = safeAdd(balances[msg.sender], minBalanceToSell);
         contributors[idOf[msg.sender]].lastUpdatedOn = getDayCount();
         contributors[idOf[msg.sender]].status = sellingStatus.NOTONSALE;
         contributors[idOf[msg.sender]].minPriceinDay = 0;

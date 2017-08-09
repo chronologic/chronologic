@@ -2,7 +2,7 @@
 
 const assertJump = require("./helpers/assertJump");
 const timer = require("./helpers/timer");
-var Token = artifacts.require("./DayToken.sol");
+var Token = artifacts.require("./DayTokenTest.sol");
 var Crowdsale = artifacts.require("./AddressCappedCrowdsaleTest.sol");
 var FinalizeAgent = artifacts.require("./BonusFinalizeAgent.sol");
 var MultisigWallet = artifacts.require("./MultisigWallet.sol");
@@ -45,7 +45,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
     var _minMintingPower = 5000000000000000000;
     var _maxMintingPower = 10000000000000000000;
     var _halvingCycle = 88;
-    var _initalBlockTimestamp = getUnixTimestamp('2017-08-7 09:00:00 GMT');
+    var _initalBlockTimestamp = getUnixTimestamp('2017-10-7 09:00:00 GMT');
     var _mintingDec = 19;
     var _bounty = etherInWei(1);
     var _minBalanceToSell = 8888;
@@ -92,7 +92,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
     var i;
     var id;
     beforeEach(async() => {
-        tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, _dayInSecs, { from: accounts[0] });
+        tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
         pricingInstance = await Pricing.new(_oneTokenInWei, { from: accounts[0] });
         multisigWalletInstance = await MultisigWallet.new(_listOfOwners, _minRequired);
         finalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, multisigWalletInstance.address, _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus, _totalBountyInDay, { from: accounts[0] });

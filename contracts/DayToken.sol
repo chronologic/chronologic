@@ -5,7 +5,6 @@ import "./UpgradeableToken.sol";
 import "./ReleasableToken.sol"; 
 import "./MintableToken.sol";
 import "./SafeMathLib.sol"; 
-// Hard code number of address in each stage
 
 /**
  * A crowdsale token.
@@ -26,7 +25,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * initialContributionWei initial contribution of the contributor in wei
         * lastUpdatedOn day count from Minting Epoch when the account balance was last updated
         * mintingPower Initial Minting power of the address
-        * totalTransferredWei Total transferred day tokens: integer. Negative value indicates transfer from
+        * totalTransferredDay Total transferred day tokens: integer. Negative value indicates transfer from
         * expiryBlockNumber Variable for transfer Minting address. Set by user
         * minPriceInDay Variable for transfer Minting address. Set by user
         * status Selling status Variable for transfer Minting address.
@@ -38,7 +37,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         uint256 initialContributionWei;
         uint256 lastUpdatedOn; //Day from Minting Epoch
         uint256 mintingPower;
-        int totalTransferredWei;
+        int totalTransferredDay;
         uint expiryBlockNumber;
         uint256 minPriceinDay;
         sellingStatus status;
@@ -55,32 +54,33 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     mapping (address => uint256) public sellingPriceInDayOf;
 
     /* Stores number of day since minting epoch when the all the balances are updated */
-        uint256 public latestAllUpdate;
-        /* Stores the id of the lastest contributor added */
-        uint256 public latestContributerId;
-        /* Maximum number of address: total. (3333) */
-        uint256 public maxAddresses;
-        /* Min Minting power with 19 decimals: 0.5% : 5000000000000000000 */
-        uint256 public minMintingPower;
-        /* Max Minting power with 19 decimals: 1% : 10000000000000000000 */
-        uint256 public maxMintingPower;
-        /* Halving cycle in days (88) */
-        uint256 public halvingCycle; 
-        /* Unix timestamp when minting is to be started */
-        uint256 public initialBlockTimestamp;
-        /* number of decimals in minting power */
-        uint256 public mintingDec; 
-        /* Bounty to be given to the person calling UpdateAllBalances() */
-        uint256 public bounty;
-        /* Minimum Balance in Day tokens required to sell a minting address */
-        uint256 minBalanceToSell;
-        /* Team address lock down period from issued time, in seconds */
-        uint256 teamLockPeriodInSec;  //Initialize and set function
-        /* Store the id of of the address after team and test addresses are assigned */
-        uint public teamTestAdrEndId;
-        uint256 public DayInSecs;
-        address crowdsaleAddress;
-        address BonusFinalizeAgentAddress;
+    uint256 public latestAllUpdate;
+    /* Stores the id of the lastest contributor added */
+    uint256 public latestContributerId;
+    /* Maximum number of address: total. (3333) */
+    uint256 public maxAddresses;
+    /* Min Minting power with 19 decimals: 0.5% : 5000000000000000000 */
+    uint256 public minMintingPower;
+    /* Max Minting power with 19 decimals: 1% : 10000000000000000000 */
+    uint256 public maxMintingPower;
+    /* Halving cycle in days (88) */
+    uint256 public halvingCycle; 
+    /* Unix timestamp when minting is to be started */
+    uint256 public initialBlockTimestamp;
+    /* number of decimals in minting power */
+    uint256 public mintingDec; 
+    /* Bounty to be given to the person calling UpdateAllBalances() */
+    uint256 public bounty;
+    /* Minimum Balance in Day tokens required to sell a minting address */
+    uint256 minBalanceToSell;
+    /* Team address lock down period from issued time, in seconds */
+    uint256 teamLockPeriodInSec;  //Initialize and set function
+    /* Store the id of of the address after team and test addresses are assigned */
+    uint public teamTestAdrEndId;
+    /* Duration in secs that we consider as a day. (For test deployment purposes, if we want to decrease length of a day. default: 84600)*/
+    uint256 public DayInSecs;
+    address crowdsaleAddress;
+    address BonusFinalizeAgentAddress;
 
     event UpdatedTokenInformation(string newName, string newSymbol); 
     event UpdateFailed(uint id); 
@@ -225,7 +225,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     */
     function getTotalMinted(address _adr) public constant returns (int256) {
         uint id = idOf[_adr];
-        return int(balances[_adr]) - ((int(contributors[id].initialContributionWei)+contributors[id].totalTransferredWei)); 
+        return int(balances[_adr]) - ((int(contributors[id].initialContributionWei)+contributors[id].totalTransferredDay)); 
     }
 
     /**
@@ -250,6 +250,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * @param _id id whose balance is to be updated.
         */
         function updateBalanceOf(uint256 _id) internal returns (bool success) {
+        require(getDayCount() - contributors[_id].lastUpdatedOn <= 3);
         totalSupply = safeSub(totalSupply, balances[contributors[_id].adr]);
         balances[contributors[_id].adr] = availableBalanceOf(_id);
         totalSupply = safeAdd(totalSupply, balances[contributors[_id].adr]);
@@ -313,8 +314,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
             }
         }
         latestAllUpdate = today;
-        balances[msg.sender] += bounty;
-        balances[this] -= bounty;
+        balances[msg.sender] = safeAdd(balances[msg.sender],bounty);
+        balances[this] = safeSub(balances[this], bounty);
         UpToDate(true); 
     }
 
@@ -341,22 +342,24 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * @param _value Number of Day tokens to be transferred
         */
     function transfer(address _to, uint _value) public returns (bool success) {
-        // if(teamIssuedTimestamp[msg.sender] != 0)
-        // {
-        //     require(block.timestamp - teamIssuedTimestamp[msg.sender] >= 15780000);
-        // }
+        if(teamIssuedTimestamp[msg.sender] != 0)
+        {
+            require(block.timestamp - teamIssuedTimestamp[msg.sender] >= 15780000);
+        }
         require (!(_value == 0));
         balances[msg.sender] = safeSub(balances[msg.sender], _value); 
         balances[_to] = safeAdd(balances[msg.sender], _value); 
         Transfer(msg.sender, _to, _value); 
         if(idOf[msg.sender] <= latestContributerId)
         {
-            contributors[idOf[msg.sender]].totalTransferredWei = int(-(_value));
+            updateBalanceOf(idOf[msg.sender]);
+            contributors[idOf[msg.sender]].totalTransferredDay = contributors[idOf[msg.sender]].totalTransferredDay + int(-(_value));
             contributors[idOf[msg.sender]].lastUpdatedOn = getDayCount();
         }
         if(idOf[_to]<=latestContributerId)
         {
-            contributors[idOf[_to]].totalTransferredWei = int(_value);
+            updateBalanceOf(idOf[msg.sender]);
+            contributors[idOf[_to]].totalTransferredDay = contributors[idOf[msg.sender]].totalTransferredDay + int(_value);
             contributors[idOf[_to]].lastUpdatedOn = getDayCount();
         }
         return true;
@@ -370,23 +373,26 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
             require(block.timestamp - teamIssuedTimestamp[_from] >= 15780000);
         }
         uint _allowance = allowed[_from][msg.sender];
-        require (!(balanceOf(_from) >= _value   // From a/c has balance
+        require ((balanceOf(_from) >= _value   // From a/c has balance
                     && _value > 0              // Non-zero transfer
                 )); 
-        balances[_to] = safeAdd(balances[_to],_value);
-        balances[_from] = safeSub(balances[_from],_value);
-        allowed[_from][msg.sender] = safeSub(_allowance,_value);
-        Transfer(_from, _to, _value);
         if(idOf[_from] <= latestContributerId)
         {
-            contributors[idOf[_from]].totalTransferredWei = int(-(_value));
+            updateBalanceOf(idOf[_from]);
+            contributors[idOf[_from]].totalTransferredDay = contributors[idOf[msg.sender]].totalTransferredDay + int(-(_value));
             contributors[idOf[_from]].lastUpdatedOn = getDayCount();
         }
         if(idOf[_to]<=latestContributerId)
         {
-            contributors[idOf[_to]].totalTransferredWei = int(_value);
+            updateBalanceOf(idOf[_from]);
+            contributors[idOf[_to]].totalTransferredDay = contributors[idOf[msg.sender]].totalTransferredDay + int(_value);
             contributors[idOf[_to]].lastUpdatedOn = getDayCount();
         }
+        balances[_to] = safeAdd(balances[_to],_value);
+        balances[_from] = safeSub(balances[_from],_value);
+        allowed[_from][msg.sender] = safeSub(_allowance,_value);
+        Transfer(_from, _to, _value);
+        
     }
 
     /**
@@ -403,7 +409,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         idOf[_from] = 0;
         contributors[id].initialContributionWei = 0;
         contributors[id].lastUpdatedOn = getDayCount();
-        contributors[id].totalTransferredWei = int(balances[_to]);
+        contributors[id].totalTransferredDay = contributors[idOf[msg.sender]].totalTransferredDay + int(balances[_to]);
         contributors[id].expiryBlockNumber = 0;
         contributors[id].status = sellingStatus.NOTONSALE;
         MintingAdrTransferred(_from,_to);
@@ -460,7 +466,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         contributors[id].minPriceinDay = _minPriceInDay;
         contributors[id].expiryBlockNumber = _expiryBlockNumber;
         contributors[id].status = sellingStatus.ONSALE;
-        balances[this] += minBalanceToSell;
+        balances[this] = safeAdd(balances[this], minBalanceToSell);
         balances[msg.sender] = safeSub(balances[msg.sender], minBalanceToSell);
         contributors[id].lastUpdatedOn = getDayCount();
         return true;
@@ -487,10 +493,10 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * @param _offerInDay Offer given by the buyer in number of DAY tokens
         */
     function buyMintingAddress(uint _offerId, uint256 _offerInDay) public returns(bool){
-        // if(contributors[_offerId].status != sellingStatus.NOTONSALE && block.number > contributors[_offerId].expiryBlockNumber )
-        // {
-        //     contributors[_offerId].status = sellingStatus.EXPIRED;
-        // }
+        if(contributors[_offerId].status != sellingStatus.NOTONSALE && block.number > contributors[_offerId].expiryBlockNumber )
+        {
+            contributors[_offerId].status = sellingStatus.EXPIRED;
+        }
         address soldAddress = contributors[_offerId].adr;
         require(contributors[_offerId].status == sellingStatus.ONSALE);
         //require(_offerInDay >= contributors[_offerId].minPriceinDay);
@@ -511,8 +517,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         */
     function fetchSuccessfulSaleProceed() public  returns(bool) {
         require(soldAddresses[msg.sender] == true);
-        balances[this] -= minBalanceToSell + sellingPriceInDayOf[msg.sender];
-        balances[msg.sender] += minBalanceToSell + sellingPriceInDayOf[msg.sender];
+        balances[this] = safeSub(balances[this], minBalanceToSell + sellingPriceInDayOf[msg.sender]);
+        balances[msg.sender] = safeAdd(balances[msg.sender], minBalanceToSell + sellingPriceInDayOf[msg.sender]);
         soldAddresses[msg.sender] = false;
         return true;
                 
@@ -529,8 +535,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
             contributors[id].status = sellingStatus.EXPIRED;
         }
         require(contributors[id].status == sellingStatus.EXPIRED);
-        balances[this] -= minBalanceToSell;
-        balances[msg.sender] += minBalanceToSell;
+        balances[this] = safeSub(balances[this], minBalanceToSell);
+        balances[msg.sender] = safeAdd(balances[msg.sender],minBalanceToSell);
         contributors[idOf[msg.sender]].lastUpdatedOn = getDayCount();
         contributors[idOf[msg.sender]].status = sellingStatus.NOTONSALE;
         contributors[idOf[msg.sender]].minPriceinDay = 0;
