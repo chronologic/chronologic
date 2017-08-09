@@ -557,7 +557,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * @param customerId Server side id of the customer
         */
     function postAllocate(address receiver, uint128 customerId) public onlyOwner {
-        if(latestContributerId == 3227)
+        if(latestContributerId >= 3227 && latestContributerId<= 3245)
         {
             latestContributerId = teamTestAdrEndId - 1;
         }

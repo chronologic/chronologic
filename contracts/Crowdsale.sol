@@ -191,7 +191,7 @@ contract Crowdsale is Haltable, SafeMathLib{
     
     uint weiAmount = msg.value;
     DayToken dayToken = DayToken(token);
-    require(dayToken.latestContributerId() >= 33);
+    require(dayToken.latestContributerId() >= 333);
     minWei = calculateMinPrice();
     require(weiAmount >= minWei && weiAmount <= maxWei);
     uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, weiRaised, tokensSold, receiver, token.decimals());
