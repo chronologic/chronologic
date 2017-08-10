@@ -234,12 +234,12 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * Can calculate balance based on last updated. *!MAXIMUM 3 DAYS!*. A difference of more than 3 days will lead to crashing of the contract.
         * @param _id id whose balnce is to be calculated
         */
-    function availableBalanceOf(uint256 _id) internal returns (uint256) {
+      function availableBalanceOf(uint256 _id) internal returns (uint256) {
         uint256 balance = balances[contributors[_id].adr]; 
-        for (uint i = contributors[_id].lastUpdatedOn; i < getDayCount(); i++) {
-            balance = (balance * ((10 ** (mintingDec + 2) * (2 ** (getPhaseCount(i)-1))) + contributors[_id].mintingPower))/(2 ** (getPhaseCount(i)-1)); 
+        if(contributors[_id].lastUpdatedOn!= getDayCount()){
+            balance = (balance * ((10 ** (mintingDec + 2) * (2 ** (getPhaseCount(getDayCount())-1))) + contributors[_id].mintingPower))/(2 ** (getPhaseCount(getDayCount())-1)); 
+            balance = balance/10 ** ((mintingDec + 2)); 
         }
-        balance = balance/10 ** ((mintingDec + 2) * (getDayCount() - contributors[_id].lastUpdatedOn)); 
         return balance; 
     }
 
@@ -499,7 +499,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         }
         address soldAddress = contributors[_offerId].adr;
         require(contributors[_offerId].status == sellingStatus.ONSALE);
-        //require(_offerInDay >= contributors[_offerId].minPriceinDay);
+        require(_offerInDay >= contributors[_offerId].minPriceinDay);
         //first get the offered DayToken in the token contract & then transfer the total sum (minBalanceToSend+_offerInDay) to the seller
         balances[this] = safeAdd(balances[this], _offerInDay);
         balances[msg.sender] = safeSub(balances[msg.sender], _offerInDay);

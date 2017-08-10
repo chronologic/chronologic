@@ -239,15 +239,16 @@ uint8 public decimals;
         * Can calculate balance based on last updated. *!MAXIMUM 3 DAYS!*. A difference of more than 3 days will lead to crashing of the contract.
         * @param _id id whose balnce is to be calculated
         */
-    function availableBalanceOf(uint256 _id) internal returns (uint256) {
+   function availableBalanceOf(uint256 _id) internal returns (uint256) {
         uint256 balance = balances[contributors[_id].adr]; 
-        for (uint i = contributors[_id].lastUpdatedOn; i < getDayCount(); i++) {
-            balance = (balance * ((10 ** (mintingDec + 2) * (2 ** (getPhaseCount(i)-1))) + contributors[_id].mintingPower))/(2 ** (getPhaseCount(i)-1)); 
-        }
-        balance = balance/10 ** ((mintingDec + 2) * (getDayCount() - contributors[_id].lastUpdatedOn)); 
-        return balance; 
+        //for (uint i = contributors[_id].lastUpdatedOn; i < getDayCount(); i++) {
+            if(contributors[_id].lastUpdatedOn!= getDayCount()){
+            balance = (balance * ((10 ** (mintingDec + 2) * (2 ** (getPhaseCount(getDayCount())-1))) + contributors[_id].mintingPower))/(2 ** (getPhaseCount(getDayCount())-1)); 
+        balance = balance/10 ** ((mintingDec + 2)); 
+            }
+            return balance; 
+    
     }
-
     /**
         * Updates the balance of the spcified id in its structure and also in the balances[] mapping.
         * returns true if successful.

@@ -222,11 +222,11 @@ contract('DayTokenTest', function(accounts) {
         await timer((_dayInSec * 1) - 1);
         await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
         let balance2 = (await tokenInstance.balanceOf(accounts[14])).valueOf();
-        assert.equal(balance2, 80788799093);
+        assert.equal(balance2, 79990454981);
         await timer((_dayInSec * 1) - 1);
         await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
         let balance3 = (await tokenInstance.balanceOf(accounts[2])).valueOf();
-        assert.equal(balance3, 81599475491);
+        assert.equal(balance3, 79991881152);
 
     });
 
@@ -241,21 +241,24 @@ contract('DayTokenTest', function(accounts) {
         await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
         let call1 = (await tokenInstance.updateAllBalances({ from: accounts[0] }));
         let balance1 = (await tokenInstance.balanceOf(accounts[14])).valueOf();
+        console.log("HWY");
         assert.isAtMost(79990454981 - balance1, 10);
         let bounty = (await tokenInstance.balanceOf(accounts[0])).valueOf();
+
         assert.equal(bounty, 100000000);
         let balance2 = (await tokenInstance.balanceOf(accounts[10])).valueOf();
+        console.log("HWY");
         assert.isAtMost(79990930372 - balance2, 10);
 
-        await timer((_dayInSec * 2) - 1);
+        await timer((_dayInSec * 1) - 1);
         await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
         let call2 = (await tokenInstance.updateAllBalances({ from: accounts[0] }));
         let balance11 = (await tokenInstance.balanceOf(accounts[14])).valueOf();
-        assert.isAtMost(81595111071 - balance11, 10);
+        assert.isAtMost(80788799092 - balance11, 10);
         let bounty1 = (await tokenInstance.balanceOf(accounts[0])).valueOf();
         assert.equal(bounty1, 200000000);
         let balance21 = (await tokenInstance.balanceOf(accounts[10])).valueOf();
-        assert.isAtMost(81596565861 - balance21, 10);
+        assert.isAtMost(80789759366 - balance21, 10);
     });
     it('Balance: should throw an error when trying to update all balances multiple times on same day', async function() {
         _initalBlockTimestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
