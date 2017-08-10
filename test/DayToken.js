@@ -241,15 +241,11 @@ contract('DayTokenTest', function(accounts) {
         await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
         let call1 = (await tokenInstance.updateAllBalances({ from: accounts[0] }));
         let balance1 = (await tokenInstance.balanceOf(accounts[14])).valueOf();
-        console.log("HWY");
         assert.isAtMost(79990454981 - balance1, 10);
         let bounty = (await tokenInstance.balanceOf(accounts[0])).valueOf();
-
         assert.equal(bounty, 100000000);
         let balance2 = (await tokenInstance.balanceOf(accounts[10])).valueOf();
-        console.log("HWY");
         assert.isAtMost(79990930372 - balance2, 10);
-
         await timer((_dayInSec * 1) - 1);
         await web3.eth.sendTransaction({ from: accounts[20], to: accounts[21], value: web3.toWei(0.000000000000000005, "ether") });
         let call2 = (await tokenInstance.updateAllBalances({ from: accounts[0] }));
