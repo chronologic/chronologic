@@ -327,10 +327,10 @@ contract('DayTokenTest', function(accounts) {
 
     });
     it('Transfer Address: Should let seller get refunds if no-one buys', async function() {
-        let balance1 = (await tokenInstance.balanceOf(accounts[1], -1)).valueOf();
+        let balance1 = (await tokenInstance.balanceOf(accounts[1])).valueOf();
         let call = (await tokenInstance.sellMintingAddress(tokenInSmallestUnit(20, _tokenDecimals), 100, { from: accounts[1] })).valueOf();
-        let call3 = (await tokenInstance.refundFailedAuctionAmount(120, { from: accounts[1] })).valueOf();
-        assert.equal((await tokenInstance.balanceOf(tokenInstance.address, -1)).valueOf(), 0);
-        assert.equal((await tokenInstance.balanceOf(accounts[1], -1)).valueOf(), 79200000000);
+        let call3 = (await tokenInstance.refundFailedAuctionAmount({ from: accounts[1] })).valueOf();
+        assert.equal((await tokenInstance.balanceOf(tokenInstance.address)).valueOf(), 0);
+        assert.equal((await tokenInstance.balanceOf(accounts[1])).valueOf(), 79200000000);
     });
 });

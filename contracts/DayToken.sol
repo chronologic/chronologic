@@ -234,7 +234,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * Can calculate balance based on last updated. *!MAXIMUM 3 DAYS!*. A difference of more than 3 days will lead to crashing of the contract.
         * @param _id id whose balnce is to be calculated
         */
-      function availableBalanceOf(uint256 _id) internal returns (uint256) {
+      function availableBalanceOf2(uint256 _id) internal returns (uint256) {
         uint256 balance = balances[contributors[_id].adr]; 
         if(contributors[_id].lastUpdatedOn!= getDayCount()){
             balance = (balance * ((10 ** (mintingDec + 2) * (2 ** (getPhaseCount(getDayCount())-1))) + contributors[_id].mintingPower))/(2 ** (getPhaseCount(getDayCount())-1)); 
@@ -243,14 +243,23 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         return balance; 
     }
 
+    function availableBalanceOf(uint256 _id) internal returns (uint256) {
+        uint256 balance = balances[contributors[_id].adr]; 
+        for (uint i = contributors[_id].lastUpdatedOn + 1; i <= getDayCount(); i++) {
+            balance = balance + ( contributors[_id].mintingPower * balance ) / ( 10**(mintingDec + 2) * 2**(getPhaseCount(i)-1) );
+        } 
+        return balance; 
+    }
+
     /**
-        * Updates the balance of the spcified id in its structure and also in the balances[] mapping.
+        * Updates the balance of the specified id in its structure and also in the balances[] mapping.
         * returns true if successful.
         * Only for internal calls. Not public.
         * @param _id id whose balance is to be updated.
         */
-        function updateBalanceOf(uint256 _id) internal returns (bool success) {
-        require(getDayCount() - contributors[_id].lastUpdatedOn <= 3);
+    function updateBalanceOf(uint256 _id) internal returns (bool success) {
+        // proceed only if not already updated today
+        require(contributors[_id].lastUpdatedOn != getDayCount());
         totalSupply = safeSub(totalSupply, balances[contributors[_id].adr]);
         balances[contributors[_id].adr] = availableBalanceOf(_id);
         totalSupply = safeAdd(totalSupply, balances[contributors[_id].adr]);
@@ -261,17 +270,16 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
 
     /**
         * Standard ERC20 function overridden.
-        * Returns the balance of the specified address after updating it.
-        * Updates the balance only if it is a minitng address else, simply returns balance from balances[] mapping.
+        * Returns the balance of the specified address.
+        * Calculates the balance on fly only if it is a minitng address else simply returns balance from balances[] mapping.
         * For public calls.
         * @param _adr address whose balance is to be returned.
         */
-        function balanceOf(address _adr) public constant returns (uint256 balance) {
+    function balanceOf(address _adr) public constant returns (uint256 balance) {
         uint id = idOf[_adr]; 
-        if(block.timestamp >= initialBlockTimestamp)
-        {
+        if(block.timestamp >= initialBlockTimestamp) {
             if (id <= latestContributerId) {
-                require(updateBalanceOf(id));
+                return ( availableBalanceOf(id) );
             }
         }
         return balances[_adr];    
@@ -279,24 +287,23 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
 
     /**
         * Standard ERC20 function overridden.
-        * Returns the balance of the specified id after updating it.
-        * Updates the balance only if it is a minitng address else, simply returns balance from balances[] mapping.
+        * Returns the balance of the specified id.
+        * Calculates the balance on fly only if it is a minitng address else simply returns balance from balances[] mapping.
         * For public calls.
         * @param _id address whose balance is to be returned.
         */
-        function balanceById(uint _id) public constant returns (uint256 balance) {
-            address adr=contributors[_id].adr; 
-        if(block.timestamp >= initialBlockTimestamp)
-        {
+    function balanceById(uint _id) public constant returns (uint256 balance) {
+        address adr=contributors[_id].adr; 
+        if(block.timestamp >= initialBlockTimestamp) {
             if (_id <= latestContributerId) {
-                require(updateBalanceOf(_id)); 
+                return ( availableBalanceOf(_id) );
             }
         }
         return balances[adr]; 
     }
 
     /**
-        * Updates balances of all minitng addresses.
+        * Updates balances of all miniting addresses.
         * Returns true/false based on success of update
         * To be called daily. 
         * Rewards caller with bounty as DAY tokens.
@@ -314,6 +321,9 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
             }
         }
         latestAllUpdate = today;
+        // before awarding bounty update balance if caller has minting power
+        uint id = idOf[msg.sender];
+        if ( id != 0 && id <= latestContributerId ) updateBalanceOf(id);
         balances[msg.sender] = safeAdd(balances[msg.sender],bounty);
         balances[this] = safeSub(balances[this], bounty);
         UpToDate(true); 
@@ -337,7 +347,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
 
     /**
         * Standard ERC20 function overidden.
-        * USed to transfer day tokens from caller's address to another
+        * Used to transfer day tokens from caller's address to another
         * @param _to address to which Day tokens are to be transferred
         * @param _value Number of Day tokens to be transferred
         */
@@ -346,53 +356,59 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         {
             require(block.timestamp - teamIssuedTimestamp[msg.sender] >= 15780000);
         }
-        require (!(_value == 0));
-        balances[msg.sender] = safeSub(balances[msg.sender], _value); 
-        balances[_to] = safeAdd(balances[msg.sender], _value); 
-        Transfer(msg.sender, _to, _value); 
+
+        // Check sender account has enough balance and transfer amount is non zero
+        require ( balanceOf(msg.sender) >= _value && _value != 0 ); 
+         
         if(idOf[msg.sender] <= latestContributerId)
         {
             updateBalanceOf(idOf[msg.sender]);
             contributors[idOf[msg.sender]].totalTransferredDay = contributors[idOf[msg.sender]].totalTransferredDay + int(-(_value));
-            contributors[idOf[msg.sender]].lastUpdatedOn = getDayCount();
         }
         if(idOf[_to]<=latestContributerId)
         {
-            updateBalanceOf(idOf[msg.sender]);
-            contributors[idOf[_to]].totalTransferredDay = contributors[idOf[msg.sender]].totalTransferredDay + int(_value);
-            contributors[idOf[_to]].lastUpdatedOn = getDayCount();
+            updateBalanceOf(idOf[_to]);
+            contributors[idOf[_to]].totalTransferredDay = contributors[idOf[_to]].totalTransferredDay + int(_value);
         }
+
+        balances[msg.sender] = safeSub(balances[msg.sender], _value); 
+        balances[_to] = safeAdd(balances[msg.sender], _value); 
+        Transfer(msg.sender, _to, _value);
+
         return true;
     }
     /**
-        * Standard ERC20 Standard Tken function over-written. Added Team address vesting period lock. 
+        * Standard ERC20 Standard Token function overridden. Added Team address vesting period lock. 
         */
         function transferFrom(address _from, address _to, uint _value) public returns (bool success) {
         if(teamIssuedTimestamp[_from] != 0)
         {
             require(block.timestamp - teamIssuedTimestamp[_from] >= 15780000);
         }
+
         uint _allowance = allowed[_from][msg.sender];
-        require ((balanceOf(_from) >= _value   // From a/c has balance
-                    && _value > 0              // Non-zero transfer
-                )); 
+
+        // Check from account has enough balance, transfer amount is non zero 
+        // and _value is allowed to be transferred
+        require ( balanceOf(_from) >= _value && _value != 0  &&  _value <= _allowance); 
+
         if(idOf[_from] <= latestContributerId)
         {
             updateBalanceOf(idOf[_from]);
-            contributors[idOf[_from]].totalTransferredDay = contributors[idOf[msg.sender]].totalTransferredDay + int(-(_value));
-            contributors[idOf[_from]].lastUpdatedOn = getDayCount();
+            contributors[idOf[_from]].totalTransferredDay = contributors[idOf[_from]].totalTransferredDay + int(-(_value));
         }
         if(idOf[_to]<=latestContributerId)
         {
-            updateBalanceOf(idOf[_from]);
-            contributors[idOf[_to]].totalTransferredDay = contributors[idOf[msg.sender]].totalTransferredDay + int(_value);
-            contributors[idOf[_to]].lastUpdatedOn = getDayCount();
+            updateBalanceOf(idOf[_to]);
+            contributors[idOf[_to]].totalTransferredDay = contributors[idOf[_to]].totalTransferredDay + int(_value);
         }
-        balances[_to] = safeAdd(balances[_to],_value);
-        balances[_from] = safeSub(balances[_from],_value);
-        allowed[_from][msg.sender] = safeSub(_allowance,_value);
+
+        balances[_to] = safeAdd(balances[_to], _value);
+        balances[_from] = safeSub(balances[_from], _value);
+        allowed[_from][msg.sender] = safeSub(_allowance, _value);
         Transfer(_from, _to, _value);
         
+        return true;
     }
 
     /**
@@ -404,10 +420,15 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         */
     function transferMintingAddress(address _from, address _to) internal onlyContributor(idOf[_from]) returns (bool){
         uint id = idOf[_from];
+
+        // update balance of from address before transferring minting power
+        updateBalanceOf(id);
+
         contributors[id].adr = _to;
         idOf[_to] = id;
         idOf[_from] = 0;
         contributors[id].initialContributionWei = 0;
+        // needed as id is assigned to new address
         contributors[id].lastUpdatedOn = getDayCount();
         contributors[id].totalTransferredDay = contributors[idOf[msg.sender]].totalTransferredDay + int(balances[_to]);
         contributors[id].expiryBlockNumber = 0;
@@ -462,13 +483,15 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         }
         uint id = idOf[msg.sender];
         require(contributors[id].status == sellingStatus.NOTONSALE);
+
+        // update balance of sender address before checking for minimum required balance
+        updateBalanceOf(id);
         require(balances[msg.sender] >= minBalanceToSell);
         contributors[id].minPriceinDay = _minPriceInDay;
         contributors[id].expiryBlockNumber = _expiryBlockNumber;
         contributors[id].status = sellingStatus.ONSALE;
         balances[this] = safeAdd(balances[this], minBalanceToSell);
         balances[msg.sender] = safeSub(balances[msg.sender], minBalanceToSell);
-        contributors[id].lastUpdatedOn = getDayCount();
         return true;
     }
 
@@ -536,8 +559,9 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         }
         require(contributors[id].status == sellingStatus.EXPIRED);
         balances[this] = safeSub(balances[this], minBalanceToSell);
+        // update balance of seller address before refunding
+        updateBalanceOf(id);
         balances[msg.sender] = safeAdd(balances[msg.sender],minBalanceToSell);
-        contributors[idOf[msg.sender]].lastUpdatedOn = getDayCount();
         contributors[idOf[msg.sender]].status = sellingStatus.NOTONSALE;
         contributors[idOf[msg.sender]].minPriceinDay = 0;
         contributors[idOf[msg.sender]].expiryBlockNumber = 0;
