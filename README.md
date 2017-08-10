@@ -35,7 +35,7 @@ Tests for the token are written using Mocha and Chai framework.
 - [UpgradeableToken.sol](/contracts/UpgradeableToken.sol): Standard ERC20 token code making the token Upgradeable
 - [newToken.sol](/contracts/newToken.sol): New code for the upgraded token
 
-See [INSTRUCTIONS.md](/INSTRUCTIONS.md) for instructions on how to test and deploy the contracts.
+See [INSTRUCTIONS.md](/Instructions.md) for instructions on how to test and deploy the contracts.
 
 ## Reviewers and audits.
 
