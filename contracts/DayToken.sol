@@ -256,12 +256,13 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         */
     function updateBalanceOf(uint256 _id) internal returns (bool success) {
         // proceed only if not already updated today
-        require(contributors[_id].lastUpdatedOn != getDayCount());
-        totalSupply = safeSub(totalSupply, balances[contributors[_id].adr]);
-        balances[contributors[_id].adr] = availableBalanceOf(_id);
-        totalSupply = safeAdd(totalSupply, balances[contributors[_id].adr]);
-        contributors[_id].lastUpdatedOn = getDayCount();
-        return true; 
+        if(contributors[_id].lastUpdatedOn != getDayCount()) {
+            totalSupply = safeSub(totalSupply, balances[contributors[_id].adr]);
+            balances[contributors[_id].adr] = availableBalanceOf(_id);
+            totalSupply = safeAdd(totalSupply, balances[contributors[_id].adr]);
+            contributors[_id].lastUpdatedOn = getDayCount();
+            return true; 
+        }
     }
 
 

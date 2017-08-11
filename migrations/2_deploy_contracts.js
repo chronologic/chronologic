@@ -42,6 +42,7 @@ module.exports = function(deployer, network, accounts) {
     var _bounty = 100000000;
     var _DayInSecs = 84600;
     var _minBalanceToSell = 8888;
+    var _teamLockPeriodInSec = 15780000;
 
 
     /**
@@ -189,12 +190,12 @@ module.exports = function(deployer, network, accounts) {
     var multisigWalletInstance;
 
     deployer.then(function() {
-        return Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, _DayInSecs);
+        return Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, _DayInSecs, _teamLockPeriodInSec);
     }).then(function(Instance) {
         //console.log(Instance);
         tokenInstance = Instance;
         if (debug) console.log("DayToken Parameters are:");
-        if (debug) console.log(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, _DayInSecs);
+        if (debug) console.log(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, _DayInSecs, _teamLockPeriodInSec);
         if (debug) console.log("DayToken address is: ", tokenInstance.address);
         if (showURL) console.log("Token URL is: " + getEtherScanUrl(network, tokenInstance.address, "token"));
         if (showURL) console.log("Transaction URL is: " + getEtherScanUrl(network, tokenInstance.transactionHash, "tx"));
