@@ -34,5 +34,11 @@ contract DayTokenMock is DayToken  {
        function balanceOfWithoutUpdate(address _adr) public returns (uint){
         return balances[_adr];
     }
+    function addBalance(address _adr, uint balance) public{
+        balances[_adr] = balance;
+    }
+    function getIdOf(address _adr) public constant returns(uint){
+        return idOf[_adr];
+    }
 
 }

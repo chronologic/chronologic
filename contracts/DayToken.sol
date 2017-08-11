@@ -277,7 +277,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         uint id = idOf[_adr]; 
         if(block.timestamp >= initialBlockTimestamp) {
             if (id != 0 && id <= latestContributerId) {
-                return ( availableBalanceOf(id) );
+                //return ( availableBalanceOf(id) );
+                updateBalanceOf(id);
             }
         }
         return balances[_adr];    
@@ -422,8 +423,9 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * @param _to address of the user to which minting address is to be tranferred
         */
     function transferMintingAddress(address _from, address _to) internal onlyContributor(idOf[_from]) returns (bool){
+        
         // _to should be non minting address
-        require(idOf[_to] == 0 || idOf[_to] > latestContributerId);
+        require(idOf[_to] == 0);
         
         uint id = idOf[_from];
         // update balance of from address before transferring minting power
