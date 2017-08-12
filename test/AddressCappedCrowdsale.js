@@ -2,8 +2,8 @@
 
 const assertJump = require("./helpers/assertJump");
 const timer = require("./helpers/timer");
-var Token = artifacts.require("./DayTokenTest.sol");
-var Crowdsale = artifacts.require("./AddressCappedCrowdsaleTest.sol");
+var Token = artifacts.require("./DayTokenMock.sol");
+var Crowdsale = artifacts.require("./helpers/AddressCappedCrowdsaleMock.sol");
 var FinalizeAgent = artifacts.require("./BonusFinalizeAgent.sol");
 var MultisigWallet = artifacts.require("./MultisigWallet.sol");
 var Pricing = artifacts.require("./FlatPricing.sol");
@@ -50,6 +50,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
     var _bounty = etherInWei(1);
     var _minBalanceToSell = 8888;
     var _dayInSecs = 84600;
+    var _teamLockPeriodInSec = 15780000;
     //Multi Sig Wallet Parameters
     var _minRequired = 2;
     var _dayLimit = 2;
@@ -92,7 +93,11 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
     var i;
     var id;
     beforeEach(async() => {
-        tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, { from: accounts[0] });
+        tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, 
+            _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, 
+            _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell,  
+            _dayInSecs, _teamLockPeriodInSec, { from: accounts[0] });
+        
         pricingInstance = await Pricing.new(_oneTokenInWei, { from: accounts[0] });
         multisigWalletInstance = await MultisigWallet.new(_listOfOwners, _minRequired);
         finalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, multisigWalletInstance.address, _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus, _totalBountyInDay, { from: accounts[0] });
@@ -199,7 +204,8 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         assert.equal(web3.toBigNumber(await tokenInstance.balanceOf(buyer)).toNumber(), tokenInSmallestUnit(tokensPurchased, _tokenDecimals), "Assert 1 Failed");
         assert.equal(web3.toBigNumber(await crowdsaleInstance.tokensSold.call()).toNumber(), tokenInSmallestUnit(tokensPurchased, _tokenDecimals), "Assert 2 Failed");
         assert.equal(web3.toBigNumber(await crowdsaleInstance.weiRaised.call()).toNumber(), tokensPurchased * tokenPriceInWei, "Assert 3 Failed");
-    });
+    
+});
     it('Pre-allocate: Pre allocating the tokens to offline investor must fail if not within range', async function() {
         await tokenInstance.setMintAgent(crowdsaleInstance.address, true);
         await tokenInstance.setMintAgent(finalizeAgentInstance.address, true);

@@ -277,8 +277,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         uint id = idOf[_adr]; 
         if(block.timestamp >= initialBlockTimestamp) {
             if (id != 0 && id <= latestContributerId) {
-                //return ( availableBalanceOf(id) );
-                updateBalanceOf(id);
+                return ( availableBalanceOf(id) );
             }
         }
         return balances[_adr];    

@@ -15,6 +15,8 @@ contract DayTokenMock is DayToken  {
          _maxMintingPower, _halvingCycle, _initialBlockTimestamp, _mintingDec, _bounty, 
          _minBalanceToSell, _DayInSecs, _teamLockPeriodInSec) {
 
+            owner = msg.sender;
+
   }
 
     function addContributorNew(address _adr, uint _initialContributionWei, uint _initialBalance)  returns(uint){
@@ -31,10 +33,10 @@ contract DayTokenMock is DayToken  {
         return id;
     }
 
-       function balanceOfWithoutUpdate(address _adr) public returns (uint){
+    function balanceOfWithoutUpdate(address _adr) public returns (uint){
         return balances[_adr];
     }
-    function addBalance(address _adr, uint balance) public{
+    function setBalance(address _adr, uint balance) public{
         balances[_adr] = balance;
     }
     function getIdOf(address _adr) public constant returns(uint){
