@@ -1,5 +1,5 @@
 
-# Day Token
+# Day Token [Work in Progress]
 
 - [Chronologic Website](https://chronologic.network)
 - [Chronologic Whitepaper](https://chronologic.network/uploads/Chronologic_Whitepaper.pdf)
