@@ -1,0 +1,117 @@
+MODE                 = 'test'
+GETHATTACHPOINT      = 'ipc:./testchain/geth.ipc'
+PASSWORD             = 'testtest'
+CONTRACTSDIR         = '../../contracts'
+TOKENSOL             = 'DayToken.sol'
+TOKENTEMPSOL         = 'DayToken.sol'
+TOKENJS              = 'DayToken.js'
+PRICINGSOL           = 'FlatPricing.sol'
+PRICINGTEMPSOL       = 'FlatPricing.sol'
+PRICINGJS            = 'FlatPricing.js'
+CROWDSALESOL         = 'AddressCappedCrowdsale.sol'
+CROWDSALETEMPSOL     = 'AddressCappedCrowdsale.sol'
+CROWDSALEJS          = 'AddressCappedCrowdsale.js'
+FINALIZEAGENTSOL     = 'BonusFinalizeAgent.sol'
+FINALIZEAGENTTEMPSOL = 'BonusFinalizeAgent.sol'
+FINALIZEAGENTJS      = 'BonusFinalizeAgent.js'
+DEPLOYMENTDATA       = 'deploymentData.txt'
+INCLUDEJS            = './include.js'
+TEST1OUTPUT          = 'test1output.txt'
+TEST1RESULTS         = 'test1results.txt'
+CURRENTTIME          = '1502688679' 'Mon 14 Aug 2017 05:31:19 UTC'
+STARTTIME            = '1502688754' 'Mon 14 Aug 2017 05:32:34 UTC'
+ENDTIME              = '1502688919' 'Mon 14 Aug 2017 05:35:19 UTC'
+--- Differences ../../contracts/DayToken.sol DayToken.sol ---
+
+--- Differences ../../contracts/FlatPricing.sol FlatPricing.sol ---
+
+--- Differences ../../contracts/AddressCappedCrowdsale.sol AddressCappedCrowdsale.sol ---
+
+--- Differences ../../contracts/BonusFinalizeAgent.sol BonusFinalizeAgent.sol ---
+
+Welcome to the Geth JavaScript console!
+
+instance: Geth/v1.6.7-stable-ab5646c5/darwin-amd64/go1.8.3
+coinbase: 0xa00af22d07c87d96eeeb0ed583f8f6ac7812827e
+at block: 131 (Mon, 14 Aug 2017 15:31:11 AEST)
+ datadir: /Users/bok/Projects/ChronologicCrowdsaleAudit/audit/test/testchain
+ modules: admin:1.0 debug:1.0 eth:1.0 miner:1.0 net:1.0 personal:1.0 rpc:1.0 txpool:1.0 web3:1.0
+
+> 
+true
+> 
+true
+> 
+true
+> 
+true
+> 
+true
+> 
+> 
+undefined
+> 
+undefined
+> 
+> 
+undefined
+> 
+undefined
+> 
+> 
+undefined
+> 
+undefined
+> 
+> 
+undefined
+> 
+undefined
+> 
+> 
+undefined
+> 
+undefined
+> 
+undefined
+> 
+undefined
+> 
+> 
+undefined
+> 
+RESULT:  # Account                                             EtherBalanceChange                          Token Name
+RESULT: -- ------------------------------------------ --------------------------- ------------------------------ ---------------------------
+RESULT:  0 0xa00af22d07c87d96eeeb0ed583f8f6ac7812827e       25.000000000000000000           0.000000000000000000 Account #0 - Miner
+RESULT:  1 0xa11aae29840fbb5c86e6fd4cf809eba183aef433        0.000000000000000000           0.000000000000000000 Account #1 - Contract Owner
+RESULT:  2 0xa22ab8a9d641ce77e06d98b7d7065d324d3d6976        0.000000000000000000           0.000000000000000000 Account #2 - Multisig
+RESULT:  3 0xa33a6c312d9ad0e0f2e95541beed0cc081621fd0        0.000000000000000000           0.000000000000000000 Account #3 - Team #1
+RESULT:  4 0xa44a08d3f6933c69212114bb66e2df1813651844        0.000000000000000000           0.000000000000000000 Account #4 - Team #2
+RESULT:  5 0xa55a151eb00fded1634d27d1127b4be4627079ea        0.000000000000000000           0.000000000000000000 Account #5 - Team #3
+RESULT:  6 0xa66a85ede0cbe03694aa9d9de0bb19c99ff55bd9        0.000000000000000000           0.000000000000000000 Account #6
+RESULT:  7 0xa77a2b9d4b1c010a22a7c565dc418cef683dbcec        0.000000000000000000           0.000000000000000000 Account #7
+RESULT:  8 0xa88a05d2b88283ce84c8325760b72a64591279a2        0.000000000000000000           0.000000000000000000 Account #8
+RESULT:  9 0xa99a0ae3354c06b1459fd441a32a3f71005d7da0        0.000000000000000000           0.000000000000000000 Account #9
+RESULT: -- ------------------------------------------ --------------------------- ------------------------------ ---------------------------
+RESULT:                                                                                     0.000000000000000000 Total Token Balances
+RESULT: -- ------------------------------------------ --------------------------- ------------------------------ ---------------------------
+RESULT: 
+undefined
+> 
+RESULT: 
+undefined
+> 
+> 
+undefined
+> 
+undefined
+> 
+undefined
+> 
+undefined
+> 
+undefined
+> 
+undefined
+> 
+> 
