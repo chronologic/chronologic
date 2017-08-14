@@ -160,47 +160,48 @@ unlockAccounts("$PASSWORD");
 printBalances();
 console.log("RESULT: ");
 
-var name = "Day";
-var symbol = "DAY";
-var initialSupply = 0;
-// CHECK: 8 or 18, does not make a difference in the pricing calculations
-var decimals = 8;
-var mintable = true;
-
-exit;
-
-var minimumFundingGoal = new BigNumber(1000).shift(18);
-var cap = new BigNumber(2000).shift(18);
-
-#      0 to 15,000 ETH 10,000 FEED = 1 ETH
-# 15,000 to 28,000 ETH  9,000 FEED = 1 ETH
-var tranches = [ \
-  0, new BigNumber(1).shift(18).div(10000), \
-  new BigNumber(1500).shift(18), new BigNumber(1).shift(18).div(9000), \
-  cap, 0 \
-];
-
-var teamMembers = [ team1, team2, team3 ];
-var teamBonus = [150, 150, 150];
 
 // -----------------------------------------------------------------------------
-var cstMessage = "Deploy CrowdsaleToken Contract";
-console.log("RESULT: " + cstMessage);
-var cstContract = web3.eth.contract(tokenAbi);
-console.log(JSON.stringify(cstContract));
-var cstTx = null;
-var cstAddress = null;
+var deployTokenMessage = "Deploy CrowdsaleToken Contract";
+// -----------------------------------------------------------------------------
+var _tokenName = "Day";
+var _tokenSymbol = "DAY";
+var _tokenDecimals = 8;
+var _tokenInitialSupply = 100000000;
+var _tokenMintable = true;
+var _maxAddresses = 7;
+var _minMintingPower = 500000000000000000;
+var _maxMintingPower = 1000000000000000000;
+var _halvingCycle = 88;
+var _initalBlockTimestamp = $ENDTIME;
+var _mintingDec = 19;
+var _bounty = 100000000;
+var _minBalanceToSell = 8888;
+var _DayInSecs = 84600;
+var _teamLockPeriodInSec = 15780000;
+// function DayToken(string _name, string _symbol, uint _initialSupply, uint8 _decimals, 
+//   bool _mintable, uint _maxAddresses, uint256 _minMintingPower, uint256 _maxMintingPower, 
+//   uint _halvingCycle, uint _initialBlockTimestamp, uint256 _mintingDec, uint _bounty, 
+//   uint256 _minBalanceToSell, uint256 _DayInSecs, uint256 _teamLockPeriodInSec) UpgradeableToken(msg.sender)
+// -----------------------------------------------------------------------------
+console.log("RESULT: " + deployTokenMessage);
+var tokenContract = web3.eth.contract(tokenAbi);
+console.log(JSON.stringify(tokenContract));
+var tokenTx = null;
+var tokenAddress = null;
 
-var cst = cstContract.new(name, symbol, initialSupply, decimals, mintable, {from: contractOwnerAccount, data: tokenBin, gas: 6000000},
+var token = tokenContract.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable,
+    _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty,
+    _minBalanceToSell, _DayInSecs, _teamLockPeriodInSec, {from: contractOwnerAccount, data: tokenBin, gas: 6000000},
   function(e, contract) {
     if (!e) {
       if (!contract.address) {
-        cstTx = contract.transactionHash;
+        tokenTx = contract.transactionHash;
       } else {
-        cstAddress = contract.address;
-        addAccount(cstAddress, "Token '" + symbol + "' '" + name + "'");
-        addTokenContractAddressAndAbi(cstAddress, tokenAbi);
-        console.log("DATA: teAddress=" + cstAddress);
+        tokenAddress = contract.address;
+        addAccount(tokenAddress, "Token '" + token.symbol() + "' '" + token.name() + "'");
+        addTokenContractAddressAndAbi(tokenAddress, tokenAbi);
+        console.log("DATA: tokenAddress=" + tokenAddress);
       }
     }
   }
@@ -208,23 +209,27 @@ var cst = cstContract.new(name, symbol, initialSupply, decimals, mintable, {from
 
 
 // -----------------------------------------------------------------------------
-var etpMessage = "Deploy PricingStrategy Contract";
-console.log("RESULT: " + etpMessage);
-var etpContract = web3.eth.contract(pricingAbi);
-console.log(JSON.stringify(etpContract));
-var etpTx = null;
-var etpAddress = null;
+var deployPricingMessage = "Deploy Pricing Contract";
+// -----------------------------------------------------------------------------
+var _oneTokenInWei = 41666666666666666;
+// function FlatPricing(uint _oneTokenInWei)
+// -----------------------------------------------------------------------------
+console.log("RESULT: " + deployPricingMessage);
+var pricingContract = web3.eth.contract(pricingAbi);
+console.log(JSON.stringify(pricingContract));
+var pricingTx = null;
+var pricingAddress = null;
 
-var etp = etpContract.new(tranches, {from: contractOwnerAccount, data: pricingBin, gas: 6000000},
+var pricing = pricingContract.new(_oneTokenInWei, {from: contractOwnerAccount, data: pricingBin, gas: 6000000},
   function(e, contract) {
     if (!e) {
       if (!contract.address) {
-        etpTx = contract.transactionHash;
+        pricingTx = contract.transactionHash;
       } else {
-        etpAddress = contract.address;
-        addAccount(etpAddress, "PricingStrategy");
-        // addCstContractAddressAndAbi(etpAddress, pricingAbi);
-        console.log("DATA: etpAddress=" + etpAddress);
+        pricingAddress = contract.address;
+        addAccount(pricingAddress, "Pricing");
+        addPricingContractAddressAndAbi(pricingAddress, pricingAbi);
+        console.log("DATA: pricingAddress=" + pricingAddress);
       }
     }
   }
@@ -233,33 +238,53 @@ var etp = etpContract.new(tranches, {from: contractOwnerAccount, data: pricingBi
 while (txpool.status.pending > 0) {
 }
 
-printTxData("cstAddress=" + cstAddress, cstTx);
-printTxData("etpAddress=" + etpAddress, etpTx);
+printTxData("tokenAddress=" + tokenAddress, tokenTx);
+printTxData("pricingAddress=" + pricingAddress, pricingTx);
 printBalances();
-failIfGasEqualsGasUsed(cstTx, cstMessage);
-failIfGasEqualsGasUsed(etpTx, etpMessage);
+failIfGasEqualsGasUsed(tokenTx, deployTokenMessage);
+failIfGasEqualsGasUsed(pricingTx, deployPricingMessage);
 printTokenContractDetails();
+printPricingContractDetails();
 console.log("RESULT: ");
 
 
 // -----------------------------------------------------------------------------
-var mecMessage = "Deploy MintedEthCappedCrowdsale Contract";
-console.log("RESULT: " + mecMessage);
-var mecContract = web3.eth.contract(crowdsaleAbi);
-console.log(JSON.stringify(mecContract));
-var mecTx = null;
-var mecAddress = null;
+var deployCrowdsaleMessage = "Deploy Crowdsale Contract";
+// -----------------------------------------------------------------------------
+// var _startTime = getUnixTimestamp('2017-07-23 09:00:00 GMT');
+// var _endTime = getUnixTimestamp('2017-08-7 09:00:00 GMT');
+var _minimumFundingGoal = web3.toWei(1500, "ether");
+var _cap = web3.toWei(38383, "ether");
+var _preMinWei = web3.toWei(33, "ether");
+var _preMaxWei = web3.toWei(333, "ether");
+// var _minWei = web3.toWei(1, "ether");
+var _maxWei = web3.toWei(333, "ether");
+var _maxPreAddresses = 333;
+var _maxIcoAddresses = 3216;
+// function AddressCappedCrowdsale(address _token, PricingStrategy _pricingStrategy, address _multisigWallet, 
+//   uint _start, uint _end, uint _minimumFundingGoal, uint _weiIcoCap, uint _preMinWei, uint _preMaxWei, 
+//   uint _maxWei, uint _maxPreAddresses, uint _maxIcoAddresses) Crowdsale(_token, _pricingStrategy,
+//   _multisigWallet, _start, _end, _minimumFundingGoal, _preMinWei, _preMaxWei, _maxWei,  _maxPreAddresses)
+// -----------------------------------------------------------------------------
+console.log("RESULT: " + deployCrowdsaleMessage);
+var crowdsaleContract = web3.eth.contract(crowdsaleAbi);
+console.log(JSON.stringify(crowdsaleContract));
+var crowdsaleTx = null;
+var crowdsaleAddress = null;
 
-var mec = mecContract.new(cstAddress, etpAddress, multisig, $STARTTIME, $ENDTIME, minimumFundingGoal, cap, {from: contractOwnerAccount, data: crowdsaleBin, gas: 6000000},
+var crowdsale = crowdsaleContract.new(tokenAddress, pricingAddress, multisig,
+    $STARTTIME, $ENDTIME, _minimumFundingGoal, _cap, _preMinWei, _preMaxWei,
+    _maxWei, _maxPreAddresses, _maxIcoAddresses,
+     {from: contractOwnerAccount, data: crowdsaleBin, gas: 6000000},
   function(e, contract) {
     if (!e) {
       if (!contract.address) {
-        mecTx = contract.transactionHash;
+        crowdsaleTx = contract.transactionHash;
       } else {
-        mecAddress = contract.address;
-        addAccount(mecAddress, "Crowdsale");
-        addCrowdsaleContractAddressAndAbi(mecAddress, crowdsaleAbi);
-        console.log("DATA: mecAddress=" + mecAddress);
+        crowdsaleAddress = contract.address;
+        addAccount(crowdsaleAddress, "Crowdsale");
+        addCrowdsaleContractAddressAndAbi(crowdsaleAddress, crowdsaleAbi);
+        console.log("DATA: crowdsaleAddress=" + crowdsaleAddress);
       }
     }
   }
@@ -268,30 +293,42 @@ var mec = mecContract.new(cstAddress, etpAddress, multisig, $STARTTIME, $ENDTIME
 while (txpool.status.pending > 0) {
 }
 
-printTxData("mecAddress=" + mecAddress, mecTx);
+printTxData("crowdsaleAddress=" + crowdsaleAddress, crowdsaleTx);
 printBalances();
-failIfGasEqualsGasUsed(mecTx, mecMessage);
+failIfGasEqualsGasUsed(crowdsaleTx, deployCrowdsaleMessage);
 printCrowdsaleContractDetails();
 console.log("RESULT: ");
 
 
 // -----------------------------------------------------------------------------
-var bfaMessage = "Deploy BonusFinalizerAgent Contract";
-console.log("RESULT: " + bfaMessage);
-var bfaContract = web3.eth.contract(finaliserAbi);
-console.log(JSON.stringify(bfaContract));
-var bfaTx = null;
-var bfaAddress = null;
+var deployFinaliserMessage = "Deploy BonusFinalizerAgent Contract";
+// -----------------------------------------------------------------------------
+var _teamAddresses = [team1, team2, team3];
+var _testAddresses = [testAddress1, testAddress2];
+var _testAddressTokens = 88;
+var _teamBonus = 5;
+var _totalBountyInDay = 8888;
+// function BonusFinalizeAgent(DayToken _token, Crowdsale _crowdsale,  address[] _teamAddresses, 
+// address[] _testAddresses, uint _testAddressTokens, uint _teamBonus, uint _totalBountyInDay)
+// -----------------------------------------------------------------------------
+console.log("RESULT: " + deployFinaliserMessage);
+var finaliserContract = web3.eth.contract(finaliserAbi);
+console.log(JSON.stringify(finaliserContract));
+var finaliserTx = null;
+var finaliserAddress = null;
 
-var bfa = bfaContract.new(cstAddress, mecAddress, teamBonus, teamMembers, {from: contractOwnerAccount, data: finaliserBin, gas: 6000000},
+var finaliser = finaliserContract.new(tokenAddress, crowdsaleAddress, _teamAddresses,
+    _testAddresses, _testAddressTokens, _teamBonus, _totalBountyInDay,
+    {from: contractOwnerAccount, data: finaliserBin, gas: 6000000},
   function(e, contract) {
     if (!e) {
       if (!contract.address) {
-        bfaTx = contract.transactionHash;
+        finaliserTx = contract.transactionHash;
       } else {
-        bfaAddress = contract.address;
-        addAccount(bfaAddress, "BonusFinalizerAgent");
-        console.log("DATA: bfaAddress=" + bfaAddress);
+        finaliserAddress = contract.address;
+        addAccount(finaliserAddress, "BonusFinalizerAgent");
+        addFinaliserContractAddressAndAbi(finaliserAddress, finaliserAbi);
+        console.log("DATA: finaliserAddress=" + finaliserAddress);
       }
     }
   }
@@ -300,10 +337,17 @@ var bfa = bfaContract.new(cstAddress, mecAddress, teamBonus, teamMembers, {from:
 while (txpool.status.pending > 0) {
 }
 
-printTxData("bfaAddress=" + bfaAddress, bfaTx);
+printTxData("finaliserAddress=" + finaliserAddress, finaliserTx);
 printBalances();
-failIfGasEqualsGasUsed(bfaTx, bfaMessage);
+failIfGasEqualsGasUsed(finaliserTx, deployFinaliserMessage);
+printTokenContractDetails();
+printPricingContractDetails();
+printCrowdsaleContractDetails();
+printFinaliserContractDetails();
 console.log("RESULT: ");
+
+
+exit;
 
 
 // -----------------------------------------------------------------------------
