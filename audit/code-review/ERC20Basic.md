@@ -1,0 +1,22 @@
+# ERC20Basic
+
+Source file [../../contracts/ERC20Basic.sol](../../contracts/ERC20Basic.sol).
+
+<br />
+
+<hr />
+
+```javascript
+pragma solidity ^0.4.11;
+/**
+ * @title ERC20Basic
+ * @dev Simpler version of ERC20 interface
+ * @dev see https://github.com/ethereum/EIPs/issues/20
+ */
+contract ERC20Basic {
+  uint public totalSupply;
+  function balanceOf(address who) constant returns (uint);
+  function transfer(address _to, uint _value) returns (bool success);
+  event Transfer(address indexed from, address indexed to, uint value);
+}
+```
