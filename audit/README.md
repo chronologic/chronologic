@@ -32,7 +32,7 @@ TODO
 
 ## Code Review
 
-* Crowdsale Contract And Dependencies
+* Crowdsale Contract And Inheritance Dependencies
   * [x] [code-review/Ownable.md](code-review/Ownable.md)
     * [x] contract Ownable
   * [x] [code-review/Haltable.md](code-review/Haltable.md)
@@ -49,15 +49,15 @@ TODO
   * [ ] [code-review/BonusFinalizeAgent.md](code-review/BonusFinalizeAgent.md)
     * [ ] contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib
 * Crowdsale Pricing Contract And New Dependencies
-  * [ ] [code-review/PricingStrategy.md](code-review/PricingStrategy.md)
-    * [ ] contract PricingStrategy
-  * [ ] [code-review/FlatPricing.md](code-review/FlatPricing.md)
-    * [ ] contract FlatPricing is PricingStrategy, SafeMathLib 
+  * [x] [code-review/PricingStrategy.md](code-review/PricingStrategy.md)
+    * [x] contract PricingStrategy
+  * [x] [code-review/FlatPricing.md](code-review/FlatPricing.md)
+    * [x] contract FlatPricing is PricingStrategy, SafeMathLib 
 * Token Contract And New Dependencies
-  * [ ] [code-review/ERC20Basic.md](code-review/ERC20Basic.md)
-    * [ ] contract ERC20Basic
-  * [ ] [code-review/ERC20.md](code-review/ERC20.md)
-    * [ ] contract ERC20 is ERC20Basic
+  * [x] [code-review/ERC20Basic.md](code-review/ERC20Basic.md)
+    * [x] contract ERC20Basic
+  * [x] [code-review/ERC20.md](code-review/ERC20.md)
+    * [x] contract ERC20 is ERC20Basic
   * [ ] [code-review/ReleasableToken.md](code-review/ReleasableToken.md)
     * [ ] contract ReleasableToken is ERC20, Ownable
   * [ ] [code-review/StandardToken.md](code-review/StandardToken.md)

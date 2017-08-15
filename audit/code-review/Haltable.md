@@ -7,8 +7,10 @@ Source file [../../contracts/Haltable.sol](../../contracts/Haltable.sol).
 <hr />
 
 ```javascript
+// BK Ok
 pragma solidity ^0.4.11;
 
+// BK Ok
 import './Ownable.sol';
 
 /*
