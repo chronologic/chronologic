@@ -1,8 +1,10 @@
 # Chronologic Crowdsale Contract Audit
 
+Status: Work in progress
+
 ## Summary
 
-
+TODO
 
 <br />
 
