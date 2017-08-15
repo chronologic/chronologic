@@ -12,7 +12,17 @@
 
 * [Summary](#summary)
 * [Table Of Contents](#table-of-contents)
+* [Testing](#testing)
 * [Code Review](#code-review)
+
+<br />
+
+<hr />
+
+## Testing
+
+* Testing script [test/01_test1.sh](test/01_test1.sh)
+* Testing results [test/test1results.txt](test/test1results.txt)
 
 <br />
 
@@ -25,8 +35,8 @@
     * [ ] contract Ownable
   * [ ] [code-review/Haltable.md](code-review/Haltable.md)
     * [ ] contract Haltable is Ownable
-  * [ ] [code-review/SafeMathLib.md](code-review/SafeMathLib.md)
-    * [ ] contract SafeMathLib
+  * [x] [code-review/SafeMathLib.md](code-review/SafeMathLib.md)
+    * [x] contract SafeMathLib
   * [ ] [code-review/Crowdsale.md](code-review/Crowdsale.md)
     * [ ] contract Crowdsale is Haltable, SafeMathLib
   * [ ] [code-review/AddressCappedCrowdsale.md](code-review/AddressCappedCrowdsale.md)
