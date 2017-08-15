@@ -33,8 +33,8 @@ TODO
 ## Code Review
 
 * Crowdsale Contract And Dependencies
-  * [ ] [code-review/Ownable.md](code-review/Ownable.md)
-    * [ ] contract Ownable
+  * [x] [code-review/Ownable.md](code-review/Ownable.md)
+    * [x] contract Ownable
   * [ ] [code-review/Haltable.md](code-review/Haltable.md)
     * [ ] contract Haltable is Ownable
   * [x] [code-review/SafeMathLib.md](code-review/SafeMathLib.md)
