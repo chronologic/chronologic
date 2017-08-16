@@ -22,7 +22,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     enum sellingStatus {NOTONSALE, SOLD, EXPIRED, ONSALE}
     /** Basic structure for a contributor with a minting Address
         * adr address of the contributor
-        * initialContributionWei initial contribution of the contributor in wei
+        * initialContributionDay initial contribution of the contributor in wei
         * lastUpdatedOn day count from Minting Epoch when the account balance was last updated
         * mintingPower Initial Minting power of the address
         * totalTransferredDay Total transferred day tokens: integer. Negative value indicates transfer from
@@ -34,7 +34,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     struct Contributor
     {
         address adr;
-        uint256 initialContributionWei;
+        uint256 initialContributionDay;
         uint256 lastUpdatedOn; //Day from Minting Epoch
         uint256 mintingPower;
         int totalTransferredDay;
@@ -231,7 +231,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     */
     function getTotalMinted(address _adr) public constant returns (int256) {
         uint id = idOf[_adr];
-        return int(balances[_adr]) - ((int(contributors[id].initialContributionWei)+contributors[id].totalTransferredDay)); 
+        return int(balances[_adr]) - ((int(contributors[id].initialContributionDay)+contributors[id].totalTransferredDay)); 
     }
 
     /**
@@ -433,7 +433,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         contributors[id].adr = _to;
         idOf[_to] = id;
         idOf[_from] = 0;
-        contributors[id].initialContributionWei = 0;
+        contributors[id].initialContributionDay = 0;
         // needed as id is assigned to new address
         contributors[id].lastUpdatedOn = getDayCount();
         contributors[id].totalTransferredDay = int(balances[_to]);
@@ -446,15 +446,15 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     /** 
         * Add any contributor structure (For every kind of contributors: Team/Pre-ICO/ICO/Test)
         * @param _adr Address of the contributor to be added  
-        * @param _initialContributionWei Initial Contribution of the contributor to be added
+        * @param _initialContributionDay Initial Contribution of the contributor to be added
         */
-    function addContributor(address _adr, uint _initialContributionWei) returns(uint){
+    function addContributor(address _adr, uint _initialContributionDay) returns(uint){
         uint id = ++latestContributerId;
         require(idOf[_adr] == 0);
         contributors[id].adr = _adr;
         setInitialMintingPowerOf(id);
         idOf[_adr] = id;
-        contributors[id].initialContributionWei = _initialContributionWei;
+        contributors[id].initialContributionDay = _initialContributionDay;
         ContributorAdded(_adr, id);
         contributors[id].status = sellingStatus.NOTONSALE;
         return id;
@@ -580,7 +580,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         contributors[id].adr = _adr;
         setInitialMintingPowerOf(id);
         idOf[_adr] = id;
-        contributors[id].initialContributionWei = 0;
+        contributors[id].initialContributionDay = 0;
         ContributorAdded(_adr, id);
         contributors[id].status = sellingStatus.NOTONSALE;
         teamIssuedTimestamp[_adr] = block.timestamp;

@@ -47,7 +47,7 @@ contract('DayTokenMock', function(accounts) {
     beforeEach(async() => {
         tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, 84600, _teamLockPeriodInSec, { from: accounts[0] });
         for (i = 1; i <= 15; i++) {
-            id = await tokenInstance.addContributorNew(accounts[i], 20, 79200000000);
+            id = await tokenInstance.addContributorNew(accounts[i], 79200000000);
         }
     });
 
@@ -322,7 +322,7 @@ contract('DayTokenMock', function(accounts) {
     it('Transfer Address: Should let seller get refunds if no-one buys', async function() {
         let balance1 = (await tokenInstance.balanceOf.call(accounts[1])).valueOf();
         let call = (await tokenInstance.sellMintingAddress(tokenInSmallestUnit(20, _tokenDecimals), 400, { from: accounts[1] })).valueOf();
-         
+
         let call3 = (await tokenInstance.refundFailedAuctionAmount({ from: accounts[1] })).valueOf();
         assert.equal((await tokenInstance.balanceOf.call(tokenInstance.address)).valueOf(), 0);
         assert.equal((await tokenInstance.balanceOf.call(accounts[1])).valueOf(), 79200000000);

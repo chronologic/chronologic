@@ -19,7 +19,7 @@ contract DayTokenMock is DayToken  {
 
   }
 
-    function addContributorNew(address _adr, uint _initialContributionWei, uint _initialBalance)  returns(uint){
+    function addContributorNew(address _adr, uint _initialBalance)  returns(uint){
         uint id = ++latestContributerId;
         require(idOf[_adr] == 0);
         contributors[id].adr = _adr;
@@ -27,7 +27,7 @@ contract DayTokenMock is DayToken  {
         idOf[_adr] = id;
         balances[_adr] = _initialBalance;
         totalSupply = safeAdd(totalSupply, _initialBalance);
-        contributors[id].initialContributionWei = _initialContributionWei;
+        contributors[id].initialContributionDay = _initialBalance;
         ContributorAdded(_adr, id);
         contributors[id].status = sellingStatus.NOTONSALE;
         return id;
