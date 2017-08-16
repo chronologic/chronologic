@@ -1,3 +1,12 @@
+# Crowdsale
+
+Source file [../../contracts/Crowdsale.sol](../../contracts/Crowdsale.sol).
+
+<br />
+
+<hr />
+
+```javascript
 pragma solidity ^0.4.11;
 
 import "./SafeMathLib.sol";
@@ -197,7 +206,7 @@ contract Crowdsale is Haltable, SafeMathLib{
     uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, weiRaised, tokensSold, receiver, token.decimals());
     require(tokenAmount != 0);
     // Add a contributor structure
-    uint id = dayToken.addContributor(receiver, tokenAmount);
+    uint id = dayToken.addContributor(receiver, weiAmount);
     if(investedAmountOf[receiver] == 0) {
         // A new investor
         investorCount++;
@@ -270,7 +279,7 @@ contract Crowdsale is Haltable, SafeMathLib{
     tokensSold = safeAdd(tokensSold,tokenAmount);
 
     DayToken dayToken = DayToken(token);
-    uint id = dayToken.addContributor(receiver, tokenAmount);
+    uint id = dayToken.addContributor(receiver, weiAmount);
     
     investedAmountOf[receiver] = safeAdd(investedAmountOf[receiver],weiAmount);
     tokenAmountOf[receiver] = safeAdd(tokenAmountOf[receiver],tokenAmount);
@@ -317,15 +326,6 @@ contract Crowdsale is Haltable, SafeMathLib{
    * Pay for funding, get invested tokens back in the sender address.
    */
   function buy() public payable {
-    invest(msg.sender);
-  }
-
-  /**
-   * The default entry point to participate the crowdsale process.
-   *
-   * Pay for funding, get invested tokens back in the sender address.
-   */
-  function () public payable {
     invest(msg.sender);
   }
 
@@ -529,3 +529,5 @@ contract Crowdsale is Haltable, SafeMathLib{
    */
   function assignTokens(address receiver, uint tokenAmount) private;
 }
+
+```
