@@ -321,6 +321,15 @@ contract Crowdsale is Haltable, SafeMathLib{
   }
 
   /**
+   * The default entry point to participate the crowdsale process.
+   *
+   * Pay for funding, get invested tokens back in the sender address.
+   */
+  function () public payable {
+    invest(msg.sender);
+  }
+
+  /**
    * Finalize a succcesful crowdsale.
    *
    * The owner can trigger a call the contract that provides post-crowdsale actions, like releasing the tokens.
