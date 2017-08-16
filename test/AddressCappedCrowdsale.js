@@ -93,11 +93,11 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
     var i;
     var id;
     beforeEach(async() => {
-        tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, 
-            _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, 
-            _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell,  
+        tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply,
+            _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower,
+            _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell,
             _dayInSecs, _teamLockPeriodInSec, { from: accounts[0] });
-        
+
         pricingInstance = await Pricing.new(_oneTokenInWei, { from: accounts[0] });
         multisigWalletInstance = await MultisigWallet.new(_listOfOwners, _minRequired);
         finalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, multisigWalletInstance.address, _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus, _totalBountyInDay, { from: accounts[0] });
@@ -204,8 +204,8 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         assert.equal(web3.toBigNumber(await tokenInstance.balanceOf(buyer)).toNumber(), tokenInSmallestUnit(tokensPurchased, _tokenDecimals), "Assert 1 Failed");
         assert.equal(web3.toBigNumber(await crowdsaleInstance.tokensSold.call()).toNumber(), tokenInSmallestUnit(tokensPurchased, _tokenDecimals), "Assert 2 Failed");
         assert.equal(web3.toBigNumber(await crowdsaleInstance.weiRaised.call()).toNumber(), tokensPurchased * tokenPriceInWei, "Assert 3 Failed");
-    
-});
+
+    });
     it('Pre-allocate: Pre allocating the tokens to offline investor must fail if not within range', async function() {
         await tokenInstance.setMintAgent(crowdsaleInstance.address, true);
         await tokenInstance.setMintAgent(finalizeAgentInstance.address, true);
@@ -537,7 +537,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         await timer((_countdownInSeconds * 22));
 
         try {
-            await crowdsaleInstance.buy({ from: accounts[4], value: web3.toWei('10', 'ether') });
+            await crowdsaleInstance.buy({ from: accounts[4], value: web3.toWei('1', 'ether') });
         } catch (error) {
             return assertJump(error);
         }

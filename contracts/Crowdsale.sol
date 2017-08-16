@@ -164,10 +164,7 @@ contract Crowdsale is Haltable, SafeMathLib{
   /**
    * Don't expect to just send in money and get tokens.
    */
-  function() payable {
-    throw;
-  }
-
+  
   /**
    * Make an investment.
    *
