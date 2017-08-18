@@ -488,12 +488,6 @@ contract Crowdsale is Haltable, SafeMathLib{
    * The child contract must define their own cap setting rules.
    * We allow a lot of flexibility through different capping strategies (ETH, token count)
    * Called from invest().
-   *
-   * @param weiAmount The amount of wei the investor tries to invest in the current transaction
-   * @param tokenAmount The amount of tokens we try to give to the investor in the current transaction
-   * @param weiRaisedTotal What would be our total raised balance after this transaction
-   * @param tokensSoldTotal What would be our total sold tokens count after this transaction
-   *
    * @return true if taking this investment would break our cap rules
    */
   function isBreakingCap(uint weiRaisedTotal) constant returns (bool limitBroken);

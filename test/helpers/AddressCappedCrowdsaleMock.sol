@@ -55,7 +55,7 @@ function investInternal(address receiver, uint128 customerId) stopInEmergency pr
     weiRaisedIco = safeAdd(weiRaisedIco, weiAmount);
 
     // Check that we did not bust the cap
-    require(!isBreakingCap(weiAmount, tokenAmount, weiRaisedIco, tokensSold));
+    require(!isBreakingCap(weiRaisedIco));
 
     assignTokens(receiver, tokenAmount);
 

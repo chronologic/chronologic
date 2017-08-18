@@ -97,11 +97,11 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
             _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower,
             _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell,
             _dayInSecs, _teamLockPeriodInSec, { from: accounts[0] });
-
         pricingInstance = await Pricing.new(_oneTokenInWei, { from: accounts[0] });
         multisigWalletInstance = await MultisigWallet.new(_listOfOwners, _minRequired);
         finalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, multisigWalletInstance.address, _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus, _totalBountyInDay, { from: accounts[0] });
         crowdsaleInstance = await Crowdsale.new(tokenInstance.address, pricingInstance.address, multisigWalletInstance.address, _startTime, _endTime, _minimumFundingGoal, _cap, _preMinWei, _preMaxWei, _maxWei, _maxPreAddresses, _maxIcoAddresses, { from: accounts[0] });
+        await tokenInstance.addCrowdsaleAddress.call(crowdsaleInstance.address);
     });
 
     it('Setup: Crowdsale address should be set as mint agent in Token properly', async function() {
@@ -199,8 +199,9 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         var buyer = accounts[3];
         var tokensPurchased = 1000;
         var tokenPriceInWei = tokenPriceInWeiFromTokensPerEther(24);
-
+        console.log("HEY");
         await crowdsaleInstance.preallocate(buyer, tokensPurchased, tokenPriceInWei, { from: accounts[1] });
+        console.log("HEY");
         assert.equal(web3.toBigNumber(await tokenInstance.balanceOf(buyer)).toNumber(), tokenInSmallestUnit(tokensPurchased, _tokenDecimals), "Assert 1 Failed");
         assert.equal(web3.toBigNumber(await crowdsaleInstance.tokensSold.call()).toNumber(), tokenInSmallestUnit(tokensPurchased, _tokenDecimals), "Assert 2 Failed");
         assert.equal(web3.toBigNumber(await crowdsaleInstance.weiRaised.call()).toNumber(), tokensPurchased * tokenPriceInWei, "Assert 3 Failed");
@@ -224,7 +225,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         } catch (error) {
             return assertJump(error);
         }
-
+        assert.fail('should have thrown exception before');
 
         buyer = accounts[5];
         tokensPurchased = 333 * 24;
@@ -234,6 +235,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         } catch (error) {
             return assertJump(error);
         }
+        assert.fail('should have thrown exception before');
     });
 
     it('Pre-allocate: Should throw if maximum number of pre-ICO contributors is exceeded', async function() {
@@ -269,7 +271,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         } catch (error) {
             return assertJump(error);
         }
-
+        assert.fail('should have thrown exception before');
     });
 
     it('Update: Owner must be able to update pricing strategy', async function() {
