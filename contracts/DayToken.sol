@@ -448,7 +448,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * @param _adr Address of the contributor to be added  
         * @param _initialContributionDay Initial Contribution of the contributor to be added
         */
-    function addContributor(address _adr, uint _initialContributionDay) returns(uint){
+    function addContributor(address _adr, uint _initialContributionDay) onlyCrowdsale returns(uint){
         uint id = ++latestContributerId;
         require(idOf[_adr] == 0);
         contributors[id].adr = _adr;

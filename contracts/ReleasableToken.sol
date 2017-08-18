@@ -26,9 +26,6 @@ contract ReleasableToken is ERC20, Ownable {
 
     if(!released) {
         require(transferAgents[_sender]);
-        // if(!transferAgents[_sender]) {
-        //     throw;
-        // }
     }
 
     _;
@@ -64,18 +61,12 @@ contract ReleasableToken is ERC20, Ownable {
   /** The function can be called only before or after the tokens have been releasesd */
   modifier inReleaseState(bool releaseState) {
     require(releaseState == released);
-    // if(releaseState != released) {
-    //     throw;
-    // }
     _;
   }
 
   /** The function can be called only by a whitelisted release agent. */
   modifier onlyReleaseAgent() {
     require(msg.sender == releaseAgent);
-    // if(msg.sender != releaseAgent) {
-    //     throw;
-    // }
     _;
   }
 

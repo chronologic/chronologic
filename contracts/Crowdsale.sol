@@ -93,9 +93,6 @@ contract Crowdsale is Haltable, SafeMathLib{
   /** How much tokens this crowdsale has credited for each investor address */
   mapping (address => uint256) public tokenAmountOf;
 
-  /** Addresses that are allowed to invest even before ICO offical opens. For testing, for ICO partners, etc. */
-  mapping (address => bool) public earlyParticipantWhitelist;
-
   /** This is for manul testing for the interaction from owner wallet. You can set it to any value and inspect this in blockchain explorer to see that crowdsale interaction works. */
   uint public ownerTestValue;
 
@@ -120,8 +117,6 @@ contract Crowdsale is Haltable, SafeMathLib{
   // The rules were changed what kind of investments we accept
   event InvestmentPolicyChanged(bool requireCustomerId, bool requiredSignedAddress, address signerAddress);
 
-  // Address early participation whitelist status changed
-  event Whitelisted(address addr, bool status);
 
   // Crowdsale end time has been changed
   event EndsAtChanged(uint endsAt);
@@ -178,14 +173,8 @@ contract Crowdsale is Haltable, SafeMathLib{
   function investInternal(address receiver, uint128 customerId) stopInEmergency private {
 
     // Determine if it's a good time to accept investment from this participant
-    if(getState() == State.Funding) {
-      // Retail participants can only come in when the crowdsale is running
-      // pass
-    } else {
-      // Unwanted state
-      throw;
-    }
-    
+    // Retail participants can only come in when the crowdsale is running
+    require(getState() == State.Funding);
     uint weiAmount = msg.value;
     DayToken dayToken = DayToken(token);
     require(dayToken.latestContributerId() >= 333);
@@ -210,7 +199,7 @@ contract Crowdsale is Haltable, SafeMathLib{
     weiRaisedIco = safeAdd(weiRaisedIco, weiAmount);
 
     // Check that we did not bust the cap
-    require(!isBreakingCap(weiAmount, tokenAmount, weiRaisedIco, tokensSold));
+    require(!isBreakingCap(weiRaisedIco));
 
     assignTokens(receiver, tokenAmount);
 
@@ -376,11 +365,7 @@ contract Crowdsale is Haltable, SafeMathLib{
    *
    */
   function setEndsAt(uint time) onlyOwner {
-
-    if(now > time) {
-      throw; // Don't change past
-    }
-
+    require(now <= time);
     endsAt = time;
     EndsAtChanged(endsAt);
   }
@@ -407,10 +392,7 @@ contract Crowdsale is Haltable, SafeMathLib{
   function setMultisig(address addr) public onlyOwner {
 
     // Change Multisig wallet address
-    if(investorCount > MAX_INVESTMENTS_BEFORE_MULTISIG_CHANGE) {
-      throw;
-    }
-
+    require(investorCount <= MAX_INVESTMENTS_BEFORE_MULTISIG_CHANGE);
     multisigWallet = addr;
   }
 
@@ -433,7 +415,7 @@ contract Crowdsale is Haltable, SafeMathLib{
     investedAmountOf[msg.sender] = 0;
     weiRefunded = safeAdd(weiRefunded,weiValue);
     Refund(msg.sender, weiValue);
-    if (!msg.sender.send(weiValue)) throw;
+    require(msg.sender.send(weiValue));
   }
 
   /**
@@ -514,7 +496,7 @@ contract Crowdsale is Haltable, SafeMathLib{
    *
    * @return true if taking this investment would break our cap rules
    */
-  function isBreakingCap(uint weiAmount, uint tokenAmount, uint weiRaisedTotal, uint tokensSoldTotal) constant returns (bool limitBroken);
+  function isBreakingCap(uint weiRaisedTotal) constant returns (bool limitBroken);
 
   /**
    * Check if the current crowdsale is full and we can no longer sell any tokens.
