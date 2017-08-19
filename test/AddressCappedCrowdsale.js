@@ -100,7 +100,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         pricingInstance = await Pricing.new(_oneTokenInWei, { from: accounts[0] });
         multisigWalletInstance = await MultisigWallet.new(_listOfOwners, _minRequired);
         finalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, multisigWalletInstance.address, _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus, _totalBountyInDay, { from: accounts[0] });
-        crowdsaleInstance = await Crowdsale.new(tokenInstance.address, pricingInstance.address, multisigWalletInstance.address, _startTime, _endTime, _minimumFundingGoal, _cap, _preMinWei, _preMaxWei, _maxWei, _maxPreAddresses, _maxIcoAddresses, { from: accounts[0] });
+        crowdsaleInstance = await Crowdsale.new(tokenInstance.address, pricingInstance.address, multisigWalletInstance.address, _startTime, _endTime, _minimumFundingGoal, _cap, _preMinWei, _preMaxWei, _minWei, _maxWei, _maxPreAddresses, _maxIcoAddresses, { from: accounts[0] });
         await tokenInstance.addCrowdsaleAddress.call(crowdsaleInstance.address);
     });
 
@@ -123,11 +123,6 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         await tokenInstance.setTransferAgent(crowdsaleInstance.address, true);
         assert.equal(await tokenInstance.transferAgents.call(crowdsaleInstance.address), true);
     });
-
-    // it('Setup: DayToken address should be set as transfer agent in Token properly', async function() {
-    //     await tokenInstance.setTransferAgent(tokenInstance.address, true);
-    //     assert.equal(await tokenInstance.transferAgents.call(crowdsaleInstance.address), true);
-    // });
 
     it('Setup: BonusFinalizeAgent address should be set as finalize agent in Crowdsale properly', async function() {
         await crowdsaleInstance.setFinalizeAgent(finalizeAgentInstance.address);

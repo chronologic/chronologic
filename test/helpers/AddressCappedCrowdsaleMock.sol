@@ -8,11 +8,11 @@ contract AddressCappedCrowdsaleMock is AddressCappedCrowdsale  {
 
 function AddressCappedCrowdsaleMock(address _token, PricingStrategy _pricingStrategy, address _multisigWallet, 
     uint _start, uint _end, uint _minimumFundingGoal, uint _weiIcoCap, uint _preMinWei, 
-    uint _preMaxWei, uint _maxWei, uint _maxPreAddresses, uint _maxIcoAddresses)
+    uint _preMaxWei, uint _minWei, uint _maxWei, uint _maxPreAddresses, uint _maxIcoAddresses)
         
     AddressCappedCrowdsale(_token, _pricingStrategy, _multisigWallet, 
      _start, _end, _minimumFundingGoal, _weiIcoCap, _preMinWei, 
-     _preMaxWei, _maxWei, _maxPreAddresses, _maxIcoAddresses) {
+     _preMaxWei, _minWei, _maxWei, _maxPreAddresses, _maxIcoAddresses) {
 
        owner = msg.sender;
 
@@ -36,7 +36,7 @@ function investInternal(address receiver, uint128 customerId) stopInEmergency pr
     //minWei = calculateMinPrice();
     minWei = 1000000000000000000;
     require(weiAmount >= minWei && weiAmount <= maxWei);
-    uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, weiRaised, tokensSold, receiver, token.decimals());
+    uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, token.decimals());
     require(tokenAmount != 0);
     // Add a contributor structure
     uint id = dayToken.addContributor(receiver, weiAmount);

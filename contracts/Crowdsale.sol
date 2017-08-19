@@ -121,7 +121,7 @@ contract Crowdsale is Haltable, SafeMathLib{
   // Crowdsale end time has been changed
   event EndsAtChanged(uint endsAt);
 
-  function Crowdsale(address _token, PricingStrategy _pricingStrategy, address _multisigWallet, uint _start, uint _end, uint _minimumFundingGoal, uint _preMinWei, uint _preMaxWei, uint _maxWei, uint _maxPreAddresses) {
+  function Crowdsale(address _token, PricingStrategy _pricingStrategy, address _multisigWallet, uint _start, uint _end, uint _minimumFundingGoal, uint _preMinWei, uint _preMaxWei, uint _minWei, uint _maxWei, uint _maxPreAddresses) {
 
     owner = msg.sender;
 
@@ -130,7 +130,7 @@ contract Crowdsale is Haltable, SafeMathLib{
     setPricingStrategy(_pricingStrategy);
 
     multisigWallet = _multisigWallet;
-   
+    require(multisigWallet != 0);
     require(_start != 0);
 
 
@@ -153,6 +153,7 @@ contract Crowdsale is Haltable, SafeMathLib{
     preMinWei = _preMinWei;
     preMaxWei = _preMaxWei;
     maxWei = _maxWei;
+    minWei = _minWei;
     maxPreAddresses = _maxPreAddresses;
   }
 
@@ -176,14 +177,14 @@ contract Crowdsale is Haltable, SafeMathLib{
     // Retail participants can only come in when the crowdsale is running
     require(getState() == State.Funding);
     uint weiAmount = msg.value;
-    DayToken dayToken = DayToken(token);
-    require(dayToken.latestContributerId() >= 333);
-    minWei = calculateMinPrice();
+  
+    require(token.latestContributerId() >= 333);
+    
     require(weiAmount >= minWei && weiAmount <= maxWei);
-    uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, weiRaised, tokensSold, receiver, token.decimals());
+    uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, token.decimals());
     require(tokenAmount != 0);
     // Add a contributor structure
-    uint id = dayToken.addContributor(receiver, tokenAmount);
+    uint id = token.addContributor(receiver, tokenAmount);
     if(investedAmountOf[receiver] == 0) {
         // A new investor
         investorCount++;
@@ -209,26 +210,7 @@ contract Crowdsale is Haltable, SafeMathLib{
     // Tell us invest was success
     Invested(receiver, weiAmount, tokenAmount, customerId, id);
   }
-  function calculateMinPrice() returns (uint256){
-    DayToken dayToken = DayToken(token);
-    uint256 minPrice;
-    uint256 id = dayToken.latestContributerId();
-    if(id >= 33 && id <= 38){
-      minPrice = 88;
-    }
-    else if(id >= 39 && id<=88){
-      minPrice = 33;
-    }
-    else if(id >= 89 && id <= 333){
-      minPrice = 8;
-    }
-    else if(id >= 334 && id <= 888){
-      minPrice = 3;
-    }
-    else {
-      minPrice = 1;
-    }
-  }
+  
   /**
    * Preallocate tokens for the early investors.
    *
@@ -245,7 +227,7 @@ contract Crowdsale is Haltable, SafeMathLib{
    *
    */
   function preallocate(address receiver, uint fullTokens, uint weiPrice) onlyOwner public {
-
+    require(getState() == State.PreFunding);
     uint tokenAmount = fullTokens * 10**uint(token.decimals());
     uint weiAmount = weiPrice * fullTokens; // This can be also 0, we give out tokens for free
 
@@ -255,8 +237,8 @@ contract Crowdsale is Haltable, SafeMathLib{
     weiRaised = safeAdd(weiRaised,weiAmount);
     tokensSold = safeAdd(tokensSold,tokenAmount);
 
-    DayToken dayToken = DayToken(token);
-    uint id = dayToken.addContributor(receiver, tokenAmount);
+  
+    uint id = token.addContributor(receiver, tokenAmount);
     
     investedAmountOf[receiver] = safeAdd(investedAmountOf[receiver],weiAmount);
     tokenAmountOf[receiver] = safeAdd(tokenAmountOf[receiver],tokenAmount);

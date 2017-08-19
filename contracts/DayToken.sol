@@ -449,7 +449,15 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * @param _initialContributionDay Initial Contribution of the contributor to be added
         */
     function addContributor(address _adr, uint _initialContributionDay) returns(uint){
-        uint id = ++latestContributerId;
+        uint id;
+        if(latestContributerId == 3227)
+        {
+           id = latestContributerId = 3246;
+        }
+        else
+        {
+            id = ++latestContributerId;
+        }
         require(idOf[_adr] == 0);
         contributors[id].adr = _adr;
         setInitialMintingPowerOf(id);
@@ -505,14 +513,12 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     function getOnSaleAddresses() constant public {
         for(uint i=1; i <= latestContributerId; i++)
         {
-        if(contributors[i].expiryBlockNumber!=0 && block.number > contributors[i].expiryBlockNumber )
-        {
-            contributors[i].status = sellingStatus.EXPIRED;
-        }
-        if(contributors[i].status == sellingStatus.ONSALE)
-        {
-            onSale(i, contributors[i].adr, contributors[i].minPriceinDay, contributors[i].expiryBlockNumber);
-        }
+            if(contributors[i].expiryBlockNumber!=0 && block.number > contributors[i].expiryBlockNumber ){
+                contributors[i].status = sellingStatus.EXPIRED;
+            }
+            if(contributors[i].status == sellingStatus.ONSALE){
+                onSale(i, contributors[i].adr, contributors[i].minPriceinDay, contributors[i].expiryBlockNumber);
+            }
         }
     }
 
@@ -592,7 +598,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * @param customerId Server side id of the customer
         */
     function postAllocate(address receiver, uint128 customerId) public onlyOwner {
-        if(latestContributerId >= 3227 && latestContributerId<= 3245)
+        if(latestContributerId >= 3227 && latestContributerId <= 3245) //
         {
             latestContributerId = teamTestAdrEndId - 1;
         }

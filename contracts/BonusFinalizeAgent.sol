@@ -90,10 +90,6 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
       testAddressAdded(testAddresses[j], id, testAddressTokens);
     }
     
-    // function to set the ending id of team + test addresses
-    token.setTeamTestEndId(3228 + i +j);
-
-
     // Make token transferable
     // realease them in the wild
     // Hell yeah!!! we did it.

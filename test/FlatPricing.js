@@ -46,7 +46,7 @@ contract('FlatPricing', function(accounts) {
         buyer = accounts[2];
         slab = 0;
 
-        assert.equal(web3.toBigNumber(await pricing.calculatePrice(value, weiRaised, tokensSold, buyer, _tokenDecimals)).toNumber(), Math.floor(tokenInSmallestUnit(value / _oneTokenInWei, _tokenDecimals)));
+        assert.equal(web3.toBigNumber(await pricing.calculatePrice(value, _tokenDecimals)).toNumber(), Math.floor(tokenInSmallestUnit(value / _oneTokenInWei, _tokenDecimals)));
 
         value = etherInWei(1);
         weiRaised = etherInWei(2);
@@ -54,7 +54,7 @@ contract('FlatPricing', function(accounts) {
         buyer = accounts[2];
         slab = 0;
 
-        assert.equal(web3.toBigNumber(await pricing.calculatePrice(value, weiRaised, tokensSold, buyer, _tokenDecimals)).toNumber(), Math.floor(tokenInSmallestUnit(value / _oneTokenInWei, _tokenDecimals)));
+        assert.equal(web3.toBigNumber(await pricing.calculatePrice(value, _tokenDecimals)).toNumber(), Math.floor(tokenInSmallestUnit(value / _oneTokenInWei, _tokenDecimals)));
 
         value = etherInWei(3);
         weiRaised = etherInWei(7);
@@ -62,7 +62,7 @@ contract('FlatPricing', function(accounts) {
         buyer = accounts[2];
         slab = 1;
 
-        assert.equal(web3.toBigNumber(await pricing.calculatePrice(value, weiRaised, tokensSold, buyer, _tokenDecimals)).toNumber(), Math.floor(tokenInSmallestUnit(value / _oneTokenInWei, _tokenDecimals)));
+        assert.equal(web3.toBigNumber(await pricing.calculatePrice(value, _tokenDecimals)).toNumber(), Math.floor(tokenInSmallestUnit(value / _oneTokenInWei, _tokenDecimals)));
     });
 
     it('Transfer: ether transfer to pricing address should fail.', async function() {
