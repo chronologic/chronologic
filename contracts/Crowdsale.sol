@@ -182,9 +182,13 @@ contract Crowdsale is Haltable, SafeMathLib{
     
     require(weiAmount >= minWei && weiAmount <= maxWei);
     uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, token.decimals());
+    uint id;
     require(tokenAmount != 0);
+    if(token.latestContributerId() < 3227)
+    {
     // Add a contributor structure
-    uint id = token.addContributor(receiver, tokenAmount);
+    id = token.addContributor(receiver, tokenAmount);
+    }
     if(investedAmountOf[receiver] == 0) {
         // A new investor
         investorCount++;

@@ -75,8 +75,6 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     uint256 minBalanceToSell;
     /* Team address lock down period from issued time, in seconds */
     uint256 teamLockPeriodInSec;  //Initialize and set function
-    /* Store id of the address after team and test addresses are assigned */
-    uint public teamTestAdrEndId;
     /* Duration in secs that we consider as a day. (For test deployment purposes, if we want to decrease length of a day. default: 84600)*/
     uint256 public DayInSecs;
     address crowdsaleAddress;
@@ -450,6 +448,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         */
     function addContributor(address _adr, uint _initialContributionDay) returns(uint){
         uint id;
+        require(latestContributerId <= 3333);
         if(latestContributerId == 3227)
         {
            id = latestContributerId = 3246;
@@ -457,6 +456,10 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         else
         {
             id = ++latestContributerId;
+        }
+        if(latestContributerId >= 3246)
+        {
+            require(released == true);
         }
         require(idOf[_adr] == 0);
         contributors[id].adr = _adr;
@@ -582,7 +585,11 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     /** Function to add a team address as a contributor and store it's time issued to calculate vesting period
         * Called by BonusFinalizeAgent
         */
-    function addAddressWithId(address _adr, uint id) onlyBonusFinalizeAgent returns (uint){                //VISIBILITY?
+    function addAddressWithId(address _adr, uint id) onlyBonusFinalizeAgent returns (uint){
+        if(latestContributerId >= 3227)
+        {
+            ++latestContributerId;
+        }
         contributors[id].adr = _adr;
         setInitialMintingPowerOf(id);
         idOf[_adr] = id;
@@ -600,14 +607,10 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     function postAllocate(address receiver, uint128 customerId) public onlyOwner {
         if(latestContributerId >= 3227 && latestContributerId <= 3245) //
         {
-            latestContributerId = teamTestAdrEndId - 1;
+            latestContributerId = 3245;
         }
         require(released == true);
         uint id = addContributor(receiver, 0);
         PostInvested(receiver, 0, 0, customerId, id);
-    }
-
-    function setTeamTestEndId(uint id) onlyBonusFinalizeAgent {
-        teamTestAdrEndId = id;
     }
 }
