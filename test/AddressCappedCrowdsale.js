@@ -66,7 +66,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
     var _endTime = _startTime + _saleDurationInSeconds;
     var _minimumFundingGoal = etherInWei(13);
     var _cap = etherInWei(35);
-    var _preMinWei = etherInWei(33);
+    var _preMinWei = etherInWei(1);
     var _preMaxWei = etherInWei(333);
     var _minWei = etherInWei(1);
     var _maxWei = etherInWei(333);
@@ -97,10 +97,19 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
             _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower,
             _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell,
             _dayInSecs, _teamLockPeriodInSec, { from: accounts[0] });
+
         pricingInstance = await Pricing.new(_oneTokenInWei, { from: accounts[0] });
+
         multisigWalletInstance = await MultisigWallet.new(_listOfOwners, _minRequired);
-        finalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, multisigWalletInstance.address, _teamAddresses, _testAddresses, _testAddressTokens, _teamBonus, _totalBountyInDay, { from: accounts[0] });
-        crowdsaleInstance = await Crowdsale.new(tokenInstance.address, pricingInstance.address, multisigWalletInstance.address, _startTime, _endTime, _minimumFundingGoal, _cap, _preMinWei, _preMaxWei, _minWei, _maxWei, _maxPreAddresses, _maxIcoAddresses, { from: accounts[0] });
+
+        finalizeAgentInstance = await FinalizeAgent.new(tokenInstance.address, 
+            multisigWalletInstance.address, _teamAddresses, _testAddresses, _testAddressTokens, 
+            _teamBonus, _totalBountyInDay, { from: accounts[0] });
+
+        crowdsaleInstance = await Crowdsale.new(tokenInstance.address, pricingInstance.address, 
+            multisigWalletInstance.address, _startTime, _endTime, _minimumFundingGoal, _cap, _preMinWei, 
+            _preMaxWei, _minWei, _maxWei, _maxPreAddresses, _maxIcoAddresses, { from: accounts[0] });
+
         await tokenInstance.addCrowdsaleAddress.call(crowdsaleInstance.address);
     });
 
@@ -192,11 +201,10 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         assert.equal(await crowdsaleInstance.isPricingSane(), true, "Pricing not sane. Can't continue.");
 
         var buyer = accounts[3];
-        var tokensPurchased = 1000;
+        var tokensPurchased = 100;
         var tokenPriceInWei = tokenPriceInWeiFromTokensPerEther(24);
-        console.log("HEY");
         await crowdsaleInstance.preallocate(buyer, tokensPurchased, tokenPriceInWei, { from: accounts[1] });
-        console.log("HEY");
+        
         assert.equal(web3.toBigNumber(await tokenInstance.balanceOf(buyer)).toNumber(), tokenInSmallestUnit(tokensPurchased, _tokenDecimals), "Assert 1 Failed");
         assert.equal(web3.toBigNumber(await crowdsaleInstance.tokensSold.call()).toNumber(), tokenInSmallestUnit(tokensPurchased, _tokenDecimals), "Assert 2 Failed");
         assert.equal(web3.toBigNumber(await crowdsaleInstance.weiRaised.call()).toNumber(), tokensPurchased * tokenPriceInWei, "Assert 3 Failed");
@@ -212,7 +220,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         assert.equal(await crowdsaleInstance.isPricingSane(), true, "Pricing not sane. Can't continue.");
 
         var buyer = accounts[3];
-        var tokensPurchased = 200;
+        var tokensPurchased = 20;
         var tokenPriceInWei = tokenPriceInWeiFromTokensPerEther(24);
 
         try {
@@ -223,8 +231,9 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
         assert.fail('should have thrown exception before');
 
         buyer = accounts[5];
-        tokensPurchased = 333 * 24;
-
+        tokensPurchased = 334 * 24;
+await crowdsaleInstance.preallocate(buyer, tokensPurchased, tokenPriceInWei, { from: accounts[0] });
+        
         try {
             await crowdsaleInstance.preallocate(buyer, tokensPurchased, tokenPriceInWei, { from: accounts[0] });
         } catch (error) {

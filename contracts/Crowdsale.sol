@@ -436,7 +436,7 @@ contract Crowdsale is Haltable, SafeMathLib{
     else if (!finalizeAgent.isSane()) return State.Preparing;
     else if (!pricingStrategy.isSane(address(this))) return State.Preparing;
     else if (block.timestamp < startsAt && token.latestContributerId() <= maxPreAddresses) return State.PreFunding;
-    else if (block.timestamp <= endsAt && !isCrowdsaleFull()) return State.Funding;
+    else if (block.timestamp <= endsAt ) return State.Funding;
     else if (isMinimumGoalReached()) return State.Success;
     else if (!isMinimumGoalReached() && weiRaised > 0 && loadedRefund >= weiRaised) return State.Refunding;
     else return State.Failure;
@@ -478,10 +478,6 @@ contract Crowdsale is Haltable, SafeMathLib{
    */
   function isBreakingCap(uint weiRaisedTotal) constant returns (bool limitBroken);
 
-  /**
-   * Check if the current crowdsale is full and we can no longer sell any tokens.
-   */
-  function isCrowdsaleFull() public constant returns (bool);
 
   /**
    * Create new tokens or transfer issued tokens to the investor depending on the cap model.

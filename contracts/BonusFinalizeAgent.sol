@@ -24,7 +24,7 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
   /* Number of tokens to be assigned per test address */
   uint public testAddressTokens;
   uint public allocatedBonus;
-  /* Number of day tokens per team address */
+  /* Percentage of day tokens per team address eg 5% will be passed as 500 */
   uint public teamBonus;
   /* Total number of DayTokens to be stored in the DayToken contract as bounty */
   uint public totalBountyInDay;

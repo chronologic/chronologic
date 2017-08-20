@@ -18,7 +18,7 @@ function AddressCappedCrowdsaleMock(address _token, PricingStrategy _pricingStra
 
   }
 
-  // Overriding InvestInternal to set minWei = 1000000000000000000
+
 function investInternal(address receiver, uint128 customerId) stopInEmergency private {
 
     // Determine if it's a good time to accept investment from this participant
@@ -33,8 +33,6 @@ function investInternal(address receiver, uint128 customerId) stopInEmergency pr
     uint weiAmount = msg.value;
     DayToken dayToken = DayToken(token);
     //require(dayToken.latestContributerId() >= 33);
-    //minWei = calculateMinPrice();
-    minWei = 1000000000000000000;
     require(weiAmount >= minWei && weiAmount <= maxWei);
     uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, token.decimals());
     require(tokenAmount != 0);
@@ -74,9 +72,11 @@ function investInternal(address receiver, uint128 customerId) stopInEmergency pr
         token.mint(receiver, tokenAmount);
     }
 
+
 // overriding to remove onlyOwner modifier
 function preallocate(address receiver, uint fullTokens, uint weiPrice)  public {
 
+    require(getState() == State.PreFunding);
     uint tokenAmount = fullTokens * 10**uint(token.decimals());
     uint weiAmount = weiPrice * fullTokens; // This can be also 0, we give out tokens for free
 
@@ -86,8 +86,7 @@ function preallocate(address receiver, uint fullTokens, uint weiPrice)  public {
     weiRaised = safeAdd(weiRaised,weiAmount);
     tokensSold = safeAdd(tokensSold,tokenAmount);
 
-    DayToken dayToken = DayToken(token);
-    uint id = dayToken.addContributor(receiver, weiAmount);
+    uint id = token.addContributor(receiver, tokenAmount);
     
     investedAmountOf[receiver] = safeAdd(investedAmountOf[receiver],weiAmount);
     tokenAmountOf[receiver] = safeAdd(tokenAmountOf[receiver],tokenAmount);

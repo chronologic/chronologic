@@ -448,7 +448,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         */
     function addContributor(address _adr, uint _initialContributionDay) returns(uint){
         uint id;
-        require(latestContributerId <= 3333);
+        require(latestContributerId < 3333);
         if(latestContributerId == 3227)
         {
            id = latestContributerId = 3246;
