@@ -11,7 +11,9 @@ import "./UpgradeAgent.sol";
  */
 contract UpgradeableToken is StandardToken {
 
-  /** Contract / person who can set the upgrade path. This can be the same as team multisig wallet, as what it is with its default value. */
+  /** Contract / person who can set the upgrade path. 
+   * This can be the same as team multisig wallet, as what it is with its default value. 
+   */
   address public upgradeMaster;
 
   /** The next contract where the tokens will be migrated. */
@@ -93,7 +95,7 @@ contract UpgradeableToken is StandardToken {
    * Get the state of the token upgrade.
    */
   function getUpgradeState() public constant returns(UpgradeState) {
-    if(!canUpgrade()) return UpgradeState.NotAllowed;
+    if (!canUpgrade()) return UpgradeState.NotAllowed;
     else if(address(upgradeAgent) == 0x00) return UpgradeState.WaitingForAgent;
     else if(totalUpgraded == 0) return UpgradeState.ReadyToUpgrade;
     else return UpgradeState.Upgrading;

@@ -15,6 +15,7 @@ contract PricingStrategy {
    * Checks that pricing strategy matches crowdsale parameters.
    */
   function isSane(address crowdsale) public constant returns (bool) {
+    require(crowdsale != 0); 
     return true;
   }
 

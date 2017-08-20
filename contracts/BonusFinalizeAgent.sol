@@ -33,10 +33,11 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
   /** List of test addresses*/
   address[] public testAddresses;
   
-  event testAddressAdded(address TestAddress, uint id, uint balance);
-  event teamMemberId(address adr, uint contributorId);
+  event TestAddressAdded(address testAddress, uint id, uint balance);
+  event TeamMemberId(address adr, uint contributorId);
 
-  function BonusFinalizeAgent(DayToken _token, Crowdsale _crowdsale,  address[] _teamAddresses, address[] _testAddresses, uint _testAddressTokens, uint _teamBonus, uint _totalBountyInDay) {
+  function BonusFinalizeAgent(DayToken _token, Crowdsale _crowdsale,  address[] _teamAddresses, 
+    address[] _testAddresses, uint _testAddressTokens, uint _teamBonus, uint _totalBountyInDay) {
     token = _token;
     crowdsale = _crowdsale;
 
@@ -52,7 +53,7 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
     totalBountyInDay = _totalBountyInDay;
 
     //if any of the address is 0 or invalid throw
-    for (uint j=0;j < totalMembers;j++){
+    for (uint j = 0; j < totalMembers; j++) {
       require(_teamAddresses[j] != 0);
     }
   }
@@ -76,18 +77,18 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
     token.mint(token, totalBountyInDay);
 
     // Calculate team bonus and assign them the addresses with tokens
-    for (uint i=0; i < totalMembers; i++){
+    for (uint i = 0; i < totalMembers; i++) {
       allocatedBonus = safeMul(tokensSold, teamBonus) / 10000;
       token.mint(teamAddresses[i], allocatedBonus);
       uint id = token.addAddressWithId(teamAddresses[i], 3228 + i);
-      teamMemberId(teamAddresses[i], id);
+      TeamMemberId(teamAddresses[i], id);
     }
 
     //Add Test Addresses
-    for(uint j=0; j < testAddresses.length ; j++){
+    for (uint j = 0; j < testAddresses.length; j++) {
       token.mint(testAddresses[j],testAddressTokens);
       id = token.addAddressWithId(testAddresses[j],  3228 + i + j);
-      testAddressAdded(testAddresses[j], id, testAddressTokens);
+      TestAddressAdded(testAddresses[j], id, testAddressTokens);
     }
     
     // Make token transferable
