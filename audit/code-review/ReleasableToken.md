@@ -21,23 +21,23 @@ contract ReleasableToken is ERC20, Ownable {
   /* The finalizer contract that allows unlift the transfer limits on this token */
   address public releaseAgent;
 
-  /** A crowdsale contract can release us to the wild if ICO success. If false we are are in transfer lock up period.*/
+  /** A crowdsale contract can release us to the wild if ICO success. 
+   * If false we are are in transfer lock up period.
+   */
   bool public released = false;
 
-  /** Map of agents that are allowed to transfer tokens regardless of the lock down period. These are crowdsale contracts and possible the team multisig itself. */
+  /** Map of agents that are allowed to transfer tokens regardless of the lock down period. 
+   * These are crowdsale contracts and possible the team multisig itself. 
+   */
   mapping (address => bool) public transferAgents;
 
   /**
    * Limit token transfer until the crowdsale is over.
-   *
    */
   modifier canTransfer(address _sender) {
 
-    if(!released) {
+    if (!released) {
         require(transferAgents[_sender]);
-        // if(!transferAgents[_sender]) {
-        //     throw;
-        // }
     }
 
     _;
@@ -64,7 +64,8 @@ contract ReleasableToken is ERC20, Ownable {
   /**
    * One way function to release the tokens to the wild.
    *
-   * Can be called only from the release agent that is the final ICO contract. It is only called if the crowdsale has been success (first milestone reached).
+   * Can be called only from the release agent that is the final ICO contract. 
+   * It is only called if the crowdsale has been success (first milestone reached).
    */
   function releaseTokenTransfer() public onlyReleaseAgent {
     released = true;
@@ -73,18 +74,12 @@ contract ReleasableToken is ERC20, Ownable {
   /** The function can be called only before or after the tokens have been releasesd */
   modifier inReleaseState(bool releaseState) {
     require(releaseState == released);
-    // if(releaseState != released) {
-    //     throw;
-    // }
     _;
   }
 
   /** The function can be called only by a whitelisted release agent. */
   modifier onlyReleaseAgent() {
     require(msg.sender == releaseAgent);
-    // if(msg.sender != releaseAgent) {
-    //     throw;
-    // }
     _;
   }
 
