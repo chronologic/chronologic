@@ -76,10 +76,10 @@ The token contract is [ERC20](https://github.com/ethereum/eips/issues/20) compli
     * [x] contract StandardToken is ERC20, SafeMathLib 
   * [x] [code-review/MintableToken.md](code-review/MintableToken.md)
     * [x] contract MintableToken is StandardToken, Ownable
-  * [ ] [code-review/UpgradeAgent.md](code-review/UpgradeAgent.md)
-    * [ ] contract UpgradeAgent
-  * [ ] [code-review/UpgradeableToken.md](code-review/UpgradeableToken.md)
-    * [ ] contract UpgradeableToken is StandardToken 
+  * [x] [code-review/UpgradeAgent.md](code-review/UpgradeAgent.md)
+    * [x] contract UpgradeAgent
+  * [x] [code-review/UpgradeableToken.md](code-review/UpgradeableToken.md)
+    * [x] contract UpgradeableToken is StandardToken 
   * [ ] [code-review/DayToken.md](code-review/DayToken.md)
     * [ ] contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken
 
