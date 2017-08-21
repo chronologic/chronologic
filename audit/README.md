@@ -102,48 +102,9 @@ The token contract is [ERC20](https://github.com/ethereum/eips/issues/20) compli
 
 ### Not Reviewed
 
-* Unused Contracts
-  * [ ] [code-review/FractionalERC20.md](code-review/FractionalERC20.md)
-    * [ ] contract FractionalERC20 is ERC20
-  * [ ] [code-review/newToken.md](code-review/newToken.md)
-    * [ ] contract newToken is StandardToken, UpgradeAgent
 * Outside Scope
   * [ ] [code-review/ConsenSysWallet.md](code-review/ConsenSysWallet.md)
     * [ ] contract MultiSigWallet
 * Unused Testing Framework
   * [ ] [code-review/Migrations.md](code-review/Migrations.md)
     * [ ] contract Migrations 
-
-<br />
-
-### Compiler Warnings
-
-```
-PricingStrategy.sol:17:19: Warning: Unused local variable
-  function isSane(address crowdsale) public constant returns (bool) {
-                  ^---------------^
-FlatPricing.sol:23:39: Warning: Unused local variable
-  function calculatePrice(uint value, uint weiRaised, uint tokensSold, address msgSender, uint decimals) public constant returns (uint) {
-                                      ^------------^
-FlatPricing.sol:23:55: Warning: Unused local variable
-  function calculatePrice(uint value, uint weiRaised, uint tokensSold, address msgSender, uint decimals) public constant returns (uint) {
-                                                      ^-------------^
-FlatPricing.sol:23:72: Warning: Unused local variable
-  function calculatePrice(uint value, uint weiRaised, uint tokensSold, address msgSender, uint decimals) public constant returns (uint) {
-                                                                       ^---------------^
-PricingStrategy.sol:17:19: Warning: Unused local variable
-  function isSane(address crowdsale) public constant returns (bool) {
-                  ^---------------^
-AddressCappedCrowdsale.sol:42:28: Warning: Unused local variable
-    function isBreakingCap(uint weiAmount, uint tokenAmount, uint weiRaisedTotal, uint tokensSoldTotal) constant returns (bool limitBroken) {
-                           ^------------^
-AddressCappedCrowdsale.sol:42:44: Warning: Unused local variable
-    function isBreakingCap(uint weiAmount, uint tokenAmount, uint weiRaisedTotal, uint tokensSoldTotal) constant returns (bool limitBroken) {
-                                           ^--------------^
-AddressCappedCrowdsale.sol:42:83: Warning: Unused local variable
-    function isBreakingCap(uint weiAmount, uint tokenAmount, uint weiRaisedTotal, uint tokensSoldTotal) constant returns (bool limitBroken) {
-                                                                                  ^------------------^
-PricingStrategy.sol:17:19: Warning: Unused local variable
-  function isSane(address crowdsale) public constant returns (bool) {
-                  ^---------------^
-```
