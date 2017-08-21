@@ -56,8 +56,8 @@ The token contract is [ERC20](https://github.com/ethereum/eips/issues/20) compli
   * [ ] [code-review/AddressCappedCrowdsale.md](code-review/AddressCappedCrowdsale.md)
     * [ ] contract AddressCappedCrowdsale is Crowdsale
 * Crowdsale Finaliser Contract And New Dependencies
-  * [ ] [code-review/FinalizeAgent.md](code-review/FinalizeAgent.md)
-    * [ ] contract FinalizeAgent
+  * [x] [code-review/FinalizeAgent.md](code-review/FinalizeAgent.md)
+    * [x] contract FinalizeAgent
   * [ ] [code-review/BonusFinalizeAgent.md](code-review/BonusFinalizeAgent.md)
     * [ ] contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib
 * Crowdsale Pricing Contract And New Dependencies

@@ -235,9 +235,10 @@ function printTokenContractDetails() {
     console.log("RESULT: token.DayInSecs=" + contract.DayInSecs());
     console.log("RESULT: token.releaseAgent=" + contract.releaseAgent());
     console.log("RESULT: token.released=" + contract.released());
-    console.log("RESULT: token.DayInSecs=" + contract.DayInSecs());
-    console.log("RESULT: token.DayInSecs=" + contract.DayInSecs());
-    
+    console.log("RESULT: token.upgradeMaster=" + contract.upgradeMaster());
+    console.log("RESULT: token.upgradeAgent=" + contract.upgradeAgent());
+    console.log("RESULT: token.totalUpgraded=" + contract.totalUpgraded().shift(-decimals));
+
 
     var latestBlock = eth.blockNumber;
     var i;
