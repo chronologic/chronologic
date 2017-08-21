@@ -8,6 +8,18 @@ TODO
 
 <br />
 
+### Token Contract
+
+The token contract is [ERC20](https://github.com/ethereum/eips/issues/20) compliant with the following features:
+
+* `decimals` is correctly defined as `uint8` instead of `uint256`
+* `transfer(...)` and `transferFrom(...)` will throw an error instead of return true/false when the transfer is invalid
+* `transfer(...)` and `transferFrom(...)` have not been built with a check on the size of the data being passed. This check is
+  [no longer a recommended feature](https://blog.coinfabrik.com/smart-contract-short-address-attack-mitigation-failure/)
+* `approve(...)` has the [requirement that a non-zero approval limit be set to 0 before a new non-zero limit can be set](https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729)
+
+<br />
+
 <hr />
 
 ## Table Of Contents
@@ -60,8 +72,8 @@ TODO
     * [x] contract ERC20 is ERC20Basic
   * [x] [code-review/ReleasableToken.md](code-review/ReleasableToken.md)
     * [x] contract ReleasableToken is ERC20, Ownable
-  * [ ] [code-review/StandardToken.md](code-review/StandardToken.md)
-    * [ ] contract StandardToken is ERC20, SafeMathLib 
+  * [x] [code-review/StandardToken.md](code-review/StandardToken.md)
+    * [x] contract StandardToken is ERC20, SafeMathLib 
   * [x] [code-review/MintableToken.md](code-review/MintableToken.md)
     * [x] contract MintableToken is StandardToken, Ownable
   * [ ] [code-review/UpgradeAgent.md](code-review/UpgradeAgent.md)
