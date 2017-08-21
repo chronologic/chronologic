@@ -16,13 +16,11 @@ contract Haltable is Ownable {
 
   modifier stopInEmergency {
     require(!halted);
-    //if (halted) throw;
     _;
   }
 
   modifier onlyInEmergency {
     require(halted);
-    //if (!halted) throw;
     _;
   }
 

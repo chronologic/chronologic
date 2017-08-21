@@ -233,6 +233,11 @@ function printTokenContractDetails() {
     console.log("RESULT: token.teamLockPeriodInSec=" + contract.teamLockPeriodInSec());
     console.log("RESULT: token.teamTestAdrEndId=" + contract.teamTestAdrEndId());
     console.log("RESULT: token.DayInSecs=" + contract.DayInSecs());
+    console.log("RESULT: token.releaseAgent=" + contract.releaseAgent());
+    console.log("RESULT: token.released=" + contract.released());
+    console.log("RESULT: token.DayInSecs=" + contract.DayInSecs());
+    console.log("RESULT: token.DayInSecs=" + contract.DayInSecs());
+    
 
     var latestBlock = eth.blockNumber;
     var i;
