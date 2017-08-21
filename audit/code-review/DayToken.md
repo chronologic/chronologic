@@ -498,18 +498,24 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
 
     /** Function to be called once to add the deployed Crowdsale Contract
         */
+    // BK Ok - Only owner can set crowdsale address
     function addCrowdsaleAddress(address _adr) onlyOwner {
+        // BK Ok
         crowdsaleAddress = _adr;
     }
 
     /** Function to be called once to add the deployed BonusFinalizeAgent Contract
         */
+    // BK Ok - Only owner can set finaliser
     function setBonusFinalizeAgentAddress(address adr) onlyOwner {
+        // BK Ok
         BonusFinalizeAgentAddress = adr;
     }
     /** Function to be called by any user to get the latest contributor ID.
         */
+    // BK Ok - Constant function
     function getLatestContributorId() constant public returns(uint id) {
+        // BK Ok
         return latestContributerId;
     }
 

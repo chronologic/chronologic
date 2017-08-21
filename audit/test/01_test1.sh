@@ -257,14 +257,14 @@ var _minimumFundingGoal = web3.toWei(1500, "ether");
 var _cap = web3.toWei(38383, "ether");
 var _preMinWei = web3.toWei(33, "ether");
 var _preMaxWei = web3.toWei(333, "ether");
-// var _minWei = web3.toWei(1, "ether");
+var _minWei = web3.toWei(1, "ether");
 var _maxWei = web3.toWei(333, "ether");
 var _maxPreAddresses = 333;
 var _maxIcoAddresses = 3216;
-// function AddressCappedCrowdsale(address _token, PricingStrategy _pricingStrategy, address _multisigWallet, 
-//   uint _start, uint _end, uint _minimumFundingGoal, uint _weiIcoCap, uint _preMinWei, uint _preMaxWei, 
-//   uint _maxWei, uint _maxPreAddresses, uint _maxIcoAddresses) Crowdsale(_token, _pricingStrategy,
-//   _multisigWallet, _start, _end, _minimumFundingGoal, _preMinWei, _preMaxWei, _maxWei,  _maxPreAddresses)
+// function AddressCappedCrowdsale(address _token, PricingStrategy _pricingStrategy, 
+//   address _multisigWallet, uint _start, uint _end, uint _minimumFundingGoal, uint _weiIcoCap, 
+//   uint _preMinWei, uint _preMaxWei, uint _minWei,  uint _maxWei, uint _maxPreAddresses, 
+//   uint _maxIcoAddresses) 
 // -----------------------------------------------------------------------------
 console.log("RESULT: " + deployCrowdsaleMessage);
 var crowdsaleContract = web3.eth.contract(crowdsaleAbi);
@@ -274,7 +274,7 @@ var crowdsaleAddress = null;
 
 var crowdsale = crowdsaleContract.new(tokenAddress, pricingAddress, multisig,
     $STARTTIME, $ENDTIME, _minimumFundingGoal, _cap, _preMinWei, _preMaxWei,
-    _maxWei, _maxPreAddresses, _maxIcoAddresses,
+    _minWei, _maxWei, _maxPreAddresses, _maxIcoAddresses,
      {from: contractOwnerAccount, data: crowdsaleBin, gas: 6000000},
   function(e, contract) {
     if (!e) {
