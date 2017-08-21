@@ -62,8 +62,8 @@ TODO
     * [x] contract ReleasableToken is ERC20, Ownable
   * [ ] [code-review/StandardToken.md](code-review/StandardToken.md)
     * [ ] contract StandardToken is ERC20, SafeMathLib 
-  * [ ] [code-review/MintableToken.md](code-review/MintableToken.md)
-    * [ ] contract MintableToken is StandardToken, Ownable
+  * [x] [code-review/MintableToken.md](code-review/MintableToken.md)
+    * [x] contract MintableToken is StandardToken, Ownable
   * [ ] [code-review/UpgradeAgent.md](code-review/UpgradeAgent.md)
     * [ ] contract UpgradeAgent
   * [ ] [code-review/UpgradeableToken.md](code-review/UpgradeableToken.md)
