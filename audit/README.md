@@ -58,8 +58,8 @@ TODO
     * [x] contract ERC20Basic
   * [x] [code-review/ERC20.md](code-review/ERC20.md)
     * [x] contract ERC20 is ERC20Basic
-  * [ ] [code-review/ReleasableToken.md](code-review/ReleasableToken.md)
-    * [ ] contract ReleasableToken is ERC20, Ownable
+  * [x] [code-review/ReleasableToken.md](code-review/ReleasableToken.md)
+    * [x] contract ReleasableToken is ERC20, Ownable
   * [ ] [code-review/StandardToken.md](code-review/StandardToken.md)
     * [ ] contract StandardToken is ERC20, SafeMathLib 
   * [ ] [code-review/MintableToken.md](code-review/MintableToken.md)
