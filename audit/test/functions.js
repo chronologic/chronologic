@@ -199,6 +199,21 @@ function printCrowdsaleContractDetails() {
     console.log("RESULT: crowdsale.startsAt=" + startsAt + " " + new Date(startsAt * 1000).toUTCString());
     var endsAt = contract.endsAt();
     console.log("RESULT: crowdsale.endsAt=" + endsAt + " " + new Date(endsAt * 1000).toUTCString());
+    console.log("RESULT: crowdsale.finalizeAgent=" + contract.finalizeAgent());
+    
+    // Events
+    // A new investment was made
+    // event Invested(address investor, uint weiAmount, uint tokenAmount, uint128 customerId, 
+    //  uint contributorId);
+
+    // Refund was processed for a contributor
+    // event Refund(address investor, uint weiAmount);
+
+    // The rules were changed what kind of investments we accept
+    // event InvestmentPolicyChanged(bool requireCustomerId, bool requiredSignedAddress, address signerAddress);
+
+    // Crowdsale end time has been changed
+    // event EndsAtChanged(uint endsAt);
   }
 }
 
@@ -296,6 +311,7 @@ function addFinaliserContractAddressAndAbi(address, abi) {
   finaliserContractAbi = abi;
 }
 
+var finaliserFromBlock = 0;
 function printFinaliserContractDetails() {
   console.log("RESULT: finaliserContractAddress=" + finaliserContractAddress);
   // console.log("RESULT: finaliserContractAbi=" + JSON.stringify(finaliserContractAbi));
@@ -309,6 +325,25 @@ function printFinaliserContractDetails() {
     console.log("RESULT: finaliser.totalBountyInDay=" + contract.totalBountyInDay());
     console.log("RESULT: finaliser.teamAddresses=" + contract.teamAddresses());
     console.log("RESULT: finaliser.testAddresses=" + contract.testAddresses());
+
+    var latestBlock = eth.blockNumber;
+    var i;
+
+    var teamAddressAddedEvents = contract.TestAddressAdded({}, { fromBlock: finaliserFromBlock, toBlock: latestBlock });
+    i = 0;
+    teamAddressAddedEvents.watch(function (error, result) {
+      console.log("RESULT: TestAddressAdded " + i++ + " #" + result.blockNumber + " " + JSON.stringify(result.args));
+    });
+    teamAddressAddedEvents.stopWatching();
+
+    var teamMemberIdEvents = contract.TeamMemberId({}, { fromBlock: finaliserFromBlock, toBlock: latestBlock });
+    i = 0;
+    teamMemberIdEvents.watch(function (error, result) {
+      console.log("RESULT: TeamMemberId " + i++ + " #" + result.blockNumber + " " + JSON.stringify(result.args));
+    });
+    teamMemberIdEvents.stopWatching();
+
+    finaliserFromBlock = parseInt(latestBlock) + 1;
   }
 }
 

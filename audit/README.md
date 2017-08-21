@@ -8,6 +8,21 @@ TODO
 
 <br />
 
+### Crowdsale Contract
+
+* Funds contributed during the crowdsale are immediately transferred to the multisig wallet
+* If the minimum funding goal is not met, contributed funds must be transferred back into the crowdsale contract for investors
+  to be able to withdraw their refunds
+
+<br />
+
+### Finalizer Contract
+
+* *WARNING* - The *BonusFinalizeAgent* must be correctly set for the crowdsale contract before the crowdsale contracts
+  `finalize()` function can be called, or the crowdsale will never be finalised correctly.
+
+<br />
+
 ### Token Contract
 
 The token contract is [ERC20](https://github.com/ethereum/eips/issues/20) compliant with the following features:
@@ -51,15 +66,15 @@ The token contract is [ERC20](https://github.com/ethereum/eips/issues/20) compli
     * [x] contract Haltable is Ownable
   * [x] [code-review/SafeMathLib.md](code-review/SafeMathLib.md)
     * [x] contract SafeMathLib
-  * [ ] [code-review/Crowdsale.md](code-review/Crowdsale.md)
-    * [ ] contract Crowdsale is Haltable, SafeMathLib
-  * [ ] [code-review/AddressCappedCrowdsale.md](code-review/AddressCappedCrowdsale.md)
-    * [ ] contract AddressCappedCrowdsale is Crowdsale
+  * [x] [code-review/Crowdsale.md](code-review/Crowdsale.md)
+    * [x] contract Crowdsale is Haltable, SafeMathLib
+  * [x] [code-review/AddressCappedCrowdsale.md](code-review/AddressCappedCrowdsale.md)
+    * [x] contract AddressCappedCrowdsale is Crowdsale
 * Crowdsale Finaliser Contract And New Dependencies
   * [x] [code-review/FinalizeAgent.md](code-review/FinalizeAgent.md)
     * [x] contract FinalizeAgent
-  * [ ] [code-review/BonusFinalizeAgent.md](code-review/BonusFinalizeAgent.md)
-    * [ ] contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib
+  * [x] [code-review/BonusFinalizeAgent.md](code-review/BonusFinalizeAgent.md)
+    * [x] contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib
 * Crowdsale Pricing Contract And New Dependencies
   * [x] [code-review/PricingStrategy.md](code-review/PricingStrategy.md)
     * [x] contract PricingStrategy
