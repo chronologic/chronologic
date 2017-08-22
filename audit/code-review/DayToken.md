@@ -84,8 +84,10 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     /* Max Minting power with 19 decimals: 1% : 10000000000000000000 */
     uint256 public maxMintingPower;
     /* Halving cycle in days (88) */
+    // BK Ok
     uint256 public halvingCycle; 
     /* Unix timestamp when minting is to be started */
+    // BK Ok
     uint256 public initialBlockTimestamp;
     /* number of decimals in minting power */
     uint256 public mintingDec; 
@@ -109,8 +111,11 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     event OnSale(uint id, address adr, uint minPriceinDay, uint expiryBlockNumber);
     event PostInvested(address investor, uint weiAmount, uint tokenAmount, uint128 customerId, uint contributorId);
     
+    // BK Ok - Not used
     modifier onlyCrowdsale(){
+        // BK Ok
         require(msg.sender==crowdsaleAddress);
+        // BK Ok
         _;
     }
 
@@ -123,10 +128,13 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         require(msg.sender == BonusFinalizeAgentAddress);
         _;
     }
+    // BK Ok
     string public name; 
 
+    // BK Ok
     string public symbol; 
 
+    // BK Ok
     uint8 public decimals; 
 
     /**
@@ -140,6 +148,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * @param _decimals Number of decimal places
         * _mintable Are new tokens created over the crowdsale or do we distribute only the initial supply?
         */
+    // BK Ok - Constructor
     function DayToken(string _name, string _symbol, uint _initialSupply, uint8 _decimals, 
         bool _mintable, uint _maxAddresses, uint256 _minMintingPower, uint256 _maxMintingPower, 
         uint _halvingCycle, uint _initialBlockTimestamp, uint256 _mintingDec, uint _bounty, 
@@ -149,6 +158,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         // Create any address, can be transferred
         // to team multisig via changeOwner(),
         // also remember to call setUpgradeMaster()
+        // BK Next block Ok
         owner = msg.sender; 
         name = _name; 
         symbol = _symbol;  
@@ -169,12 +179,17 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         DayInSecs = _dayInSecs;
         teamLockPeriodInSec = _teamLockPeriodInSec;
         
+        // BK Ok
         if (totalSupply > 0) {
+            // BK Ok
             Minted(owner, totalSupply); 
         }
 
+        // BK Ok
         if (!_mintable) {
-            mintingFinished = true; 
+            // BK Ok
+            mintingFinished = true;
+            // BK Ok 
             require(totalSupply != 0); 
         }
     }
@@ -182,24 +197,33 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     /**
         * When token is released to be transferable, enforce no new tokens can be created.
         */
+    // BK Ok
     function releaseTokenTransfer() public onlyReleaseAgent {
-        mintingFinished = true; 
+        // BK Ok
+        mintingFinished = true;
+        // BK Ok 
         super.releaseTokenTransfer(); 
     }
 
     /**
         * Allow upgrade agent functionality kick in only if the crowdsale was success.
         */
+    // BK Ok - Constant function
     function canUpgrade() public constant returns(bool) {
+        // BK Ok
         return released && super.canUpgrade(); 
     }
 
     /**
         * Owner can update token information here
         */
+    // BK Ok - Only owner can change token name and symbol
     function setTokenInformation(string _name, string _symbol) onlyOwner {
-        name = _name; 
-        symbol = _symbol; 
+        // BK Ok
+        name = _name;
+        // BK Ok 
+        symbol = _symbol;
+        // BK Ok 
         UpdatedTokenInformation(name, symbol); 
     }
 
@@ -208,15 +232,21 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * Note: Phase starts with 1
         * @param _day Number of days since Minting Epoch
         */
+    // BK Ok - Constant function
     function getPhaseCount(uint _day) public constant returns (uint phase) {
-        phase = (_day/halvingCycle) + 1; 
+        // BK Ok
+        phase = (_day/halvingCycle) + 1;
+        // BK Ok 
         return (phase); 
     }
     /**
         * Returns current day number since minting epoch.
         */
+    // BK Ok - Constant function
     function getDayCount() public constant returns (uint daySinceMintingEpoch) {
-        daySinceMintingEpoch = ((block.timestamp - initialBlockTimestamp)/DayInSecs); 
+        // BK Ok
+        daySinceMintingEpoch = ((block.timestamp - initialBlockTimestamp)/DayInSecs);
+        // BK Ok 
         return daySinceMintingEpoch; 
     }
     /**
@@ -331,6 +361,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * For public calls.
         * Logs the ids whose balance could not be updated
         */
+    // BK TODO - Check the gas usage of this function
+    // BK TODO - Check what happens if days skipped
     function updateAllBalances() public {
         require(block.timestamp >= initialBlockTimestamp);
         uint today = (block.timestamp - initialBlockTimestamp)/1 days;
@@ -355,14 +387,18 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * Can be called only by owner
         * @param _bounty bounty to be set.
         */
+    // BK Ok - Only owner can set bounty
     function setBounty(uint256 _bounty) onlyOwner{
+        // BK Ok
         bounty = _bounty;
     }
 
     /**
         * Returns totalSupply of DAY tokens.
         */
+    // BK Ok - Constant function
     function getTotalSupply() public constant returns (uint){
+        // BK Ok
         return totalSupply;
     }
 
@@ -395,7 +431,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
             contributors[toId].totalTransferredDay = contributors[toId].totalTransferredDay + int(_value);
         }
 
-        balances[msg.sender] = safeSub(balances[msg.sender], _value); 
+        balances[msg.sender] = safeSub(balances[msg.sender], _value);
+        // BK ERROR - Line below should be `balances[_to] = safeAdd(balances[to], _value);`
         balances[_to] = safeAdd(balances[msg.sender], _value); 
         Transfer(msg.sender, _to, _value);
 

@@ -73,10 +73,10 @@ contract Crowdsale is Haltable, SafeMathLib{
   uint public weiRaisedIco = 0;
 
   /* Min and Max contribution during pre-ICO and during ICO   */
-  uint preMinWei;
-  uint preMaxWei;
-  uint minWei;
-  uint maxWei;
+  uint public preMinWei;
+  uint public preMaxWei;
+  uint public minWei;
+  uint public maxWei;
   
   /**
     * Do we verify that contributor has been cleared on the server side (accredited investors only).
@@ -179,7 +179,7 @@ contract Crowdsale is Haltable, SafeMathLib{
     require(getState() == State.Funding);
     uint weiAmount = msg.value;
   
-    require(token.latestContributerId() >= 333);
+    // require(token.latestContributerId() >= 333);
     
     require(weiAmount >= minWei && weiAmount <= maxWei);
     uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, token.decimals());
