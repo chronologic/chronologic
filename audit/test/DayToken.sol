@@ -73,14 +73,14 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     /* Bounty to be given to the person calling UpdateAllBalances() */
     uint256 public bounty;
     /* Minimum Balance in Day tokens required to sell a minting address */
-    uint256 minBalanceToSell;
+    uint256 public minBalanceToSell;
     /* Team address lock down period from issued time, in seconds */
-    uint256 teamLockPeriodInSec;  //Initialize and set function
+    uint256 public teamLockPeriodInSec;  //Initialize and set function
     /* Duration in secs that we consider as a day. (For test deployment purposes, 
        if we want to decrease length of a day. default: 84600)*/
     uint256 public DayInSecs;
-    address crowdsaleAddress;
-    address BonusFinalizeAgentAddress;
+    address public crowdsaleAddress;
+    address public BonusFinalizeAgentAddress;
 
     event UpdatedTokenInformation(string newName, string newSymbol); 
     event UpdateFailed(uint id); 

@@ -41,8 +41,27 @@ The token contract is [ERC20](https://github.com/ethereum/eips/issues/20) compli
 
 * [Summary](#summary)
 * [Table Of Contents](#table-of-contents)
+* [Recommendations](#recommendations)
 * [Testing](#testing)
 * [Code Review](#code-review)
+
+<br />
+
+<hr />
+
+## Recommendations
+
+* **HIGH IMPORTANCE** - In *DayToken*, `balances[_to] = safeAdd(balances[msg.sender], _value);` in `transfer(...)` should be
+  `balances[_to] = safeAdd(balances[to], _value); `
+* **MEDIUM IMPORTANCE** - In *DayToken* and *Crowdsale*, please convert the magic numbers like `333`, `3227`, `3227`, `3245` into
+  constant variable that will explain the meaning of these numbers
+* **LOW IMPORTANCE** - In *DayToken*, `minBalanceToSell`, `crowdsaleAddress` and `BonusFinalizeAgentAddress` should be made public to
+  provide visibility
+* **LOW IMPORTANCE** - In *DayToken*, `DayInSecs` should be renamed `dayInSecs` and `BonusFinalizeAgentAddress` should be renamed
+  `bonusFinalizeAgentAddress` for variable naming consistency
+* **LOW IMPORTANCE** - In *DayToken*, `modifier onlyCrowdsale()` is unused and can be removed to simplify the contract
+* **LOW IMPORTANCE** - Un-indent `function transferFrom(...)` in *DayToken*
+* **LOW IMPORTANCE** - In *Crowdsale*, `preMinWei`, `preMaxWei`, `minWei` and `maxWei` should be made public to provide visibility
 
 <br />
 
