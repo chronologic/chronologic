@@ -20,7 +20,7 @@ contract FlatPricing is PricingStrategy, SafeMathLib {
    *
    * 
    */
-  function calculatePrice(uint value, uint weiRaised, uint tokensSold, address msgSender, uint decimals) public constant returns (uint) {
+  function calculatePrice(uint value, uint decimals) public constant returns (uint) {
     uint multiplier = 10 ** decimals;
     return safeMul(value, multiplier) / oneTokenInWei;
   }

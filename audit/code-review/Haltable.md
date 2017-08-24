@@ -31,7 +31,6 @@ contract Haltable is Ownable {
   modifier stopInEmergency {
     // BK Ok
     require(!halted);
-    //if (halted) throw;
     // BK Ok
     _;
   }
@@ -40,7 +39,6 @@ contract Haltable is Ownable {
   modifier onlyInEmergency {
     // BK Ok
     require(halted);
-    //if (!halted) throw;
     // BK Ok
     _;
   }

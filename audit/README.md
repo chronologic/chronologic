@@ -8,14 +8,60 @@ TODO
 
 <br />
 
+### Crowdsale Contract
+
+* Funds contributed during the crowdsale are immediately transferred to the multisig wallet
+* If the minimum funding goal is not met, contributed funds must be transferred back into the crowdsale contract for investors
+  to be able to withdraw their refunds
+
+<br />
+
+### Finalizer Contract
+
+* *WARNING* - The *BonusFinalizeAgent* must be correctly set for the crowdsale contract before the crowdsale contracts
+  `finalize()` function can be called, or the crowdsale will never be finalised correctly.
+
+<br />
+
+### Token Contract
+
+The token contract is [ERC20](https://github.com/ethereum/eips/issues/20) compliant with the following features:
+
+* `decimals` is correctly defined as `uint8` instead of `uint256`
+* `transfer(...)` and `transferFrom(...)` will throw an error instead of return true/false when the transfer is invalid
+* `transfer(...)` and `transferFrom(...)` have not been built with a check on the size of the data being passed. This check is
+  [no longer a recommended feature](https://blog.coinfabrik.com/smart-contract-short-address-attack-mitigation-failure/)
+* `approve(...)` has the [requirement that a non-zero approval limit be set to 0 before a new non-zero limit can be set](https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729)
+
+<br />
+
 <hr />
 
 ## Table Of Contents
 
 * [Summary](#summary)
 * [Table Of Contents](#table-of-contents)
+* [Recommendations](#recommendations)
 * [Testing](#testing)
 * [Code Review](#code-review)
+
+<br />
+
+<hr />
+
+## Recommendations
+
+* **HIGH IMPORTANCE** - In *DayToken*, `balances[_to] = safeAdd(balances[msg.sender], _value);` in `transfer(...)` should be
+  `balances[_to] = safeAdd(balances[to], _value); `
+* **MEDIUM IMPORTANCE** - In *DayToken* and *Crowdsale*, please convert the magic numbers like `333`, `3227`, `3227`, `3245` into
+  constant variable that will explain the meaning of these numbers
+* **LOW IMPORTANCE** - In *DayToken*, `minBalanceToSell`, `crowdsaleAddress` and `BonusFinalizeAgentAddress` should be made public to
+  provide visibility
+* **LOW IMPORTANCE** - In *DayToken*, `DayInSecs` should be renamed `dayInSecs` and `BonusFinalizeAgentAddress` should be renamed
+  `bonusFinalizeAgentAddress` for variable naming consistency
+* **LOW IMPORTANCE** - In *DayToken*, `modifier onlyCrowdsale()` is unused and can be removed to simplify the contract
+* **LOW IMPORTANCE** - Un-indent `function transferFrom(...)` in *DayToken*
+* **LOW IMPORTANCE** - In *Crowdsale*, `preMinWei`, `preMaxWei`, `minWei` and `maxWei` should be made public to provide visibility
 
 <br />
 
@@ -39,15 +85,15 @@ TODO
     * [x] contract Haltable is Ownable
   * [x] [code-review/SafeMathLib.md](code-review/SafeMathLib.md)
     * [x] contract SafeMathLib
-  * [ ] [code-review/Crowdsale.md](code-review/Crowdsale.md)
-    * [ ] contract Crowdsale is Haltable, SafeMathLib
-  * [ ] [code-review/AddressCappedCrowdsale.md](code-review/AddressCappedCrowdsale.md)
-    * [ ] contract AddressCappedCrowdsale is Crowdsale
+  * [x] [code-review/Crowdsale.md](code-review/Crowdsale.md)
+    * [x] contract Crowdsale is Haltable, SafeMathLib
+  * [x] [code-review/AddressCappedCrowdsale.md](code-review/AddressCappedCrowdsale.md)
+    * [x] contract AddressCappedCrowdsale is Crowdsale
 * Crowdsale Finaliser Contract And New Dependencies
-  * [ ] [code-review/FinalizeAgent.md](code-review/FinalizeAgent.md)
-    * [ ] contract FinalizeAgent
-  * [ ] [code-review/BonusFinalizeAgent.md](code-review/BonusFinalizeAgent.md)
-    * [ ] contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib
+  * [x] [code-review/FinalizeAgent.md](code-review/FinalizeAgent.md)
+    * [x] contract FinalizeAgent
+  * [x] [code-review/BonusFinalizeAgent.md](code-review/BonusFinalizeAgent.md)
+    * [x] contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib
 * Crowdsale Pricing Contract And New Dependencies
   * [x] [code-review/PricingStrategy.md](code-review/PricingStrategy.md)
     * [x] contract PricingStrategy
@@ -58,16 +104,16 @@ TODO
     * [x] contract ERC20Basic
   * [x] [code-review/ERC20.md](code-review/ERC20.md)
     * [x] contract ERC20 is ERC20Basic
-  * [ ] [code-review/ReleasableToken.md](code-review/ReleasableToken.md)
-    * [ ] contract ReleasableToken is ERC20, Ownable
-  * [ ] [code-review/StandardToken.md](code-review/StandardToken.md)
-    * [ ] contract StandardToken is ERC20, SafeMathLib 
-  * [ ] [code-review/MintableToken.md](code-review/MintableToken.md)
-    * [ ] contract MintableToken is StandardToken, Ownable
-  * [ ] [code-review/UpgradeAgent.md](code-review/UpgradeAgent.md)
-    * [ ] contract UpgradeAgent
-  * [ ] [code-review/UpgradeableToken.md](code-review/UpgradeableToken.md)
-    * [ ] contract UpgradeableToken is StandardToken 
+  * [x] [code-review/ReleasableToken.md](code-review/ReleasableToken.md)
+    * [x] contract ReleasableToken is ERC20, Ownable
+  * [x] [code-review/StandardToken.md](code-review/StandardToken.md)
+    * [x] contract StandardToken is ERC20, SafeMathLib 
+  * [x] [code-review/MintableToken.md](code-review/MintableToken.md)
+    * [x] contract MintableToken is StandardToken, Ownable
+  * [x] [code-review/UpgradeAgent.md](code-review/UpgradeAgent.md)
+    * [x] contract UpgradeAgent
+  * [x] [code-review/UpgradeableToken.md](code-review/UpgradeableToken.md)
+    * [x] contract UpgradeableToken is StandardToken 
   * [ ] [code-review/DayToken.md](code-review/DayToken.md)
     * [ ] contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken
 
@@ -75,48 +121,9 @@ TODO
 
 ### Not Reviewed
 
-* Unused Contracts
-  * [ ] [code-review/FractionalERC20.md](code-review/FractionalERC20.md)
-    * [ ] contract FractionalERC20 is ERC20
-  * [ ] [code-review/newToken.md](code-review/newToken.md)
-    * [ ] contract newToken is StandardToken, UpgradeAgent
 * Outside Scope
   * [ ] [code-review/ConsenSysWallet.md](code-review/ConsenSysWallet.md)
     * [ ] contract MultiSigWallet
 * Unused Testing Framework
   * [ ] [code-review/Migrations.md](code-review/Migrations.md)
     * [ ] contract Migrations 
-
-<br />
-
-### Compiler Warnings
-
-```
-PricingStrategy.sol:17:19: Warning: Unused local variable
-  function isSane(address crowdsale) public constant returns (bool) {
-                  ^---------------^
-FlatPricing.sol:23:39: Warning: Unused local variable
-  function calculatePrice(uint value, uint weiRaised, uint tokensSold, address msgSender, uint decimals) public constant returns (uint) {
-                                      ^------------^
-FlatPricing.sol:23:55: Warning: Unused local variable
-  function calculatePrice(uint value, uint weiRaised, uint tokensSold, address msgSender, uint decimals) public constant returns (uint) {
-                                                      ^-------------^
-FlatPricing.sol:23:72: Warning: Unused local variable
-  function calculatePrice(uint value, uint weiRaised, uint tokensSold, address msgSender, uint decimals) public constant returns (uint) {
-                                                                       ^---------------^
-PricingStrategy.sol:17:19: Warning: Unused local variable
-  function isSane(address crowdsale) public constant returns (bool) {
-                  ^---------------^
-AddressCappedCrowdsale.sol:42:28: Warning: Unused local variable
-    function isBreakingCap(uint weiAmount, uint tokenAmount, uint weiRaisedTotal, uint tokensSoldTotal) constant returns (bool limitBroken) {
-                           ^------------^
-AddressCappedCrowdsale.sol:42:44: Warning: Unused local variable
-    function isBreakingCap(uint weiAmount, uint tokenAmount, uint weiRaisedTotal, uint tokensSoldTotal) constant returns (bool limitBroken) {
-                                           ^--------------^
-AddressCappedCrowdsale.sol:42:83: Warning: Unused local variable
-    function isBreakingCap(uint weiAmount, uint tokenAmount, uint weiRaisedTotal, uint tokensSoldTotal) constant returns (bool limitBroken) {
-                                                                                  ^------------------^
-PricingStrategy.sol:17:19: Warning: Unused local variable
-  function isSane(address crowdsale) public constant returns (bool) {
-                  ^---------------^
-```

@@ -11,7 +11,9 @@ import "./UpgradeAgent.sol";
  */
 contract UpgradeableToken is StandardToken {
 
-  /** Contract / person who can set the upgrade path. This can be the same as team multisig wallet, as what it is with its default value. */
+  /** Contract / person who can set the upgrade path. 
+   * This can be the same as team multisig wallet, as what it is with its default value. 
+   */
   address public upgradeMaster;
 
   /** The next contract where the tokens will be migrated. */
@@ -54,11 +56,6 @@ contract UpgradeableToken is StandardToken {
   function upgrade(uint256 value) public {
     UpgradeState state = getUpgradeState();
     require((state == UpgradeState.ReadyToUpgrade || state == UpgradeState.Upgrading));
-    // if(!(state == UpgradeState.ReadyToUpgrade || state == UpgradeState.Upgrading)) {
-    //   // Called in a bad state
-    //   throw;
-    // }
-
     // Validate input value.
     require(value!=0);
 
@@ -78,28 +75,18 @@ contract UpgradeableToken is StandardToken {
    */
   function setUpgradeAgent(address agent) external {
     require(canUpgrade());
-    // if(!canUpgrade()) {
-    //   // The token is not yet in a state that we could think upgrading
-    //   throw;
-    // }
-
     require(agent != 0x0);
-    //if (agent == 0x0) throw;
     // Only a master can designate the next agent
     require(msg.sender == upgradeMaster);
-    //if (msg.sender != upgradeMaster) throw;
     // Upgrade has already begun for an agent
     require(getUpgradeState() != UpgradeState.Upgrading);
-    //if (getUpgradeState() == UpgradeState.Upgrading) throw;
 
     upgradeAgent = UpgradeAgent(agent);
 
     // Bad interface
     require(upgradeAgent.isUpgradeAgent());
-    //if(!upgradeAgent.isUpgradeAgent()) throw;
     // Make sure that token supplies match in source and target
     require(upgradeAgent.originalSupply() == totalSupply);
-    //if (upgradeAgent.originalSupply() != totalSupply) throw;
 
     UpgradeAgentSet(upgradeAgent);
   }
@@ -108,7 +95,7 @@ contract UpgradeableToken is StandardToken {
    * Get the state of the token upgrade.
    */
   function getUpgradeState() public constant returns(UpgradeState) {
-    if(!canUpgrade()) return UpgradeState.NotAllowed;
+    if (!canUpgrade()) return UpgradeState.NotAllowed;
     else if(address(upgradeAgent) == 0x00) return UpgradeState.WaitingForAgent;
     else if(totalUpgraded == 0) return UpgradeState.ReadyToUpgrade;
     else return UpgradeState.Upgrading;
@@ -121,9 +108,7 @@ contract UpgradeableToken is StandardToken {
    */
   function setUpgradeMaster(address master) public {
     require(master != 0x0);
-    //if (master == 0x0) throw;
     require(msg.sender == upgradeMaster);
-    //if (msg.sender != upgradeMaster) throw;
     upgradeMaster = master;
   }
 

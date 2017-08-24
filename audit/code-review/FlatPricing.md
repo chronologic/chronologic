@@ -40,7 +40,7 @@ contract FlatPricing is PricingStrategy, SafeMathLib {
   // BK NOTE - result = msg.value / 0.01
   // BK NOTE - So if 1 ETH is sent, result = 100 
   // BK Ok
-  function calculatePrice(uint value, uint weiRaised, uint tokensSold, address msgSender, uint decimals) public constant returns (uint) {
+  function calculatePrice(uint value, uint decimals) public constant returns (uint) {
     // BK Ok
     uint multiplier = 10 ** decimals;
     // BK Ok

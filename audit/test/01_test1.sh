@@ -103,10 +103,15 @@ printf "ENDTIME              = '$ENDTIME' '$ENDTIME_S'\n" | tee -a $TEST1OUTPUT
 `cp $CONTRACTSDIR/PricingStrategy.sol .`
 
 # --- Modify dates ---
-#`perl -pi -e "s/startTime \= 1498140000;.*$/startTime = $STARTTIME; \/\/ $STARTTIME_S/" $FUNFAIRSALETEMPSOL`
-#`perl -pi -e "s/deadline \=  1499436000;.*$/deadline = $ENDTIME; \/\/ $ENDTIME_S/" $FUNFAIRSALETEMPSOL`
-#`perl -pi -e "s/\/\/\/ \@return total amount of tokens.*$/function overloadedTotalSupply() constant returns (uint256) \{ return totalSupply; \}/" $DAOCASINOICOTEMPSOL`
-#`perl -pi -e "s/BLOCKS_IN_DAY \= 5256;*$/BLOCKS_IN_DAY \= $BLOCKSINDAY;/" $DAOCASINOICOTEMPSOL`
+`perl -pi -e "s/uint256 minBalanceToSell;/uint256 public minBalanceToSell;/" $TOKENTEMPSOL`
+`perl -pi -e "s/uint256 teamLockPeriodInSec;/uint256 public teamLockPeriodInSec;/" $TOKENTEMPSOL`
+`perl -pi -e "s/address crowdsaleAddress;/address public crowdsaleAddress;/" $TOKENTEMPSOL`
+`perl -pi -e "s/address BonusFinalizeAgentAddress;/address public BonusFinalizeAgentAddress;/" $TOKENTEMPSOL`
+
+`perl -pi -e "s/uint preMinWei;/uint public preMinWei;/" Crowdsale.sol`
+`perl -pi -e "s/uint preMaxWei;/uint public preMaxWei;/" Crowdsale.sol`
+`perl -pi -e "s/uint minWei;/uint public minWei;/" Crowdsale.sol`
+`perl -pi -e "s/uint maxWei;/uint public maxWei;/" Crowdsale.sol`
 
 DIFFS1=`diff $CONTRACTSDIR/$TOKENSOL $TOKENTEMPSOL`
 echo "--- Differences $CONTRACTSDIR/$TOKENSOL $TOKENTEMPSOL ---" | tee -a $TEST1OUTPUT
@@ -118,6 +123,10 @@ echo "$DIFFS1" | tee -a $TEST1OUTPUT
 
 DIFFS1=`diff $CONTRACTSDIR/$CROWDSALESOL $CROWDSALETEMPSOL`
 echo "--- Differences $CONTRACTSDIR/$CROWDSALESOL $CROWDSALETEMPSOL ---" | tee -a $TEST1OUTPUT
+echo "$DIFFS1" | tee -a $TEST1OUTPUT
+
+DIFFS1=`diff $CONTRACTSDIR/Crowdsale.sol Crowdsale.sol`
+echo "--- Differences $CONTRACTSDIR/Crowdsale.sol Crowdsale.sol ---" | tee -a $TEST1OUTPUT
 echo "$DIFFS1" | tee -a $TEST1OUTPUT
 
 DIFFS1=`diff $CONTRACTSDIR/$FINALIZEAGENTSOL $FINALIZEAGENTTEMPSOL`
@@ -257,14 +266,14 @@ var _minimumFundingGoal = web3.toWei(1500, "ether");
 var _cap = web3.toWei(38383, "ether");
 var _preMinWei = web3.toWei(33, "ether");
 var _preMaxWei = web3.toWei(333, "ether");
-// var _minWei = web3.toWei(1, "ether");
+var _minWei = web3.toWei(1, "ether");
 var _maxWei = web3.toWei(333, "ether");
 var _maxPreAddresses = 333;
 var _maxIcoAddresses = 3216;
-// function AddressCappedCrowdsale(address _token, PricingStrategy _pricingStrategy, address _multisigWallet, 
-//   uint _start, uint _end, uint _minimumFundingGoal, uint _weiIcoCap, uint _preMinWei, uint _preMaxWei, 
-//   uint _maxWei, uint _maxPreAddresses, uint _maxIcoAddresses) Crowdsale(_token, _pricingStrategy,
-//   _multisigWallet, _start, _end, _minimumFundingGoal, _preMinWei, _preMaxWei, _maxWei,  _maxPreAddresses)
+// function AddressCappedCrowdsale(address _token, PricingStrategy _pricingStrategy, 
+//   address _multisigWallet, uint _start, uint _end, uint _minimumFundingGoal, uint _weiIcoCap, 
+//   uint _preMinWei, uint _preMaxWei, uint _minWei,  uint _maxWei, uint _maxPreAddresses, 
+//   uint _maxIcoAddresses) 
 // -----------------------------------------------------------------------------
 console.log("RESULT: " + deployCrowdsaleMessage);
 var crowdsaleContract = web3.eth.contract(crowdsaleAbi);
@@ -274,7 +283,7 @@ var crowdsaleAddress = null;
 
 var crowdsale = crowdsaleContract.new(tokenAddress, pricingAddress, multisig,
     $STARTTIME, $ENDTIME, _minimumFundingGoal, _cap, _preMinWei, _preMaxWei,
-    _maxWei, _maxPreAddresses, _maxIcoAddresses,
+    _minWei, _maxWei, _maxPreAddresses, _maxIcoAddresses,
      {from: contractOwnerAccount, data: crowdsaleBin, gas: 6000000},
   function(e, contract) {
     if (!e) {
@@ -347,6 +356,67 @@ printFinaliserContractDetails();
 console.log("RESULT: ");
 
 
+// -----------------------------------------------------------------------------
+var stitchMessage = "Stitch Contracts Together";
+console.log("RESULT: " + stitchMessage);
+var stitch1Tx = token.setMintAgent(crowdsaleAddress, true, {from: contractOwnerAccount, gas: 400000});
+var stitch2Tx = token.setMintAgent(finaliserAddress, true, {from: contractOwnerAccount, gas: 400000});
+var stitch3Tx = token.setReleaseAgent(finaliserAddress, {from: contractOwnerAccount, gas: 400000});
+var stitch4Tx = token.setTransferAgent(crowdsaleAddress, true, {from: contractOwnerAccount, gas: 400000});
+var stitch5Tx = token.setBonusFinalizeAgentAddress(finaliserAddress, {from: contractOwnerAccount, gas: 400000});
+var stitch6Tx = crowdsale.setFinalizeAgent(finaliserAddress, {from: contractOwnerAccount, gas: 400000});
+while (txpool.status.pending > 0) {
+}
+printTxData("stitch1Tx", stitch1Tx);
+printTxData("stitch2Tx", stitch2Tx);
+printTxData("stitch3Tx", stitch3Tx);
+printTxData("stitch4Tx", stitch4Tx);
+printTxData("stitch5Tx", stitch5Tx);
+printTxData("stitch6Tx", stitch6Tx);
+printBalances();
+failIfGasEqualsGasUsed(stitch1Tx, stitchMessage + " 1");
+failIfGasEqualsGasUsed(stitch2Tx, stitchMessage + " 2");
+failIfGasEqualsGasUsed(stitch3Tx, stitchMessage + " 3");
+failIfGasEqualsGasUsed(stitch4Tx, stitchMessage + " 4");
+failIfGasEqualsGasUsed(stitch5Tx, stitchMessage + " 5");
+failIfGasEqualsGasUsed(stitch6Tx, stitchMessage + " 6");
+printTokenContractDetails();
+printPricingContractDetails();
+printCrowdsaleContractDetails();
+printFinaliserContractDetails();
+console.log("RESULT: ");
+
+
+// -----------------------------------------------------------------------------
+// Wait for crowdsale start
+// -----------------------------------------------------------------------------
+var startsAtTime = crowdsale.startsAt();
+var startsAtTimeDate = new Date(startsAtTime * 1000);
+console.log("RESULT: Waiting until startAt date at " + startsAtTime + " " + startsAtTimeDate +
+  " currentDate=" + new Date());
+while ((new Date()).getTime() <= startsAtTimeDate.getTime()) {
+}
+console.log("RESULT: Waited until start date at " + startsAtTime + " " + startsAtTimeDate +
+  " currentDate=" + new Date());
+
+
+// -----------------------------------------------------------------------------
+var validContribution1Message = "Send Valid Contribution - 100 ETH From Account8 - After Crowdsale Start";
+console.log("RESULT: " + validContribution1Message);
+var validContribution1Tx = eth.sendTransaction({from: account8, to: crowdsaleAddress, gas: 400000, value: web3.toWei("100", "ether")});
+
+while (txpool.status.pending > 0) {
+}
+printTxData("validContribution1Tx", validContribution1Tx);
+printBalances();
+failIfGasEqualsGasUsed(validContribution1Tx, validContribution1Message);
+printTokenContractDetails();
+printPricingContractDetails();
+printCrowdsaleContractDetails();
+printFinaliserContractDetails();
+console.log("RESULT: ");
+
+
 exit;
 
 
@@ -362,45 +432,6 @@ passIfGasEqualsGasUsed(invalidContribution1Tx, invalidContribution1Message);
 printCrowdsaleContractDetails();
 printTokenContractDetails();
 console.log("RESULT: ");
-
-
-// -----------------------------------------------------------------------------
-var stitchMessage = "Stitch Contracts Together";
-console.log("RESULT: " + stitchMessage);
-var stitch1Tx = cst.setMintAgent(mecAddress, true, {from: contractOwnerAccount, gas: 400000});
-var stitch2Tx = cst.setMintAgent(bfaAddress, true, {from: contractOwnerAccount, gas: 400000});
-var stitch3Tx = cst.setReleaseAgent(bfaAddress, {from: contractOwnerAccount, gas: 400000});
-var stitch4Tx = cst.setTransferAgent(mecAddress, true, {from: contractOwnerAccount, gas: 400000});
-var stitch5Tx = mec.setFinalizeAgent(bfaAddress, {from: contractOwnerAccount, gas: 400000});
-while (txpool.status.pending > 0) {
-}
-printTxData("stitch1Tx", stitch1Tx);
-printTxData("stitch2Tx", stitch2Tx);
-printTxData("stitch3Tx", stitch3Tx);
-printTxData("stitch4Tx", stitch4Tx);
-printTxData("stitch5Tx", stitch5Tx);
-printBalances();
-failIfGasEqualsGasUsed(stitch1Tx, stitchMessage + " 1");
-failIfGasEqualsGasUsed(stitch2Tx, stitchMessage + " 2");
-failIfGasEqualsGasUsed(stitch3Tx, stitchMessage + " 3");
-failIfGasEqualsGasUsed(stitch4Tx, stitchMessage + " 4");
-failIfGasEqualsGasUsed(stitch5Tx, stitchMessage + " 5");
-printCrowdsaleContractDetails();
-printTokenContractDetails();
-console.log("RESULT: ");
-
-
-// -----------------------------------------------------------------------------
-// Wait for crowdsale start
-// -----------------------------------------------------------------------------
-var startsAtTime = mec.startsAt();
-var startsAtTimeDate = new Date(startsAtTime * 1000);
-console.log("RESULT: Waiting until startAt date at " + startsAtTime + " " + startsAtTimeDate +
-  " currentDate=" + new Date());
-while ((new Date()).getTime() <= startsAtTimeDate.getTime()) {
-}
-console.log("RESULT: Waited until start date at " + startsAtTime + " " + startsAtTimeDate +
-  " currentDate=" + new Date());
 
 
 // -----------------------------------------------------------------------------
