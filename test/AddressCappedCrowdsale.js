@@ -42,12 +42,15 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
     var _tokenMintable = true;
     var decimals = _tokenDecimals;
     var _maxAddresses = 3333;
+    var _totalPreIcoAddresses = 333, 
+    var _totalIcoAddresses = 2894, 
+    var _totalPostIcoAddresses = 88
     var _minMintingPower = 5000000000000000000;
     var _maxMintingPower = 10000000000000000000;
     var _halvingCycle = 88;
-    var _initalBlockTimestamp = getUnixTimestamp('2017-10-7 09:00:00 GMT');
-    var _mintingDec = 19;
-    var _bounty = etherInWei(1);
+    // var _initalBlockTimestamp = getUnixTimestamp('2017-10-7 09:00:00 GMT');
+    // var _mintingDec = 19;
+    // var _bounty = etherInWei(1);
     var _minBalanceToSell = 8888;
     var _dayInSecs = 84600;
     var _teamLockPeriodInSec = 15780000;
@@ -70,8 +73,8 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
     var _preMaxWei = etherInWei(333);
     var _minWei = etherInWei(1);
     var _maxWei = etherInWei(333);
-    var _maxPreAddresses = 3;
-    var _maxIcoAddresses = 3;
+    var _totalPreIcoAddresses = 3;
+    var _totalIcoAddresses = 3;
 
 
     //BonusFinalizeAgent Parameters
@@ -94,8 +97,9 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
     var id;
     beforeEach(async() => {
         tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply,
-            _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower,
-            _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell,
+            _tokenDecimals, _tokenMintable, _maxAddresses, _totalPreIcoAddresses, _totalIcoAddresses, 
+            _totalPostIcoAddresses, _minMintingPower, _maxMintingPower,
+            _halvingCycle, _minBalanceToSell,
             _dayInSecs, _teamLockPeriodInSec, { from: accounts[0] });
 
         pricingInstance = await Pricing.new(_oneTokenInWei, { from: accounts[0] });
@@ -108,7 +112,7 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
 
         crowdsaleInstance = await Crowdsale.new(tokenInstance.address, pricingInstance.address, 
             multisigWalletInstance.address, _startTime, _endTime, _minimumFundingGoal, _cap, _preMinWei, 
-            _preMaxWei, _minWei, _maxWei, _maxPreAddresses, _maxIcoAddresses, { from: accounts[0] });
+            _preMaxWei, _minWei, _maxWei, { from: accounts[0] });
 
         await tokenInstance.addCrowdsaleAddress.call(crowdsaleInstance.address);
     });

@@ -34,12 +34,16 @@ module.exports = function(deployer, network, accounts) {
     var _tokenInitialSupply = tokenInSmallestUnit(0, _tokenDecimals);
     var _tokenMintable = true;
     var _maxAddresses = 7;
+    var _totalPreIcoAddresses = 2, 
+    var _totalIcoAddresses = 2, 
+    var _totalPostIcoAddresses = 2
     var _minMintingPower = 500000000000000000;
     var _maxMintingPower = 1000000000000000000;
     var _halvingCycle = 88;
-    var _initalBlockTimestamp = getUnixTimestamp('2017-08-7 09:00:00 GMT');
-    var _mintingDec = 19;
-    var _bounty = 100000000;
+    // var _initalBlockTimestamp = getUnixTimestamp('2017-08-7 09:00:00 GMT');
+    // var _mintingDec = 19;
+    // var _bounty = 100000000;
+    var _updateAllBalancesEnabled = false;
     var _DayInSecs = 84600;
     var _minBalanceToSell = 8888;
     var _teamLockPeriodInSec = 15780000;
@@ -60,8 +64,8 @@ module.exports = function(deployer, network, accounts) {
     var _preMaxWei = etherInWei(333);
     var _minWei = etherInWei(1);
     var _maxWei = etherInWei(333);
-    var _maxPreAddresses = 333;
-    var _maxIcoAddresses = 3216;
+    var _totalPreIcoAddresses = 333;
+    var _totalIcoAddresses = 3216;
     var _tranches = [33, 88, 39, 33, 89, 8, 334, 3, 889, 1, 3217, 0];
 
     /**
@@ -190,12 +194,20 @@ module.exports = function(deployer, network, accounts) {
     var multisigWalletInstance;
 
     deployer.then(function() {
-        return Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, _DayInSecs, _teamLockPeriodInSec);
+
+        return Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, 
+            _maxAddresses, _totalPreIcoAddresses, _totalIcoAddresses, _totalPostIcoAddresses, 
+            _minMintingPower, _maxMintingPower, _halvingCycle, _updateAllBalancesEnabled, 
+            _minBalanceToSell, _DayInSecs, _teamLockPeriodInSec);
+
     }).then(function(Instance) {
         //console.log(Instance);
         tokenInstance = Instance;
         if (debug) console.log("DayToken Parameters are:");
-        if (debug) console.log(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, _DayInSecs, _teamLockPeriodInSec);
+        if (debug) console.log(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, 
+            _maxAddresses, _totalPreIcoAddresses, _totalIcoAddresses, _totalPostIcoAddresses, 
+            _minMintingPower, _maxMintingPower, _halvingCycle, _updateAllBalancesEnabled, 
+            _minBalanceToSell, _DayInSecs, _teamLockPeriodInSec);
         if (debug) console.log("DayToken address is: ", tokenInstance.address);
         if (showURL) console.log("Token URL is: " + getEtherScanUrl(network, tokenInstance.address, "token"));
         if (showURL) console.log("Transaction URL is: " + getEtherScanUrl(network, tokenInstance.transactionHash, "tx"));
@@ -225,11 +237,11 @@ module.exports = function(deployer, network, accounts) {
         if (showURL) console.log("Transaction URL is: " + getEtherScanUrl(network, multisigWalletInstance.transactionHash, "tx"));
         if (showABI) console.log("MultiSigWallet ABI is: ", JSON.stringify(multisigWalletInstance.abi));
         if (debug) console.log("*************  Deploying AddressCappedCrowdsale  ************** \n");
-        return Crowdsale.new(tokenInstance.address, pricingInstance.address, multisigWalletInstance.address, _startTime, _endTime, _minimumFundingGoal, _cap, _preMinWei, _preMaxWei, _minWei, _maxWei, _maxPreAddresses, _maxIcoAddresses);
+        return Crowdsale.new(tokenInstance.address, pricingInstance.address, multisigWalletInstance.address, _startTime, _endTime, _minimumFundingGoal, _cap, _preMinWei, _preMaxWei, _minWei, _maxWei);
     }).then(function(Instance) {
         crowdsaleInstance = Instance;
         if (debug) console.log("AddressCappedCrowdsale Parameters are:");
-        if (debug) console.log(tokenInstance.address, pricingInstance.address, multisigWalletInstance.address, _startTime, _endTime, _minimumFundingGoal, _cap, _preMinWei, _preMaxWei, _minWei, _maxWei, _maxPreAddresses, _maxIcoAddresses);
+        if (debug) console.log(tokenInstance.address, pricingInstance.address, multisigWalletInstance.address, _startTime, _endTime, _minimumFundingGoal, _cap, _preMinWei, _preMaxWei, _minWei, _maxWei);
         if (debug) console.log("AddressCappedCrowdsale address is: ", crowdsaleInstance.address);
         if (showURL) console.log("Crowdsale URL is: " + getEtherScanUrl(network, crowdsaleInstance.address, "address"));
         if (showURL) console.log("Transaction URL is: " + getEtherScanUrl(network, crowdsaleInstance.transactionHash, "tx"));

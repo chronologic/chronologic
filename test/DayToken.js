@@ -32,12 +32,15 @@ contract('DayTokenMock', function(accounts) {
     var _tokenMintable = true;
     var decimals = _tokenDecimals;
     var _maxAddresses = 3333;
+    var _totalPreIcoAddresses = 333, 
+    var _totalIcoAddresses = 2894, 
+    var _totalPostIcoAddresses = 88
     var _minMintingPower = 5000000000000000000;
     var _maxMintingPower = 10000000000000000000;
     var _halvingCycle = 88;
-    var _initalBlockTimestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
-    var _mintingDec = 19;
-    var _bounty = 100000000;
+    // var _initalBlockTimestamp = web3.eth.getBlock(web3.eth.blockNumber).timestamp;
+    // var _mintingDec = 19;
+    // var _bounty = 100000000;
     var _minBalanceToSell = 8800000000;
     var _teamLockPeriodInSec = 15780000;
     var tokenInstance = null;
@@ -45,7 +48,7 @@ contract('DayTokenMock', function(accounts) {
     var id;
     var call;
     beforeEach(async() => {
-        tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty, _minBalanceToSell, 84600, _teamLockPeriodInSec, { from: accounts[0] });
+        tokenInstance = await Token.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable, _maxAddresses, _totalPreIcoAddresses, _totalIcoAddresses, _totalPostIcoAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _minBalanceToSell, 84600, _teamLockPeriodInSec, { from: accounts[0] });
         for (i = 1; i <= 15; i++) {
             id = await tokenInstance.addContributorNew(accounts[i], 79200000000);
         }

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 import './ERC20.sol';
 import './StandardToken.sol';
@@ -34,7 +34,7 @@ contract UpgradeableToken is StandardToken {
   enum UpgradeState {Unknown, NotAllowed, WaitingForAgent, ReadyToUpgrade, Upgrading}
 
   /**
-   * Somebody has upgraded some of his tokens.
+   * Somebody has upgraded some of their tokens.
    */
   event Upgrade(address indexed _from, address indexed _to, uint256 _value);
 

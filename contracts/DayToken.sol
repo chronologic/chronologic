@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11; 
+pragma solidity ^0.4.13; 
 
 import "./StandardToken.sol"; 
 import "./UpgradeableToken.sol"; 
@@ -20,7 +20,7 @@ import "./SafeMathLib.sol";
  */
 contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
 
-    enum sellingStatus {NOTONSALE, SOLD, EXPIRED, ONSALE}
+    enum sellingStatus {NOTONSALE, EXPIRED, ONSALE}
 
     /** Basic structure for a contributor with a minting Address
      * adr address of the contributor
@@ -56,10 +56,25 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
 
     /* Stores number of days since minting epoch when all the balances are updated */
     uint256 public latestAllUpdate;
-    /* Stores the id of the lastest contributor added */
-    uint256 public latestContributerId;
+
+    /* Stores the id of the next Pre ICO contributor */
+    uint256 public nextPreIcoContributorId;
+    /* Maximum number of addresses for Pre ICO */
+    uint256 public totalPreIcoAddresses;
+
+    /* Stores the id of the next ICO contributor */
+    uint256 public nextIcoContributorId;
+    /* Maximum number of addresses for ICO */
+    uint256 public totalIcoAddresses;
+
+    /* Stores the id of the next Post ICO contributor (for auctionable addresses) */
+    uint256 public nextPostIcoContributorId;
+    /* Maximum number of addresses for Post ICO (Auction) */
+    uint256 public totalPostIcoAddresses;
+
     /* Maximum number of address: total. (3333) */
     uint256 public maxAddresses;
+
     /* Min Minting power with 19 decimals: 0.5% : 5000000000000000000 */
     uint256 public minMintingPower;
     /* Max Minting power with 19 decimals: 1% : 10000000000000000000 */
@@ -70,12 +85,14 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     uint256 public initialBlockTimestamp;
     /* number of decimals in minting power */
     uint256 public mintingDec; 
+    /* Enable calling UpdateAllBalances() */
+    bool public updateAllBalancesEnabled;
     /* Bounty to be given to the person calling UpdateAllBalances() */
     uint256 public bounty;
     /* Minimum Balance in Day tokens required to sell a minting address */
-    uint256 minBalanceToSell;
+    uint256 public minBalanceToSell;
     /* Team address lock down period from issued time, in seconds */
-    uint256 teamLockPeriodInSec;  //Initialize and set function
+    uint256 public teamLockPeriodInSec;  //Initialize and set function
     /* Duration in secs that we consider as a day. (For test deployment purposes, 
        if we want to decrease length of a day. default: 84600)*/
     uint256 public DayInSecs;
@@ -95,8 +112,13 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         _;
     }
 
+    modifier onlyCrowdsaleOrOwner(){
+        require(msg.sender==crowdsaleAddress || msg.sender==owner);
+        _;
+    }
+
     modifier onlyContributor(uint id){
-        require(id <= latestContributerId && id != 0);
+        require(isValidContributorId(id));
         _;
     }
 
@@ -122,9 +144,10 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * _mintable Are new tokens created over the crowdsale or do we distribute only the initial supply?
         */
     function DayToken(string _name, string _symbol, uint _initialSupply, uint8 _decimals, 
-        bool _mintable, uint _maxAddresses, uint256 _minMintingPower, uint256 _maxMintingPower, 
-        uint _halvingCycle, uint _initialBlockTimestamp, uint256 _mintingDec, uint _bounty, 
-        uint256 _minBalanceToSell, uint256 _dayInSecs, uint256 _teamLockPeriodInSec) 
+        bool _mintable, uint _maxAddresses, uint _totalPreIcoAddresses, uint _totalIcoAddresses, 
+        uint _totalPostIcoAddresses, uint256 _minMintingPower, uint256 _maxMintingPower, uint _halvingCycle, 
+        bool _updateAllBalancesEnabled, uint256 _minBalanceToSell, 
+        uint256 _dayInSecs, uint256 _teamLockPeriodInSec) 
         UpgradeableToken(msg.sender) {
         
         // Create any address, can be transferred
@@ -138,14 +161,25 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         // Create initially all balance on the team multisig
         balances[owner] = totalSupply; 
         maxAddresses = _maxAddresses;
+        totalPreIcoAddresses = _totalPreIcoAddresses;
+        totalIcoAddresses = _totalIcoAddresses;
+        totalPostIcoAddresses = _totalPostIcoAddresses;
+        // starts with 1
+        nextPreIcoContributorId = 1;
+        // calculate first contributor id for ICO phase
+        nextIcoContributorId = totalPreIcoAddresses + 1;
+        // calculate first contributor id to be auctioned post ICO
+        nextPostIcoContributorId = maxAddresses - totalPostIcoAddresses + 1;
         minMintingPower = _minMintingPower;
         maxMintingPower = _maxMintingPower;
         halvingCycle = _halvingCycle;
-        initialBlockTimestamp = _initialBlockTimestamp;
-        mintingDec = _mintingDec;
-        latestContributerId = 0;
+        // setting future date far far away, year 2020, 
+        // call setInitialBlockTimestamp to set proper timestamp
+        initialBlockTimestamp = 1577836800;
+        // use setMintingDec to change this
+        mintingDec = 19;
         latestAllUpdate = 0;
-        bounty = _bounty;
+        updateAllBalancesEnabled = _updateAllBalancesEnabled;
         minBalanceToSell = _minBalanceToSell;
         DayInSecs = _dayInSecs;
         teamLockPeriodInSec = _teamLockPeriodInSec;
@@ -158,6 +192,79 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
             mintingFinished = true; 
             require(totalSupply != 0); 
         }
+    }
+
+    /**
+    * Used to set timestamp at which minting power of TimeMints is activated
+    * Can be called only by owner
+    * @param _initialBlockTimestamp timestamp to be set.
+    */
+    function setInitialBlockTimestamp(uint _initialBlockTimestamp) onlyOwner {
+        initialBlockTimestamp = _initialBlockTimestamp;
+    }
+
+    /**
+    * check if mintining power is activated and Day token and Timemint transfer is enabled
+    */
+    function isDayTokenActivated() returns (bool isActivated) {
+        return (block.timestamp >= initialBlockTimestamp);
+    }
+
+
+    /**
+    * to check if an id is a valid contributor
+    * @param _id contributor id to check.
+    */
+    function isValidContributorId(uint _id) returns (bool isValidContributor) {
+        return (_id > 0 && _id <= maxAddresses && contributors[_id].adr != 0 
+            && idOf[contributors[_id].adr] == _id); // cross checking
+    }
+
+    /**
+    * to check if an address is a valid contributor
+    * @param _address  contributor address to check.
+    */
+    function isValidContributorAddress(address _address) returns (bool isValidContributor) {
+        return isValidContributorId(idOf[_address]);
+    }
+
+
+    /**
+    * In case of Team address check if lock-in period is over (returns true for all non team addresses)
+    * @param _address team address to check lock in period for.
+    */
+    function isTeamLockInPeriodOverIfTeamAddress(address _address) returns (bool isLockInPeriodOver) {
+        isLockInPeriodOver = true;
+        if (teamIssuedTimestamp[_address] != 0) {
+                if (block.timestamp - teamIssuedTimestamp[_address] < teamLockPeriodInSec)
+                    isLockInPeriodOver = false;
+        }
+
+        return isLockInPeriodOver;
+    }
+
+    /**
+    * Used to set mintingDec
+    * Can be called only by owner
+    * @param _mintingDec bounty to be set.
+    */
+    function setMintingDec(uint256 _mintingDec) onlyOwner {
+        mintingDec = _mintingDec;
+    }
+
+    /* increment  nextPreIcoContributorId */
+    function incrementPreIcoContributorId() {
+        nextPreIcoContributorId++;
+    }
+
+    /* increment  nextIcoContributorId */
+    function incrementIcoContributorId() {
+        nextIcoContributorId++;
+    }
+
+    /* increment  nextPostIcoContributorId */
+    function incrementPostIcoContributorId() {
+        nextPostIcoContributorId++;
     }
 
     /**
@@ -194,10 +301,14 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         return (phase); 
     }
     /**
-        * Returns current day number since minting epoch.
+        * Returns current day number since minting epoch 
+        * or zero if initialBlockTimestamp is in future or its DayZero.
         */
     function getDayCount() public constant returns (uint daySinceMintingEpoch) {
-        daySinceMintingEpoch = ((block.timestamp - initialBlockTimestamp)/DayInSecs); 
+        daySinceMintingEpoch = 0;
+        if (isDayTokenActivated())
+            daySinceMintingEpoch = (block.timestamp - initialBlockTimestamp)/DayInSecs; 
+
         return daySinceMintingEpoch; 
     }
     /**
@@ -211,14 +322,6 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     }
 
     /**
-        * Returns minting power of a particular address.
-        * @param _adr Address whose minting power is to be returned
-        */
-    function getMintingPowerByAddress(address _adr) public constant returns (uint256 mintingPower) {
-        return contributors[idOf[_adr]].mintingPower/(2**(getPhaseCount(getDayCount())-1)); 
-    }
-
-    /**
         * Returns minting power of a particular id.
         * @param _id Contribution id whose minting power is to be returned
         */
@@ -226,14 +329,22 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         return contributors[_id].mintingPower/(2**(getPhaseCount(getDayCount())-1)); 
     }
 
+    /**
+        * Returns minting power of a particular address.
+        * @param _adr Address whose minting power is to be returned
+        */
+    function getMintingPowerByAddress(address _adr) public constant returns (uint256 mintingPower) {
+        return getMintingPowerById(idOf[_adr]);
+    }
+
 
      /**
         * Returns the amount of DAY tokens minted by the address
         * @param _adr Address whose total minted is to be returned
         */
-    function getTotalMinted(address _adr) public constant returns (int256) {
+    function getTotalMinted(address _adr) public constant returns (uint256) {
         uint id = idOf[_adr];
-        return int(balances[_adr]) - ((int(contributors[id].initialContributionDay)+contributors[id].totalTransferredDay)); 
+        return uint(int(balances[_adr]) - ((int(contributors[id].initialContributionDay)+contributors[id].totalTransferredDay))); 
     }
 
     /**
@@ -257,14 +368,18 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * @param _id id whose balance is to be updated.
         */
     function updateBalanceOf(uint256 _id) internal returns (bool success) {
-        // proceed only if not already updated today
-        if(contributors[_id].lastUpdatedOn != getDayCount()) {
-            totalSupply = safeSub(totalSupply, balances[contributors[_id].adr]);
-            balances[contributors[_id].adr] = availableBalanceOf(_id);
-            totalSupply = safeAdd(totalSupply, balances[contributors[_id].adr]);
-            contributors[_id].lastUpdatedOn = getDayCount();
-            return true; 
+        // check if its contributor
+        if (isValidContributorId(_id)) {
+            // proceed only if not already updated today
+            if (contributors[_id].lastUpdatedOn != getDayCount()) {
+                totalSupply = safeSub(totalSupply, balances[contributors[_id].adr]);
+                balances[contributors[_id].adr] = availableBalanceOf(_id);
+                totalSupply = safeAdd(totalSupply, balances[contributors[_id].adr]);
+                contributors[_id].lastUpdatedOn = getDayCount();
+                return true; 
+            }
         }
+        return false;
     }
 
 
@@ -278,8 +393,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         */
     function balanceOf(address _adr) public constant returns (uint256 balance) {
         uint id = idOf[_adr]; 
-        if (block.timestamp >= initialBlockTimestamp) {
-            if (id != 0 && id <= latestContributerId) {
+        if (isDayTokenActivated()) {
+            if (isValidContributorId(id)) {
                 return ( availableBalanceOf(id) );
             }
         }
@@ -296,8 +411,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         */
     function balanceById(uint _id) public constant returns (uint256 balance) {
         address adr = contributors[_id].adr; 
-        if (block.timestamp >= initialBlockTimestamp) {
-            if (_id != 0 && _id <= latestContributerId) {
+        if (isDayTokenActivated()) {
+            if (isValidContributorId(_id)) {
                 return ( availableBalanceOf(_id) );
             }
         }
@@ -313,19 +428,18 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * Logs the ids whose balance could not be updated
         */
     function updateAllBalances() public {
-        require(block.timestamp >= initialBlockTimestamp);
-        uint today = (block.timestamp - initialBlockTimestamp)/1 days;
+        require(updateAllBalancesEnabled);
+        require(isDayTokenActivated());
+        uint today = getDayCount();
         require(today != latestAllUpdate); 
 
-        for (uint i = 1; i <= latestContributerId; i++) {
+        for (uint i = 1; i <= maxAddresses; i++) {
             if (!updateBalanceOf(i))
                 UpdateFailed(i); 
         }
 
         latestAllUpdate = today;
-        // before awarding bounty update balance if caller has minting power
-        uint id = idOf[msg.sender];
-        if ( id != 0 && id <= latestContributerId ) updateBalanceOf(id);
+        // award bounty
         balances[msg.sender] = safeAdd(balances[msg.sender],bounty);
         balances[this] = safeSub(balances[this], bounty);
         UpToDate(true); 
@@ -336,14 +450,14 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * Can be called only by owner
         * @param _bounty bounty to be set.
         */
-    function setBounty(uint256 _bounty) onlyOwner{
+    function setBounty(uint256 _bounty) onlyOwner {
         bounty = _bounty;
     }
 
     /**
         * Returns totalSupply of DAY tokens.
         */
-    function getTotalSupply() public constant returns (uint){
+    function getTotalSupply() public constant returns (uint) {
         return totalSupply;
     }
 
@@ -354,30 +468,29 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * @param _value Number of Day tokens to be transferred
         */
     function transfer(address _to, uint _value) public returns (bool success) {
-        if(teamIssuedTimestamp[msg.sender] != 0)
-        {
-            require(block.timestamp - teamIssuedTimestamp[msg.sender] >= teamLockPeriodInSec);
-        }
+        require(isDayTokenActivated());
+        // if Team address, check if lock-in period is over
+        require(isTeamLockInPeriodOverIfTeamAddress(msg.sender));
 
         // Check sender account has enough balance and transfer amount is non zero
         require ( balanceOf(msg.sender) >= _value && _value != 0 ); 
          
         uint msgSenderId = idOf[msg.sender];
-        if(msgSenderId != 0 && msgSenderId <= latestContributerId)
+        if (isValidContributorId(msgSenderId))
         {
             updateBalanceOf(msgSenderId);
             contributors[msgSenderId].totalTransferredDay = contributors[msgSenderId].totalTransferredDay + int(-(_value));
         }
 
         uint toId = idOf[_to];
-        if(toId != 0 && toId <= latestContributerId)
+        if (isValidContributorId(toId))
         {
             updateBalanceOf(toId);
             contributors[toId].totalTransferredDay = contributors[toId].totalTransferredDay + int(_value);
         }
 
         balances[msg.sender] = safeSub(balances[msg.sender], _value); 
-        balances[_to] = safeAdd(balances[msg.sender], _value); 
+        balances[_to] = safeAdd(balances[_to], _value); 
         Transfer(msg.sender, _to, _value);
 
         return true;
@@ -385,11 +498,11 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     /**
         * Standard ERC20 Standard Token function overridden. Added Team address vesting period lock. 
         */
-        function transferFrom(address _from, address _to, uint _value) public returns (bool success) {
-        if(teamIssuedTimestamp[_from] != 0)
-        {
-            require(block.timestamp - teamIssuedTimestamp[_from] >= teamLockPeriodInSec);
-        }
+    function transferFrom(address _from, address _to, uint _value) public returns (bool success) {
+        require(isDayTokenActivated());
+
+        // if Team address, check if lock-in period is over
+        require(isTeamLockInPeriodOverIfTeamAddress(_from));
 
         uint _allowance = allowed[_from][msg.sender];
 
@@ -398,22 +511,23 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         require ( balanceOf(_from) >= _value && _value != 0  &&  _value <= _allowance); 
 
         uint fromId = idOf[_from];
-        if(fromId != 0 && fromId <= latestContributerId)
+        if (isValidContributorId(fromId))
         {
             updateBalanceOf(fromId);
             contributors[fromId].totalTransferredDay = contributors[fromId].totalTransferredDay + int(-(_value));
         }
 
         uint toId = idOf[_to];
-        if(toId !=0 && toId <= latestContributerId)
+        if (isValidContributorId(toId))
         {
             updateBalanceOf(toId);
             contributors[toId].totalTransferredDay = contributors[toId].totalTransferredDay + int(_value);
         }
 
-        balances[_to] = safeAdd(balances[_to], _value);
-        balances[_from] = safeSub(balances[_from], _value);
         allowed[_from][msg.sender] = safeSub(_allowance, _value);
+        balances[_from] = safeSub(balances[_from], _value);
+        balances[_to] = safeAdd(balances[_to], _value);
+    
         Transfer(_from, _to, _value);
         
         return true;
@@ -426,7 +540,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * @param _to address of the user to which minting address is to be tranferred
         */
     function transferMintingAddress(address _from, address _to) internal onlyContributor(idOf[_from]) returns (bool) {
-        
+        require(isDayTokenActivated());
+
         // _to should be non minting address
         require(idOf[_to] == 0);
         
@@ -452,29 +567,15 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * @param _adr Address of the contributor to be added  
         * @param _initialContributionDay Initial Contribution of the contributor to be added
         */
-    function addContributor(address _adr, uint _initialContributionDay) returns(uint) {
-        uint id;
-        require(latestContributerId < 3333);
-        if(latestContributerId == 3227)
-        {
-           id = latestContributerId = 3246;
-        }
-        else
-        {
-            id = ++latestContributerId;
-        }
-        if(latestContributerId >= 3246)
-        {
-            require(released == true);
-        }
+  function addContributor(uint contributorId, address _adr, uint _initialContributionDay) onlyCrowdsaleOrOwner {
+        require(contributorId <= maxAddresses);
         require(idOf[_adr] == 0);
-        contributors[id].adr = _adr;
-        setInitialMintingPowerOf(id);
-        idOf[_adr] = id;
-        contributors[id].initialContributionDay = _initialContributionDay;
-        ContributorAdded(_adr, id);
-        contributors[id].status = sellingStatus.NOTONSALE;
-        return id;
+        contributors[contributorId].adr = _adr;
+        setInitialMintingPowerOf(contributorId);
+        idOf[_adr] = contributorId;
+        contributors[contributorId].initialContributionDay = _initialContributionDay;
+        ContributorAdded(_adr, contributorId);
+        contributors[contributorId].status = sellingStatus.NOTONSALE;
     }
 
     /** Function to be called once to add the deployed Crowdsale Contract
@@ -488,21 +589,17 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     function setBonusFinalizeAgentAddress(address adr) onlyOwner {
         BonusFinalizeAgentAddress = adr;
     }
-    /** Function to be called by any user to get the latest contributor ID.
-        */
-    function getLatestContributorId() constant public returns(uint id) {
-        return latestContributerId;
-    }
 
     /** Function to be called by minting addresses in order to sell their address
         * @param _minPriceInDay Minimum price in DAY tokens set by the seller
         * @param _expiryBlockNumber Expiry Block Number set by the seller
         */
     function sellMintingAddress(uint256 _minPriceInDay, uint _expiryBlockNumber) public returns (bool) {
-        if(teamIssuedTimestamp[msg.sender] != 0)
-        {
-            require(block.timestamp - teamIssuedTimestamp[msg.sender] >= teamLockPeriodInSec);
-        }
+        require(isDayTokenActivated());
+
+        // if Team address, check if lock-in period is over
+        require(isTeamLockInPeriodOverIfTeamAddress(msg.sender));
+
         uint id = idOf[msg.sender];
         require(contributors[id].status == sellingStatus.NOTONSALE);
 
@@ -512,21 +609,23 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         contributors[id].minPriceinDay = _minPriceInDay;
         contributors[id].expiryBlockNumber = _expiryBlockNumber;
         contributors[id].status = sellingStatus.ONSALE;
-        balances[this] = safeAdd(balances[this], minBalanceToSell);
         balances[msg.sender] = safeSub(balances[msg.sender], minBalanceToSell);
+        balances[this] = safeAdd(balances[this], minBalanceToSell);
         return true;
     }
 
     /** Function to be called by any user to get a list of all on sale addresses
         */
     function getOnSaleAddresses() constant public {
-        for(uint i=1; i <= latestContributerId; i++)
+        for(uint i=1; i <= maxAddresses; i++)
         {
-            if(contributors[i].expiryBlockNumber!=0 && block.number > contributors[i].expiryBlockNumber ){
-                contributors[i].status = sellingStatus.EXPIRED;
-            }
-            if(contributors[i].status == sellingStatus.ONSALE){
-                OnSale(i, contributors[i].adr, contributors[i].minPriceinDay, contributors[i].expiryBlockNumber);
+            if (contributors[i].adr != 0) {
+                if(contributors[i].expiryBlockNumber!=0 && block.number > contributors[i].expiryBlockNumber ){
+                    contributors[i].status = sellingStatus.EXPIRED;
+                }
+                if(contributors[i].status == sellingStatus.ONSALE){
+                    OnSale(i, contributors[i].adr, contributors[i].minPriceinDay, contributors[i].expiryBlockNumber);
+                }
             }
         }
     }
@@ -546,31 +645,32 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         require(_offerInDay >= contributors[_offerId].minPriceinDay);
         // first get the offered DayToken in the token contract & 
         // then transfer the total sum (minBalanceToSend+_offerInDay) to the seller
-        balances[this] = safeAdd(balances[this], _offerInDay);
         balances[msg.sender] = safeSub(balances[msg.sender], _offerInDay);
+        balances[this] = safeAdd(balances[this], _offerInDay);
         if(transferMintingAddress(contributors[_offerId].adr, msg.sender)) {
-            //mark the offer as sold & let seller pull the proceed to his own account.
+            //mark the offer as sold & let seller pull the proceed to their own account.
             sellingPriceInDayOf[soldAddress] = _offerInDay;
             soldAddresses[soldAddress] = true; 
         }
         return true;
     }
 
-    /** Funtion to allow seller to get back his deposited amount of day tokens(minBalanceToSell) and 
+    /** Function to allow seller to get back their deposited amount of day tokens(minBalanceToSell) and 
         * offer made by buyer after successful sale.
         * Throws if sale is not successful
         * Resets all sale-related variables to 0 and status to NOTONSALE
         */
     function fetchSuccessfulSaleProceed() public  returns(bool) {
         require(soldAddresses[msg.sender] == true);
-        balances[this] = safeSub(balances[this], minBalanceToSell + sellingPriceInDayOf[msg.sender]);
-        balances[msg.sender] = safeAdd(balances[msg.sender], minBalanceToSell + sellingPriceInDayOf[msg.sender]);
+        uint saleProceed = safeAdd(minBalanceToSell, sellingPriceInDayOf[msg.sender]);
+        balances[this] = safeSub(balances[this], saleProceed);
+        balances[msg.sender] = safeAdd(balances[msg.sender], saleProceed);
         soldAddresses[msg.sender] = false;
         return true;
                 
     }
 
-    /** Function that lets a seller get his deposited day tokens (minBalanceToSell) back, if no buyer turns up.
+    /** Function that lets a seller get their deposited day tokens (minBalanceToSell) back, if no buyer turns up.
         * Allowed only after expiryBlockNumber
         * Throws if any other state other than EXPIRED
         */
@@ -585,41 +685,58 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         // update balance of seller address before refunding
         updateBalanceOf(id);
         balances[msg.sender] = safeAdd(balances[msg.sender],minBalanceToSell);
-        contributors[idOf[msg.sender]].status = sellingStatus.NOTONSALE;
-        contributors[idOf[msg.sender]].minPriceinDay = 0;
-        contributors[idOf[msg.sender]].expiryBlockNumber = 0;
+        contributors[id].status = sellingStatus.NOTONSALE;
+        contributors[id].minPriceinDay = 0;
+        contributors[id].expiryBlockNumber = 0;
         return true;
     }
 
     /** Function to add a team address as a contributor and store it's time issued to calculate vesting period
         * Called by BonusFinalizeAgent
         */
-    function addAddressWithId(address _adr, uint id) onlyBonusFinalizeAgent returns (uint){
-        if(latestContributerId >= 3227)
-        {
-            ++latestContributerId;
-        }
-        contributors[id].adr = _adr;
-        setInitialMintingPowerOf(id);
-        idOf[_adr] = id;
-        contributors[id].initialContributionDay = 0;
-        ContributorAdded(_adr, id);
-        contributors[id].status = sellingStatus.NOTONSALE;
+    function addTeamAddress(address _adr, uint id) onlyBonusFinalizeAgent {
+        addContributor(id, _adr, 0);
         teamIssuedTimestamp[_adr] = block.timestamp;
-        return id;
     }
 
-    /** Function to add addresses post-ICO. Only by owner
+    /** Function to add reserved aution addresses post-ICO. Only by owner
         * @param receiver Address of the minting to be added
         * @param customerId Server side id of the customer
         */
     function postAllocate(address receiver, uint128 customerId) public onlyOwner {
-        if(latestContributerId >= 3227 && latestContributerId <= 3245) //
-        {
-            latestContributerId = 3245;
-        }
         require(released == true);
-        uint id = addContributor(receiver, 0);
-        PostInvested(receiver, 0, 0, customerId, id);
+        require(nextPostIcoContributorId <= maxAddresses);
+        addContributor(nextPostIcoContributorId, receiver, 0);
+        PostInvested(receiver, 0, 0, customerId, nextPostIcoContributorId);
+        //increment counter
+        nextPostIcoContributorId++;
     }
+
+    /** Function to add Remaining ICO addresses post-ICO. Only by owner
+        * @param receiver Address of the minting to be added
+        * @param customerId Server side id of the customer
+        */
+    function postAllocateRemainingIcoAddresses(address receiver, uint128 customerId) public onlyOwner {
+        require(released == true);
+        require(nextIcoContributorId <= totalPreIcoAddresses + totalIcoAddresses);
+        addContributor(nextIcoContributorId, receiver, 0);
+        PostInvested(receiver, 0, 0, customerId, nextIcoContributorId);
+        //increment counter
+        nextIcoContributorId++;
+    }
+
+
+    /** Function to add Remaining Pre ICO addresses post-ICO. Only by owner
+        * @param receiver Address of the minting to be added
+        * @param customerId Server side id of the customer
+        */
+    function postAllocateRemainingPreIcoAddresses(address receiver, uint128 customerId) public onlyOwner {
+        require(released == true);
+        require(nextPreIcoContributorId <= totalPreIcoAddresses);
+        addContributor(nextPreIcoContributorId, receiver, 0);
+        PostInvested(receiver, 0, 0, customerId, nextPreIcoContributorId);
+        //increment counter
+        nextPreIcoContributorId++;
+    }
+    
 }
