@@ -222,6 +222,9 @@ function printCrowdsaleContractDetails() {
     console.log("RESULT: crowdsale.maxWei=" + contract.maxWei() + " " + contract.maxWei().shift(-18) + " ETH");
     console.log("RESULT: crowdsale.requiredSignedAddress=" + contract.requiredSignedAddress());
     console.log("RESULT: crowdsale.signerAddress=" + contract.signerAddress());
+    console.log("RESULT: crowdsale.getState()=" + contract.getState());
+    console.log("RESULT: crowdsale.isFinalizerSane()=" + contract.isFinalizerSane());
+    console.log("RESULT: crowdsale.isPricingSane()=" + contract.isPricingSane());
 
     var latestBlock = eth.blockNumber;
     var i;

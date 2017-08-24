@@ -364,7 +364,8 @@ var stitch2Tx = token.setMintAgent(finaliserAddress, true, {from: contractOwnerA
 var stitch3Tx = token.setReleaseAgent(finaliserAddress, {from: contractOwnerAccount, gas: 400000});
 var stitch4Tx = token.setTransferAgent(crowdsaleAddress, true, {from: contractOwnerAccount, gas: 400000});
 var stitch5Tx = token.setBonusFinalizeAgentAddress(finaliserAddress, {from: contractOwnerAccount, gas: 400000});
-var stitch6Tx = crowdsale.setFinalizeAgent(finaliserAddress, {from: contractOwnerAccount, gas: 400000});
+var stitch6Tx = token.addCrowdsaleAddress(crowdsaleAddress, {from: contractOwnerAccount, gas: 400000});
+var stitch7Tx = crowdsale.setFinalizeAgent(finaliserAddress, {from: contractOwnerAccount, gas: 400000});
 while (txpool.status.pending > 0) {
 }
 printTxData("stitch1Tx", stitch1Tx);
@@ -373,6 +374,7 @@ printTxData("stitch3Tx", stitch3Tx);
 printTxData("stitch4Tx", stitch4Tx);
 printTxData("stitch5Tx", stitch5Tx);
 printTxData("stitch6Tx", stitch6Tx);
+printTxData("stitch7Tx", stitch6Tx);
 printBalances();
 failIfGasEqualsGasUsed(stitch1Tx, stitchMessage + " 1");
 failIfGasEqualsGasUsed(stitch2Tx, stitchMessage + " 2");
@@ -380,6 +382,7 @@ failIfGasEqualsGasUsed(stitch3Tx, stitchMessage + " 3");
 failIfGasEqualsGasUsed(stitch4Tx, stitchMessage + " 4");
 failIfGasEqualsGasUsed(stitch5Tx, stitchMessage + " 5");
 failIfGasEqualsGasUsed(stitch6Tx, stitchMessage + " 6");
+failIfGasEqualsGasUsed(stitch7Tx, stitchMessage + " 7");
 printTokenContractDetails();
 printPricingContractDetails();
 printCrowdsaleContractDetails();

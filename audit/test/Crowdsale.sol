@@ -179,7 +179,7 @@ contract Crowdsale is Haltable, SafeMathLib{
     require(getState() == State.Funding);
     uint weiAmount = msg.value;
   
-    require(token.latestContributerId() >= 333);
+    // require(token.latestContributerId() >= 333);
     
     require(weiAmount >= minWei && weiAmount <= maxWei);
     uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, token.decimals());
