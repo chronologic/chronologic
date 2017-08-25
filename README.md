@@ -40,3 +40,4 @@ See [INSTRUCTIONS.md](/Instructions.md) for instructions on how to test and depl
 ## Reviewers and audits.
 
 Code for the Day token is being reviewed by:
+- [See Audit details here](https://github.com/chronologic/chronologic/tree/dev/audit): Independent External Auditors
