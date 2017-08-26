@@ -379,13 +379,16 @@ function printFinaliserContractDetails() {
   if (finaliserContractAddress != null && pricingContractAbi != null) {
     var contract = eth.contract(finaliserContractAbi).at(finaliserContractAddress);
     console.log("RESULT: finaliser.token=" + contract.token());
-    // console.log("RESULT: finaliser.totalMembers=" + contract.totalMembers());
+    console.log("RESULT: finaliser.totalTeamAddresses=" + contract.totalTeamAddresses());
+    console.log("RESULT: finaliser.totalTestAddresses=" + contract.totalTestAddresses());
     console.log("RESULT: finaliser.testAddressTokens=" + contract.testAddressTokens());
     console.log("RESULT: finaliser.allocatedBonus=" + contract.allocatedBonus());
     console.log("RESULT: finaliser.teamBonus=" + contract.teamBonus());
     console.log("RESULT: finaliser.totalBountyInDay=" + contract.totalBountyInDay());
     console.log("RESULT: finaliser.teamAddresses=" + contract.teamAddresses());
     console.log("RESULT: finaliser.testAddresses=" + contract.testAddresses());
+    console.log("RESULT: finaliser.nextTeamContributorId=" + contract.nextTeamContributorId());
+    console.log("RESULT: finaliser.nextTestContributorId=" + contract.nextTestContributorId());
 
     var latestBlock = eth.blockNumber;
     var i;

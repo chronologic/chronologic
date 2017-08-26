@@ -48,7 +48,7 @@ else
   STARTTIME=`echo "$CURRENTTIME+75" | bc`
 fi
 STARTTIME_S=`date -r $STARTTIME -u`
-ENDTIME=`echo "$CURRENTTIME+60*4" | bc`
+ENDTIME=`echo "$CURRENTTIME+60*3" | bc`
 ENDTIME_S=`date -r $ENDTIME -u`
 
 printf "MODE                 = '$MODE'\n" | tee $TEST1OUTPUT
@@ -355,6 +355,7 @@ console.log("RESULT: ");
 
 // -----------------------------------------------------------------------------
 var stitchMessage = "Stitch Contracts Together";
+// -----------------------------------------------------------------------------
 console.log("RESULT: " + stitchMessage);
 var stitch1Tx = token.setMintAgent(crowdsaleAddress, true, {from: contractOwnerAccount, gas: 400000});
 var stitch2Tx = token.setMintAgent(finaliserAddress, true, {from: contractOwnerAccount, gas: 400000});
@@ -392,29 +393,23 @@ console.log("RESULT: ");
 // -----------------------------------------------------------------------------
 var startsAtTime = crowdsale.startsAt();
 var startsAtTimeDate = new Date(startsAtTime * 1000);
-console.log("RESULT: Waiting until startAt date at " + startsAtTime + " " + startsAtTimeDate +
-  " currentDate=" + new Date());
+console.log("RESULT: Waiting until startsAt date at " + startsAtTime + " " + startsAtTimeDate + " currentDate=" + new Date());
 while ((new Date()).getTime() <= startsAtTimeDate.getTime()) {
 }
-console.log("RESULT: Waited until start date at " + startsAtTime + " " + startsAtTimeDate +
-  " currentDate=" + new Date());
+console.log("RESULT: Waited until startsAt date at " + startsAtTime + " " + startsAtTimeDate + " currentDate=" + new Date());
 
 
 // -----------------------------------------------------------------------------
 var validContribution1Message = "Send Valid Contribution After Crowdsale Start";
+// -----------------------------------------------------------------------------
 console.log("RESULT: " + validContribution1Message);
-
 // var addContributor1Tx = crowdsale.preallocate(account8, web3.toWei(20000, "ether"), 1, {from: contractOwnerAccount, gas: 400000});
-
 // while (txpool.status.pending > 0) {
 // }
-
 var validContribution1Tx = eth.sendTransaction({from: account8, to: crowdsaleAddress, gas: 400000, value: web3.toWei("20000", "ether")});
 var validContribution2Tx = eth.sendTransaction({from: account9, to: crowdsaleAddress, gas: 400000, value: web3.toWei("1000", "ether")});
-
 while (txpool.status.pending > 0) {
 }
-
 // printTxData("addContributor1Tx", addContributor1Tx);
 printTxData("validContribution1Tx", validContribution1Tx);
 printTxData("validContribution2Tx", validContribution2Tx);
@@ -422,6 +417,34 @@ printBalances();
 // failIfGasEqualsGasUsed(addContributor1Tx, validContribution1Message + " - Add Contributor");
 failIfGasEqualsGasUsed(validContribution1Tx, validContribution1Message + " - ac8 contributes 20,000 ETH");
 failIfGasEqualsGasUsed(validContribution2Tx, validContribution1Message + " - ac9 contributes 1,000 ETH");
+printTokenContractDetails();
+printPricingContractDetails();
+printCrowdsaleContractDetails();
+printFinaliserContractDetails();
+console.log("RESULT: ");
+
+
+// -----------------------------------------------------------------------------
+// Wait for crowdsale end
+// -----------------------------------------------------------------------------
+var endsAtTime = crowdsale.endsAt();
+var endsAtTimeDate = new Date(endsAtTime * 1000);
+console.log("RESULT: Waiting until endsAt date at " + endsAtTime + " " + endsAtTimeDate + " currentDate=" + new Date());
+while ((new Date()).getTime() <= endsAtTimeDate.getTime()) {
+}
+console.log("RESULT: Waited until endsAt date at " + endsAtTime + " " + endsAtTimeDate + " currentDate=" + new Date());
+
+
+// -----------------------------------------------------------------------------
+var finaliseMessage = "Finalise Crowdsale";
+// -----------------------------------------------------------------------------
+console.log("RESULT: " + finaliseMessage);
+var finaliseTx = crowdsale.finalize({from: contractOwnerAccount, gas: 400000});
+while (txpool.status.pending > 0) {
+}
+printTxData("finaliseTx", finaliseTx);
+printBalances();
+failIfGasEqualsGasUsed(finaliseTx, finaliseMessage);
 printTokenContractDetails();
 printPricingContractDetails();
 printCrowdsaleContractDetails();

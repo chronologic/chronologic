@@ -1,16 +1,5 @@
-# DayToken
-
-Source file [../../contracts/DayToken.sol](../../contracts/DayToken.sol).
-
-<br />
-
-<hr />
-
-```javascript
-// BK Ok
 pragma solidity ^0.4.13; 
 
-// BK Next 5 Ok
 import "./StandardToken.sol"; 
 import "./UpgradeableToken.sol"; 
 import "./ReleasableToken.sol"; 
@@ -44,7 +33,6 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
      * status Selling status Variable for transfer Minting address.
      * sellingPriceInDay Variable for transfer Minting address. Price at which the address is actually sold
      */ 
-    // BK Next block Ok
     struct Contributor {
         address adr;
         uint256 initialContributionDay;
@@ -58,21 +46,15 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     }
 
     /* Mapping to store id of each minting address */
-    // BK Ok
     mapping (address => uint) public idOf;
     /* Mapping from id of each minting address to their respective structures */
-    // BK Ok
     mapping (uint256 => Contributor) public contributors;
     /* mapping to store unix timestamp of when the minting address is issued to each team member */
-    // BK Ok
     mapping (address => uint256) public teamIssuedTimestamp;
-    // BK OK
     mapping (address => bool) public soldAddresses;
-    // BK Ok
     mapping (address => uint256) public sellingPriceInDayOf;
 
     /* Stores number of days since minting epoch when all the balances are updated */
-    // BK Ok - This is not expected to be used
     uint256 public latestAllUpdate;
 
     /* Stores the id of the next Pre ICO contributor */
@@ -106,7 +88,6 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     /* number of decimals in minting power */
     uint256 public mintingDec; 
     /* Enable calling UpdateAllBalances() */
-    // BK Ok - Developers have stated that this variable will be disabled by default 
     bool public updateAllBalancesEnabled;
     /* Bounty to be given to the person calling UpdateAllBalances() */
     uint256 public bounty;
@@ -447,9 +428,6 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * For public calls.
         * Logs the ids whose balance could not be updated
         */
-    // BK NOTE - The gas cost of this function may be too large for the transaction to fit into a block
-    // BK NOTE - The developers have stated that this function will be disabled by default (variable updateAllBalancesEnabled
-    // BK NOTE - should be false).
     function updateAllBalances() public {
         require(updateAllBalancesEnabled);
         require(isDayTokenActivated());
@@ -592,6 +570,18 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         contributors[contributorId].adr = _adr;
         idOf[_adr] = contributorId;
         setInitialMintingPowerOf(contributorId);
+        contributors[contributorId].initialContributionDay = _initialContributionDay;
+        ContributorAdded(_adr, contributorId);
+        contributors[contributorId].status = sellingStatus.NOTONSALE;
+    }
+
+  function addContributorTest(uint contributorId, address _adr, uint _initialContributionDay) onlyCrowdsaleOrOwnerOrFinalizer {
+        require(contributorId <= maxAddresses);
+        //should not be an existing contributor
+        require(!isValidContributorAddress(_adr));
+        contributors[contributorId].adr = _adr;
+        idOf[_adr] = contributorId;
+        // setInitialMintingPowerOf(contributorId);
         contributors[contributorId].initialContributionDay = _initialContributionDay;
         ContributorAdded(_adr, contributorId);
         contributors[contributorId].status = sellingStatus.NOTONSALE;
@@ -764,4 +754,3 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     }
     
 }
-```

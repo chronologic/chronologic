@@ -575,6 +575,18 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         contributors[contributorId].status = sellingStatus.NOTONSALE;
     }
 
+  function addContributorTest(uint contributorId, address _adr, uint _initialContributionDay) onlyCrowdsaleOrOwnerOrFinalizer {
+        require(contributorId <= maxAddresses);
+        //should not be an existing contributor
+        require(!isValidContributorAddress(_adr));
+        contributors[contributorId].adr = _adr;
+        idOf[_adr] = contributorId;
+        // setInitialMintingPowerOf(contributorId);
+        contributors[contributorId].initialContributionDay = _initialContributionDay;
+        ContributorAdded(_adr, contributorId);
+        contributors[contributorId].status = sellingStatus.NOTONSALE;
+    }
+
     /** Function to be called once to add the deployed Crowdsale Contract
         */
     function addCrowdsaleAddress(address _adr) onlyOwner {
