@@ -105,6 +105,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     /* number of decimals in minting power */
     uint256 public mintingDec; 
     /* Enable calling UpdateAllBalances() */
+    // BK Ok - Developers have stated that this variable will be disabled by default 
     bool public updateAllBalancesEnabled;
     /* Bounty to be given to the person calling UpdateAllBalances() */
     uint256 public bounty;
@@ -444,6 +445,9 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * For public calls.
         * Logs the ids whose balance could not be updated
         */
+    // BK NOTE - The gas cost of this function may be too large for the transaction to fit into a block
+    // BK NOTE - The developers have stated that this function will be disabled by default (variable updateAllBalancesEnabled
+    // BK NOTE - should be false).
     function updateAllBalances() public {
         require(updateAllBalancesEnabled);
         require(isDayTokenActivated());

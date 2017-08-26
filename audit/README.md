@@ -75,6 +75,9 @@ The token contract is [ERC20](https://github.com/ethereum/eips/issues/20) compli
 * **LOW IMPORTANCE** - In *AddressCappedCrowdsale*, `maxIcoAddresses` is never used
   * [x] Fixed in [fd679446](https://github.com/chronologic/chronologic/commit/fd679446f01c2d29b02856719548d6a35e8c34c8)
 * **LOW IMPORTANCE** - In *DayToken*, `isValidContributorId(...)` and `isValidContributorAddress(...)` should be made constant
+* **LOW IMPORTANCE** - Remove `DayToken.updateAllBalances()`. After enquiring about the potentially large gas cost of executing
+  this function, the developers have stated that this function is not required any more, as balances are now calculated on the fly
+  and this function is now disabled by default, using the switch `updateAllBalancesEnabled`.
  
 <br />
 
@@ -134,9 +137,75 @@ The token contract is [ERC20](https://github.com/ethereum/eips/issues/20) compli
 
 ### Not Reviewed
 
-* Outside Scope
-  * [ ] [code-review/ConsenSysWallet.md](code-review/ConsenSysWallet.md)
-    * [ ] contract MultiSigWallet
-* Unused Testing Framework
-  * [ ] [code-review/Migrations.md](code-review/Migrations.md)
-    * [ ] contract Migrations 
+#### ConsenSys Multisig Wallet
+
+[../contracts/ConsenSysWallet.sol](../contracts/ConsenSysWallet.sol) is outside the scope of this review.
+
+The following are the differences between the version in this repository and the original ConsenSys
+[MultiSigWallet.sol](https://raw.githubusercontent.com/ConsenSys/MultiSigWallet/e3240481928e9d2b57517bd192394172e31da487/contracts/solidity/MultiSigWallet.sol):
+
+    $ diff -w OriginalConsenSysMultisigWallet.sol ConsenSysWallet.sol 
+    1c1
+    < pragma solidity 0.4.4;
+    ---
+    > pragma solidity ^0.4.13;
+    367d366
+    < 
+
+The only difference is in the Solidity version number.
+
+<br />
+
+The following are the differences between the version in this repository and the ConsenSys MultiSigWallet deployed 
+at [0xa646e29877d52b9e2de457eca09c724ff16d0a2b](https://etherscan.io/address/0xa646e29877d52b9e2de457eca09c724ff16d0a2b#code)
+by Status.im and is currently holding 284,732.64 Ether:
+
+    $ diff -w ConsenSysWallet.sol StatusConsenSysMultisigWallet.sol 
+    1c1
+    < pragma solidity ^0.4.13;
+    ---
+    > pragma solidity ^0.4.11;
+    10,18c10,18
+    <     event Confirmation(address indexed sender, uint indexed transactionId);
+    <     event Revocation(address indexed sender, uint indexed transactionId);
+    <     event Submission(uint indexed transactionId);
+    <     event Execution(uint indexed transactionId);
+    <     event ExecutionFailure(uint indexed transactionId);
+    <     event Deposit(address indexed sender, uint value);
+    <     event OwnerAddition(address indexed owner);
+    <     event OwnerRemoval(address indexed owner);
+    <     event RequirementChange(uint required);
+    ---
+    >     event Confirmation(address indexed _sender, uint indexed _transactionId);
+    >     event Revocation(address indexed _sender, uint indexed _transactionId);
+    >     event Submission(uint indexed _transactionId);
+    >     event Execution(uint indexed _transactionId);
+    >     event ExecutionFailure(uint indexed _transactionId);
+    >     event Deposit(address indexed _sender, uint _value);
+    >     event OwnerAddition(address indexed _owner);
+    >     event OwnerRemoval(address indexed _owner);
+    >     event RequirementChange(uint _required);
+    295c295
+    <     /// @dev Returns total number of transactions after filers are applied.
+    ---
+    >     /// @dev Returns total number of transactions after filters are applied.
+
+The only differences are in the Solidity version number and the prefixing of the event variables with `_`s.
+
+This [link](https://etherscan.io/find-similiar-contracts?a=0xa646e29877d52b9e2de457eca09c724ff16d0a2b) will display
+79 (currently) other multisig wallet contracts with high similarity to the ConsenSys MultiSigWallet deployed by Status.im .
+
+Some further information on the ConsenSys multisig wallet:
+
+* [The Gnosis MultiSig Wallet and our Commitment to Security](https://blog.gnosis.pm/the-gnosis-multisig-wallet-and-our-commitment-to-security-ce9aca0d17f6)
+* [Release of new Multisig Wallet](https://blog.gnosis.pm/release-of-new-multisig-wallet-59b6811f7edc)
+
+An audit on a previous version of this multisig has already been done by [Martin Holst Swende](https://gist.github.com/holiman/77dfe5addab521bf28ea552591ef8ac4).
+
+<br />
+
+#### Unused Testing Framework
+
+The following file is used for the testing framework are is outside the scope of this review: 
+* [../contracts/Migrations.sol](../contracts/Migrations.sol)
+
