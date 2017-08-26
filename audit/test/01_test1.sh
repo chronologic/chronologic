@@ -268,7 +268,7 @@ var _cap = web3.toWei(38383, "ether");
 var _preMinWei = web3.toWei(33, "ether");
 var _preMaxWei = web3.toWei(333, "ether");
 var _minWei = web3.toWei(1, "ether");
-var _maxWei = web3.toWei(333, "ether");
+var _maxWei = web3.toWei(33333, "ether");
 // function AddressCappedCrowdsale(address _token, PricingStrategy _pricingStrategy, 
 //   address _multisigWallet, uint _start, uint _end, uint _minimumFundingGoal, uint _weiIcoCap, 
 //   uint _preMinWei, uint _preMaxWei, uint _minWei,  uint _maxWei) 
@@ -409,16 +409,19 @@ console.log("RESULT: " + validContribution1Message);
 // while (txpool.status.pending > 0) {
 // }
 
-var validContribution1Tx = eth.sendTransaction({from: account8, to: crowdsaleAddress, gas: 400000, value: web3.toWei("100", "ether")});
+var validContribution1Tx = eth.sendTransaction({from: account8, to: crowdsaleAddress, gas: 400000, value: web3.toWei("20000", "ether")});
+var validContribution2Tx = eth.sendTransaction({from: account9, to: crowdsaleAddress, gas: 400000, value: web3.toWei("1000", "ether")});
 
 while (txpool.status.pending > 0) {
 }
 
 // printTxData("addContributor1Tx", addContributor1Tx);
 printTxData("validContribution1Tx", validContribution1Tx);
+printTxData("validContribution2Tx", validContribution2Tx);
 printBalances();
 // failIfGasEqualsGasUsed(addContributor1Tx, validContribution1Message + " - Add Contributor");
-failIfGasEqualsGasUsed(validContribution1Tx, validContribution1Message + " - Add Contribution");
+failIfGasEqualsGasUsed(validContribution1Tx, validContribution1Message + " - ac8 contributes 20,000 ETH");
+failIfGasEqualsGasUsed(validContribution2Tx, validContribution1Message + " - ac9 contributes 1,000 ETH");
 printTokenContractDetails();
 printPricingContractDetails();
 printCrowdsaleContractDetails();
