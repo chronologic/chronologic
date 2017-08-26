@@ -80,6 +80,7 @@ The token contract is [ERC20](https://github.com/ethereum/eips/issues/20) compli
   this function, the developers have stated that this function is not required any more, as balances are now calculated on the fly
   and this function is now disabled by default, using the switch `updateAllBalancesEnabled`
 * **LOW/MEDIUM? IMPORTANCE** `totalSupply` (504,001) does not match up with the total token balances from the accounts (504,000)
+
         # Account                                             EtherBalanceChange                Token Name
       -- ------------------------------------------ --------------------------- -------------------- ---------------------------
        0 0xa00af22d07c87d96eeeb0ed583f8f6ac7812827e      145.170305992000000000           0.00000000 Account #0 - Miner
@@ -99,7 +100,7 @@ The token contract is [ERC20](https://github.com/ethereum/eips/issues/20) compli
       -- ------------------------------------------ --------------------------- -------------------- ---------------------------
                                                                                      504000.00000000 Total Token Balances
       -- ------------------------------------------ --------------------------- -------------------- ---------------------------
-      
+
       PASS Send Valid Contribution - 100 ETH From Account8 - After Crowdsale Start - ac8 contributes 20,000 ETH
       PASS Send Valid Contribution - 100 ETH From Account8 - After Crowdsale Start - ac9 contributes 1,000 ETH
       ...
