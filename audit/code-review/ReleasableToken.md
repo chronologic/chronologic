@@ -8,7 +8,7 @@ Source file [../../contracts/ReleasableToken.sol](../../contracts/ReleasableToke
 
 ```javascript
 // BK Ok
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 // BK Next 2 Ok
 import './Ownable.sol';

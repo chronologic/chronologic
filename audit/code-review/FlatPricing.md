@@ -8,7 +8,7 @@ Source file [../../contracts/FlatPricing.sol](../../contracts/FlatPricing.sol).
 
 ```javascript
 // BK Ok
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 import "./PricingStrategy.sol";
 import "./SafeMathLib.sol";
@@ -25,6 +25,8 @@ contract FlatPricing is PricingStrategy, SafeMathLib {
 
   // BK Ok
   function FlatPricing(uint _oneTokenInWei) {
+    // BK Ok
+    require(_oneTokenInWei > 0);
     // BK Ok
     oneTokenInWei = _oneTokenInWei;
   }

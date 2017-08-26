@@ -8,7 +8,7 @@ Source file [../../contracts/PricingStrategy.sol](../../contracts/PricingStrateg
 
 ```javascript
 // BK Ok
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 /**
  * Interface for defining crowdsale pricing.

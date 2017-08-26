@@ -8,7 +8,7 @@ Source file [../../contracts/Crowdsale.sol](../../contracts/Crowdsale.sol).
 
 ```javascript
 // BK Ok
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 // BK Next 5 Ok
 import "./SafeMathLib.sol";
@@ -93,10 +93,6 @@ contract Crowdsale is Haltable, SafeMathLib{
   // BK Ok
   bool public requireCustomerId;
 
-  /* Maximum number of addresses on sale for Pre-ICO */
-  // BK Ok
-  uint public maxPreAddresses;
-
   /* Wei Funding raised during ICO period */
   // BK Ok
   uint public weiRaisedIco = 0;
@@ -129,7 +125,7 @@ contract Crowdsale is Haltable, SafeMathLib{
   // BK Ok
   mapping (address => uint256) public tokenAmountOf;
 
-  /** This is for manul testing for the interaction from owner wallet. 
+  /** This is for manual testing for the interaction from owner wallet. 
     * You can set it to any value and inspect this in blockchain explorer to 
     * see that crowdsale interaction works. 
     */
@@ -170,7 +166,7 @@ contract Crowdsale is Haltable, SafeMathLib{
   // BK Ok - Constructor
   function Crowdsale(address _token, PricingStrategy _pricingStrategy, address _multisigWallet, 
     uint _start, uint _end, uint _minimumFundingGoal, uint _preMinWei, uint _preMaxWei, 
-    uint _minWei, uint _maxWei, uint _maxPreAddresses) {
+    uint _minWei, uint _maxWei) {
 
     // BK Ok
     owner = msg.sender;
@@ -211,9 +207,8 @@ contract Crowdsale is Haltable, SafeMathLib{
     // BK Next 5 Ok
     preMinWei = _preMinWei;
     preMaxWei = _preMaxWei;
-    maxWei = _maxWei;
     minWei = _minWei;
-    maxPreAddresses = _maxPreAddresses;
+    maxWei = _maxWei;
   }
   
   /**
@@ -237,22 +232,22 @@ contract Crowdsale is Haltable, SafeMathLib{
     uint weiAmount = msg.value;
   
     // BK Ok
-    require(token.latestContributerId() >= 333);
-    
-    // BK Ok
     require(weiAmount >= minWei && weiAmount <= maxWei);
     // BK Ok
     uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, token.decimals());
     // BK Ok
-    uint id;
-    // BK Ok
     require(tokenAmount != 0);
-    // BK Ok
-    if (token.latestContributerId() < 3227) {
-      // Add a contributor structure
-      // BK Ok
-      id = token.addContributor(receiver, tokenAmount);
+    uint contributorId = 0;
+
+    // if investor not already a contributor and minting addresses are still there, add as contributor
+    if (!token.isValidContributorAddress(receiver) && 
+        token.nextIcoContributorId() <= token.totalPreIcoAddresses() + token.totalIcoAddresses()) {
+      contributorId = token.nextIcoContributorId();
+      token.addContributor(contributorId, receiver, tokenAmount);
+      // increment counter
+      token.incrementIcoContributorId();
     }
+
     // BK Ok
     if (investedAmountOf[receiver] == 0) {
         // A new investor
@@ -287,7 +282,7 @@ contract Crowdsale is Haltable, SafeMathLib{
 
     // Tell us invest was success
     // BK Ok - Log event
-    Invested(receiver, weiAmount, tokenAmount, customerId, id);
+    Invested(receiver, weiAmount, tokenAmount, customerId, contributorId);
   }
   
   /**
@@ -307,8 +302,10 @@ contract Crowdsale is Haltable, SafeMathLib{
    */
   // BK Ok
   function preallocate(address receiver, uint fullTokens, uint weiPrice) onlyOwner public {
-    // BK Ok
-    require(getState() == State.PreFunding);
+    require(getState() == State.PreFunding || getState() == State.Funding);
+    require(!token.isValidContributorAddress(receiver) && 
+      token.nextPreIcoContributorId() <= token.totalPreIcoAddresses());
+
     // BK Ok
     uint tokenAmount = fullTokens * 10**uint(token.decimals());
     // BK Ok
@@ -324,8 +321,7 @@ contract Crowdsale is Haltable, SafeMathLib{
     // BK Ok
     tokensSold = safeAdd(tokensSold,tokenAmount);
 
-    // BK Ok
-    uint id = token.addContributor(receiver, tokenAmount);
+    token.addContributor(token.nextPreIcoContributorId(), receiver, tokenAmount);
     
     // BK Ok
     investedAmountOf[receiver] = safeAdd(investedAmountOf[receiver],weiAmount);
@@ -337,7 +333,10 @@ contract Crowdsale is Haltable, SafeMathLib{
 
     // Tell us invest was success
     // BK Ok - Log events
-    Invested(receiver, weiAmount, tokenAmount, 0, id);
+    Invested(receiver, weiAmount, tokenAmount, 0, token.nextPreIcoContributorId());
+
+    //increment counter
+    token.incrementPreIcoContributorId();
   }
 
   /**
@@ -380,7 +379,7 @@ contract Crowdsale is Haltable, SafeMathLib{
   }
 
   /**
-   * The basic entry point to participate the crowdsale process.
+   * The basic entry point to participate in the crowdsale process.
    *
    * Pay for funding, get invested tokens back in the sender address.
    */
@@ -403,7 +402,7 @@ contract Crowdsale is Haltable, SafeMathLib{
 
   /**
    * Finalize a succcesful crowdsale.
-   * The owner can trigger a call the contract that provides post-crowdsale actions, 
+   * The owner can trigger a call to the contract that provides post-crowdsale actions, 
    * like releasing the tokens.
    */
   // BK Ok - Only owner can call this
@@ -576,7 +575,7 @@ contract Crowdsale is Haltable, SafeMathLib{
     // BK Ok
     else if (!pricingStrategy.isSane(address(this))) return State.Preparing;
     // BK Ok - Once all presale addresses have been aded, the crowdsale can commence
-    else if (block.timestamp < startsAt && token.latestContributerId() <= maxPreAddresses) return State.PreFunding;
+    else if (block.timestamp < startsAt) return State.PreFunding;
     // BK Ok
     else if (block.timestamp <= endsAt) return State.Funding;
     // BK Ok
