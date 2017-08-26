@@ -8,7 +8,7 @@ Source file [../../contracts/FinalizeAgent.sol](../../contracts/FinalizeAgent.so
 
 ```javascript
 // BK Ok
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 /**
  * Finalize agent defines what happens at the end of succeseful crowdsale.

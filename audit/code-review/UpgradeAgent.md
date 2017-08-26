@@ -8,7 +8,7 @@ Source file [../../contracts/UpgradeAgent.sol](../../contracts/UpgradeAgent.sol)
 
 ```javascript
 // BK Ok
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 /**
  * Upgrade agent interface inspired by Lunyr.

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 import "./PricingStrategy.sol";
 import "./SafeMathLib.sol";
@@ -12,6 +12,7 @@ contract FlatPricing is PricingStrategy, SafeMathLib {
   uint public oneTokenInWei;
 
   function FlatPricing(uint _oneTokenInWei) {
+    require(_oneTokenInWei > 0);
     oneTokenInWei = _oneTokenInWei;
   }
 

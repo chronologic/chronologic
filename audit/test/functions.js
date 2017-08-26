@@ -197,7 +197,7 @@ function printCrowdsaleContractDetails() {
     var decimals = 8;
     console.log("RESULT: crowdsale.owner=" + contract.owner());
     console.log("RESULT: crowdsale.weiIcoCap=" + contract.weiIcoCap() + " " + contract.weiIcoCap().shift(-18) + " ETH");
-    console.log("RESULT: crowdsale.maxIcoAddresses=" + contract.maxIcoAddresses());
+    // console.log("RESULT: crowdsale.maxIcoAddresses=" + contract.maxIcoAddresses());
     console.log("RESULT: crowdsale.token=" + contract.token());
     console.log("RESULT: crowdsale.pricingStrategy=" + contract.pricingStrategy());
     console.log("RESULT: crowdsale.finalizeAgent=" + contract.finalizeAgent());
@@ -214,7 +214,7 @@ function printCrowdsaleContractDetails() {
     console.log("RESULT: crowdsale.weiRefunded=" + contract.weiRefunded() + " " + contract.weiRefunded().shift(-18) + " ETH");
     console.log("RESULT: crowdsale.finalized=" + contract.finalized());
     console.log("RESULT: crowdsale.requireCustomerId=" + contract.requireCustomerId());
-    console.log("RESULT: crowdsale.maxPreAddresses=" + contract.maxPreAddresses());
+    // console.log("RESULT: crowdsale.maxPreAddresses=" + contract.maxPreAddresses());
     console.log("RESULT: crowdsale.weiRaisedIco=" + contract.weiRaisedIco() + " " + contract.weiRaisedIco().shift(-18) + " ETH");
     console.log("RESULT: crowdsale.preMinWei=" + contract.preMinWei() + " " + contract.preMinWei().shift(-18) + " ETH");
     console.log("RESULT: crowdsale.preMaxWei=" + contract.preMaxWei() + " " + contract.preMaxWei().shift(-18) + " ETH");
@@ -279,8 +279,26 @@ function printTokenContractDetails() {
     console.log("RESULT: token.totalSupply=" + contract.totalSupply().shift(-decimals));
     console.log("RESULT: token.mintingFinished=" + contract.mintingFinished());
     console.log("RESULT: token.latestAllUpdate=" + contract.latestAllUpdate());
-    console.log("RESULT: token.latestContributerId=" + contract.latestContributerId());
+    // console.log("RESULT: token.latestContributerId=" + contract.latestContributerId());
+    console.log("RESULT: token.nextIcoContributorId=" + contract.nextIcoContributorId());
     console.log("RESULT: token.maxAddresses=" + contract.maxAddresses());
+    console.log("RESULT: token.totalPreIcoAddresses=" + contract.totalPreIcoAddresses());
+    console.log("RESULT: token.totalIcoAddresses=" + contract.totalIcoAddresses());
+    console.log("RESULT: token.totalTeamAddresses=" + contract.totalTeamAddresses());
+    console.log("RESULT: token.totalPostIcoAddresses=" + contract.totalPostIcoAddresses());
+    
+    // token.maxAddresses=3333
+    // token.totalPreIcoAddresses=333
+    // token.totalIcoAddresses=2894
+    // 3333-3227 = 106
+    // token.totalPostIcoAddresses = 88
+    
+    // console.log("RESULT: token.totalTeamAddresses=" + contract.totalTeamAddresses());
+    // console.log("RESULT: token.totalTeamAddresses=" + contract.totalTeamAddresses());
+    
+    // uint totalAddresses = token.totalPreIcoAddresses() + token.totalIcoAddresses() + totalTeamAddresses + 
+    // totalTestAddresses + token.totalPostIcoAddresses();
+    
     console.log("RESULT: token.minMintingPower=" + contract.minMintingPower() + " " + contract.minMintingPower().shift(-19) + "%");
     console.log("RESULT: token.maxMintingPower=" + contract.maxMintingPower() + " " + contract.maxMintingPower().shift(-19) + "%");
     console.log("RESULT: token.halvingCycle=" + contract.halvingCycle());
@@ -304,16 +322,16 @@ function printTokenContractDetails() {
     var approvalEvents = contract.Approval({}, { fromBlock: tokenFromBlock, toBlock: latestBlock });
     i = 0;
     approvalEvents.watch(function (error, result) {
-      console.log("RESULT: Approval " + i++ + " #" + result.blockNumber + " owner=" + result.args.owner + " spender=" + result.args.spender + " _value=" +
-        result.args.value.shift(-decimals));
+      console.log("RESULT: Approval " + i++ + " #" + result.blockNumber + " _owner=" + result.args._owner + " spender=" + result.args._spender + " _value=" +
+        result.args._value.shift(-decimals));
     });
     approvalEvents.stopWatching();
 
     var transferEvents = contract.Transfer({}, { fromBlock: tokenFromBlock, toBlock: latestBlock });
     i = 0;
     transferEvents.watch(function (error, result) {
-      console.log("RESULT: Transfer " + i++ + " #" + result.blockNumber + ": from=" + result.args.from + " to=" + result.args.to +
-        " value=" + result.args.value.shift(-decimals));
+      console.log("RESULT: Transfer " + i++ + " #" + result.blockNumber + ": _from=" + result.args._from + " _to=" + result.args._to +
+        " _value=" + result.args._value.shift(-decimals));
     });
     transferEvents.stopWatching();
 
@@ -361,7 +379,7 @@ function printFinaliserContractDetails() {
   if (finaliserContractAddress != null && pricingContractAbi != null) {
     var contract = eth.contract(finaliserContractAbi).at(finaliserContractAddress);
     console.log("RESULT: finaliser.token=" + contract.token());
-    console.log("RESULT: finaliser.totalMembers=" + contract.totalMembers());
+    // console.log("RESULT: finaliser.totalMembers=" + contract.totalMembers());
     console.log("RESULT: finaliser.testAddressTokens=" + contract.testAddressTokens());
     console.log("RESULT: finaliser.allocatedBonus=" + contract.allocatedBonus());
     console.log("RESULT: finaliser.teamBonus=" + contract.teamBonus());

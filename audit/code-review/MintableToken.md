@@ -8,7 +8,7 @@ Source file [../../contracts/MintableToken.sol](../../contracts/MintableToken.so
 
 ```javascript
 // BK Ok
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 // BK Next 4 Ok
 import './ERC20.sol';
 import './Ownable.sol';

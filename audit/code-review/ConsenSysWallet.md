@@ -7,7 +7,7 @@ Source file [../../contracts/ConsenSysWallet.sol](../../contracts/ConsenSysWalle
 <hr />
 
 ```javascript
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 
 /// @title Multisignature wallet - Allows multiple parties to agree on transactions before execution.

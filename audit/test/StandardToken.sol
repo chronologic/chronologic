@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 import './ERC20.sol';
 import './SafeMathLib.sol';
@@ -43,10 +43,12 @@ contract StandardToken is ERC20, SafeMathLib {
         && _allowance >= _value    // Transfer approved
         && _value > 0              // Non-zero transfer
         && balances[_to] + _value > balances[_to]  // Overflow check
-        ){
-    balances[_to] = safeAdd(balances[_to],_value);
-    balances[_from] = safeSub(balances[_from],_value);
+        ){ 
+
     allowed[_from][msg.sender] = safeSub(_allowance,_value);
+    balances[_from] = safeSub(balances[_from],_value);
+    balances[_to] = safeAdd(balances[_to],_value);
+    
     Transfer(_from, _to, _value);
     return true;
         }
@@ -65,7 +67,7 @@ contract StandardToken is ERC20, SafeMathLib {
     //  allowance to zero by calling `approve(_spender, 0)` if it is not
     //  already 0 to mitigate the race condition described here:
     //  https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
-    require(!((_value != 0) && (allowed[msg.sender][_spender] != 0)));
+    require((_value == 0) || (allowed[msg.sender][_spender] == 0));
 
     allowed[msg.sender][_spender] = _value;
     Approval(msg.sender, _spender, _value);
