@@ -1,6 +1,6 @@
  # Account                                             EtherBalanceChange                Token Name
 -- ------------------------------------------ --------------------------- -------------------- ---------------------------
- 0 0xa00af22d07c87d96eeeb0ed583f8f6ac7812827e       20.000000000000000000           0.000000000000000000 Account #0 - Miner
+ 0 0xa00af22d07c87d96eeeb0ed583f8f6ac7812827e       35.000000000000000000           0.000000000000000000 Account #0 - Miner
  1 0xa11aae29840fbb5c86e6fd4cf809eba183aef433        0.000000000000000000           0.000000000000000000 Account #1 - Contract Owner
  2 0xa22ab8a9d641ce77e06d98b7d7065d324d3d6976        0.000000000000000000           0.000000000000000000 Account #2 - Multisig
  3 0xa33a6c312d9ad0e0f2e95541beed0cc081621fd0        0.000000000000000000           0.000000000000000000 Account #3 - Team #1
@@ -17,12 +17,12 @@
 
 Deploy CrowdsaleToken Contract
 Deploy Pricing Contract
-tokenAddress=0x1029670471248c1046263e47c431a061a7fa34ab gas=6000000 gasUsed=4293669 costETH=0.077286042 costUSD=20.279702848716 @ ETH/USD=262.398 gasPrice=18000000000 block=666 txId=0x5f249e7a2ac5c258a353efdaacc20968b52ca62293ea0d2df32cd591428b20ca
-pricingAddress=0xa83b361b5b868fc289d586c3a1d3712d8075d8f8 gas=6000000 gasUsed=257171 costETH=0.004629078 costUSD=1.214660809044 @ ETH/USD=262.398 gasPrice=18000000000 block=666 txId=0x5a85d28eec382cb79c14a1b97644ea8cdf1709ad13ec5109fa36f02f680734a2
+tokenAddress=0xe00ccdd988b1395489290c4c22e85a9c989f40f6 gas=6000000 gasUsed=4356394 costETH=0.078415092 costUSD=20.575963310616 @ ETH/USD=262.398 gasPrice=18000000000 block=93 txId=0x573e4b6a563816eae68ea922257df4dbb7cab2cefc9f8dc2d034c2a25badc4e2
+pricingAddress=0xf3d9d349146b55cf4e0b622edc71bc4af76b014c gas=6000000 gasUsed=257171 costETH=0.004629078 costUSD=1.214660809044 @ ETH/USD=262.398 gasPrice=18000000000 block=93 txId=0x6e5cce1b7fdcc4a00dc220f202e19c22ae5d6440badb08ff3dc02b2f3169c1c0
  # Account                                             EtherBalanceChange                Token Name
 -- ------------------------------------------ --------------------------- -------------------- ---------------------------
- 0 0xa00af22d07c87d96eeeb0ed583f8f6ac7812827e       30.081915120000000000           0.00000000 Account #0 - Miner
- 1 0xa11aae29840fbb5c86e6fd4cf809eba183aef433       -0.081915120000000000           0.00000000 Account #1 - Contract Owner
+ 0 0xa00af22d07c87d96eeeb0ed583f8f6ac7812827e       45.083044170000000000           0.00000000 Account #0 - Miner
+ 1 0xa11aae29840fbb5c86e6fd4cf809eba183aef433       -0.083044170000000000           0.00000000 Account #1 - Contract Owner
  2 0xa22ab8a9d641ce77e06d98b7d7065d324d3d6976        0.000000000000000000           0.00000000 Account #2 - Multisig
  3 0xa33a6c312d9ad0e0f2e95541beed0cc081621fd0        0.000000000000000000           0.00000000 Account #3 - Team #1
  4 0xa44a08d3f6933c69212114bb66e2df1813651844        0.000000000000000000           0.00000000 Account #4 - Team #2
@@ -31,15 +31,15 @@ pricingAddress=0xa83b361b5b868fc289d586c3a1d3712d8075d8f8 gas=6000000 gasUsed=25
  7 0xa77a2b9d4b1c010a22a7c565dc418cef683dbcec        0.000000000000000000           0.00000000 Account #7 - Test Address #2
  8 0xa88a05d2b88283ce84c8325760b72a64591279a2        0.000000000000000000           0.00000000 Account #8
  9 0xa99a0ae3354c06b1459fd441a32a3f71005d7da0        0.000000000000000000           0.00000000 Account #9
-10 0x1029670471248c1046263e47c431a061a7fa34ab        0.000000000000000000           0.00000000 Token 'DAY' 'Day'
-11 0xa83b361b5b868fc289d586c3a1d3712d8075d8f8        0.000000000000000000           0.00000000 Pricing
+10 0xe00ccdd988b1395489290c4c22e85a9c989f40f6        0.000000000000000000           0.00000000 Token 'DAY' 'Day'
+11 0xf3d9d349146b55cf4e0b622edc71bc4af76b014c        0.000000000000000000           0.00000000 Pricing
 -- ------------------------------------------ --------------------------- -------------------- ---------------------------
                                                                                     0.00000000 Total Token Balances
 -- ------------------------------------------ --------------------------- -------------------- ---------------------------
 
 PASS Deploy CrowdsaleToken Contract
 PASS Deploy Pricing Contract
-tokenContractAddress=0x1029670471248c1046263e47c431a061a7fa34ab
+tokenContractAddress=0xe00ccdd988b1395489290c4c22e85a9c989f40f6
 token.owner=0xa11aae29840fbb5c86e6fd4cf809eba183aef433
 token.symbol=DAY
 token.name=Day
@@ -51,15 +51,30 @@ token.nextIcoContributorId=334
 token.maxAddresses=3333
 token.totalPreIcoAddresses=333
 token.totalIcoAddresses=2894
-pricingContractAddress=0xa83b361b5b868fc289d586c3a1d3712d8075d8f8
+token.totalPostIcoAddresses=101
+token.minMintingPower=500000000000000000 0.05%
+token.maxMintingPower=1000000000000000000 0.1%
+token.halvingCycle=88
+token.initialBlockTimestamp=1577836800 Wed, 01 Jan 2020 00:00:00 UTC
+token.mintingDec=19
+token.bounty=0
+token.minBalanceToSell=8888
+token.teamLockPeriodInSec=15780000
+token.DayInSecs=84600
+token.releaseAgent=0x0000000000000000000000000000000000000000
+token.released=false
+token.upgradeMaster=0xa11aae29840fbb5c86e6fd4cf809eba183aef433
+token.upgradeAgent=0x0000000000000000000000000000000000000000
+token.totalUpgraded=0
+pricingContractAddress=0xf3d9d349146b55cf4e0b622edc71bc4af76b014c
 pricing.oneTokenInWei=41666666666666666 0.041666666666666666 ETH
 
 Deploy Crowdsale Contract
-crowdsaleAddress=0x43ac93ca1533f31e82ae941b6f477096cf9a28e6 gas=6000000 gasUsed=2638259 costETH=0.047488662 costUSD=12.460929931476 @ ETH/USD=262.398 gasPrice=18000000000 block=668 txId=0x166efe4bc6b0b9c415525b238ebddf12b408752b8c5421d16169f1bc65dbf0dc
+crowdsaleAddress=0xb797d2439cd318684f93de852b4928ea75ae6917 gas=6000000 gasUsed=2638323 costETH=0.047489814 costUSD=12.461232213972 @ ETH/USD=262.398 gasPrice=18000000000 block=96 txId=0x0f2dbfd7a6a0dae60d780fd22eae91cdd455a079f9890aba84dad694f3552d8f
  # Account                                             EtherBalanceChange                Token Name
 -- ------------------------------------------ --------------------------- -------------------- ---------------------------
- 0 0xa00af22d07c87d96eeeb0ed583f8f6ac7812827e       40.129403782000000000           0.00000000 Account #0 - Miner
- 1 0xa11aae29840fbb5c86e6fd4cf809eba183aef433       -0.129403782000000000           0.00000000 Account #1 - Contract Owner
+ 0 0xa00af22d07c87d96eeeb0ed583f8f6ac7812827e       65.130533984000000000           0.00000000 Account #0 - Miner
+ 1 0xa11aae29840fbb5c86e6fd4cf809eba183aef433       -0.130533984000000000           0.00000000 Account #1 - Contract Owner
  2 0xa22ab8a9d641ce77e06d98b7d7065d324d3d6976        0.000000000000000000           0.00000000 Account #2 - Multisig
  3 0xa33a6c312d9ad0e0f2e95541beed0cc081621fd0        0.000000000000000000           0.00000000 Account #3 - Team #1
  4 0xa44a08d3f6933c69212114bb66e2df1813651844        0.000000000000000000           0.00000000 Account #4 - Team #2
@@ -68,24 +83,24 @@ crowdsaleAddress=0x43ac93ca1533f31e82ae941b6f477096cf9a28e6 gas=6000000 gasUsed=
  7 0xa77a2b9d4b1c010a22a7c565dc418cef683dbcec        0.000000000000000000           0.00000000 Account #7 - Test Address #2
  8 0xa88a05d2b88283ce84c8325760b72a64591279a2        0.000000000000000000           0.00000000 Account #8
  9 0xa99a0ae3354c06b1459fd441a32a3f71005d7da0        0.000000000000000000           0.00000000 Account #9
-10 0x1029670471248c1046263e47c431a061a7fa34ab        0.000000000000000000           0.00000000 Token 'DAY' 'Day'
-11 0xa83b361b5b868fc289d586c3a1d3712d8075d8f8        0.000000000000000000           0.00000000 Pricing
-12 0x43ac93ca1533f31e82ae941b6f477096cf9a28e6        0.000000000000000000           0.00000000 Crowdsale
+10 0xe00ccdd988b1395489290c4c22e85a9c989f40f6        0.000000000000000000           0.00000000 Token 'DAY' 'Day'
+11 0xf3d9d349146b55cf4e0b622edc71bc4af76b014c        0.000000000000000000           0.00000000 Pricing
+12 0xb797d2439cd318684f93de852b4928ea75ae6917        0.000000000000000000           0.00000000 Crowdsale
 -- ------------------------------------------ --------------------------- -------------------- ---------------------------
                                                                                     0.00000000 Total Token Balances
 -- ------------------------------------------ --------------------------- -------------------- ---------------------------
 
 PASS Deploy Crowdsale Contract
-crowdsaleContractAddress=0x43ac93ca1533f31e82ae941b6f477096cf9a28e6
+crowdsaleContractAddress=0xb797d2439cd318684f93de852b4928ea75ae6917
 crowdsale.owner=0xa11aae29840fbb5c86e6fd4cf809eba183aef433
 crowdsale.weiIcoCap=3.8383e+22 38383 ETH
-crowdsale.token=0x1029670471248c1046263e47c431a061a7fa34ab
-crowdsale.pricingStrategy=0xa83b361b5b868fc289d586c3a1d3712d8075d8f8
+crowdsale.token=0xe00ccdd988b1395489290c4c22e85a9c989f40f6
+crowdsale.pricingStrategy=0xf3d9d349146b55cf4e0b622edc71bc4af76b014c
 crowdsale.finalizeAgent=0x0000000000000000000000000000000000000000
 crowdsale.multisigWallet=0xa22ab8a9d641ce77e06d98b7d7065d324d3d6976
 crowdsale.minimumFundingGoal=1.5e+21 1500 ETH
-crowdsale.startsAt=1503740355 Sat, 26 Aug 2017 09:39:15 UTC
-crowdsale.endsAt=1503740520 Sat, 26 Aug 2017 09:42:00 UTC
+crowdsale.startsAt=1503762997 Sat, 26 Aug 2017 15:56:37 UTC
+crowdsale.endsAt=1503763162 Sat, 26 Aug 2017 15:59:22 UTC
 crowdsale.tokensSold=0
 crowdsale.weiRaised=0 0 ETH
 crowdsale.investorCount=0
@@ -97,7 +112,7 @@ crowdsale.weiRaisedIco=0 0 ETH
 crowdsale.preMinWei=33000000000000000000 33 ETH
 crowdsale.preMaxWei=333000000000000000000 333 ETH
 crowdsale.minWei=1000000000000000000 1 ETH
-crowdsale.maxWei=333000000000000000000 333 ETH
+crowdsale.maxWei=3.3333e+22 33333 ETH
 crowdsale.requiredSignedAddress=false
 crowdsale.signerAddress=0x0000000000000000000000000000000000000000
 crowdsale.getState()=1
@@ -105,11 +120,11 @@ crowdsale.isFinalizerSane()=false
 crowdsale.isPricingSane()=true
 
 Deploy BonusFinalizerAgent Contract
-finaliserAddress=0x354059c8c025b0bb359d8a9a6afaf1e550b2ea4b gas=6000000 gasUsed=1359088 costETH=0.024463584 costUSD=6.419195514432 @ ETH/USD=262.398 gasPrice=18000000000 block=670 txId=0x53f684687cf8fea60b1cf2751bbdb74064ca13e522d53100b49b080db9236036
+finaliserAddress=0x9fb3c6433aa45e3eb6df7d4f1ed943a8138a4923 gas=6000000 gasUsed=1359088 costETH=0.024463584 costUSD=6.419195514432 @ ETH/USD=262.398 gasPrice=18000000000 block=101 txId=0x587116c5933f8c6c7dd832ade70549c886efa318ad86bb55d88e547e42b3bebe
  # Account                                             EtherBalanceChange                Token Name
 -- ------------------------------------------ --------------------------- -------------------- ---------------------------
- 0 0xa00af22d07c87d96eeeb0ed583f8f6ac7812827e       50.153867366000000000           0.00000000 Account #0 - Miner
- 1 0xa11aae29840fbb5c86e6fd4cf809eba183aef433       -0.153867366000000000           0.00000000 Account #1 - Contract Owner
+ 0 0xa00af22d07c87d96eeeb0ed583f8f6ac7812827e       85.154997568000000000           0.00000000 Account #0 - Miner
+ 1 0xa11aae29840fbb5c86e6fd4cf809eba183aef433       -0.154997568000000000           0.00000000 Account #1 - Contract Owner
  2 0xa22ab8a9d641ce77e06d98b7d7065d324d3d6976        0.000000000000000000           0.00000000 Account #2 - Multisig
  3 0xa33a6c312d9ad0e0f2e95541beed0cc081621fd0        0.000000000000000000           0.00000000 Account #3 - Team #1
  4 0xa44a08d3f6933c69212114bb66e2df1813651844        0.000000000000000000           0.00000000 Account #4 - Team #2
@@ -118,16 +133,16 @@ finaliserAddress=0x354059c8c025b0bb359d8a9a6afaf1e550b2ea4b gas=6000000 gasUsed=
  7 0xa77a2b9d4b1c010a22a7c565dc418cef683dbcec        0.000000000000000000           0.00000000 Account #7 - Test Address #2
  8 0xa88a05d2b88283ce84c8325760b72a64591279a2        0.000000000000000000           0.00000000 Account #8
  9 0xa99a0ae3354c06b1459fd441a32a3f71005d7da0        0.000000000000000000           0.00000000 Account #9
-10 0x1029670471248c1046263e47c431a061a7fa34ab        0.000000000000000000           0.00000000 Token 'DAY' 'Day'
-11 0xa83b361b5b868fc289d586c3a1d3712d8075d8f8        0.000000000000000000           0.00000000 Pricing
-12 0x43ac93ca1533f31e82ae941b6f477096cf9a28e6        0.000000000000000000           0.00000000 Crowdsale
-13 0x354059c8c025b0bb359d8a9a6afaf1e550b2ea4b        0.000000000000000000           0.00000000 BonusFinalizerAgent
+10 0xe00ccdd988b1395489290c4c22e85a9c989f40f6        0.000000000000000000           0.00000000 Token 'DAY' 'Day'
+11 0xf3d9d349146b55cf4e0b622edc71bc4af76b014c        0.000000000000000000           0.00000000 Pricing
+12 0xb797d2439cd318684f93de852b4928ea75ae6917        0.000000000000000000           0.00000000 Crowdsale
+13 0x9fb3c6433aa45e3eb6df7d4f1ed943a8138a4923        0.000000000000000000           0.00000000 BonusFinalizerAgent
 -- ------------------------------------------ --------------------------- -------------------- ---------------------------
                                                                                     0.00000000 Total Token Balances
 -- ------------------------------------------ --------------------------- -------------------- ---------------------------
 
 PASS Deploy BonusFinalizerAgent Contract
-tokenContractAddress=0x1029670471248c1046263e47c431a061a7fa34ab
+tokenContractAddress=0xe00ccdd988b1395489290c4c22e85a9c989f40f6
 token.owner=0xa11aae29840fbb5c86e6fd4cf809eba183aef433
 token.symbol=DAY
 token.name=Day
@@ -139,18 +154,33 @@ token.nextIcoContributorId=334
 token.maxAddresses=3333
 token.totalPreIcoAddresses=333
 token.totalIcoAddresses=2894
-pricingContractAddress=0xa83b361b5b868fc289d586c3a1d3712d8075d8f8
+token.totalPostIcoAddresses=101
+token.minMintingPower=500000000000000000 0.05%
+token.maxMintingPower=1000000000000000000 0.1%
+token.halvingCycle=88
+token.initialBlockTimestamp=1577836800 Wed, 01 Jan 2020 00:00:00 UTC
+token.mintingDec=19
+token.bounty=0
+token.minBalanceToSell=8888
+token.teamLockPeriodInSec=15780000
+token.DayInSecs=84600
+token.releaseAgent=0x0000000000000000000000000000000000000000
+token.released=false
+token.upgradeMaster=0xa11aae29840fbb5c86e6fd4cf809eba183aef433
+token.upgradeAgent=0x0000000000000000000000000000000000000000
+token.totalUpgraded=0
+pricingContractAddress=0xf3d9d349146b55cf4e0b622edc71bc4af76b014c
 pricing.oneTokenInWei=41666666666666666 0.041666666666666666 ETH
-crowdsaleContractAddress=0x43ac93ca1533f31e82ae941b6f477096cf9a28e6
+crowdsaleContractAddress=0xb797d2439cd318684f93de852b4928ea75ae6917
 crowdsale.owner=0xa11aae29840fbb5c86e6fd4cf809eba183aef433
 crowdsale.weiIcoCap=3.8383e+22 38383 ETH
-crowdsale.token=0x1029670471248c1046263e47c431a061a7fa34ab
-crowdsale.pricingStrategy=0xa83b361b5b868fc289d586c3a1d3712d8075d8f8
+crowdsale.token=0xe00ccdd988b1395489290c4c22e85a9c989f40f6
+crowdsale.pricingStrategy=0xf3d9d349146b55cf4e0b622edc71bc4af76b014c
 crowdsale.finalizeAgent=0x0000000000000000000000000000000000000000
 crowdsale.multisigWallet=0xa22ab8a9d641ce77e06d98b7d7065d324d3d6976
 crowdsale.minimumFundingGoal=1.5e+21 1500 ETH
-crowdsale.startsAt=1503740355 Sat, 26 Aug 2017 09:39:15 UTC
-crowdsale.endsAt=1503740520 Sat, 26 Aug 2017 09:42:00 UTC
+crowdsale.startsAt=1503762997 Sat, 26 Aug 2017 15:56:37 UTC
+crowdsale.endsAt=1503763162 Sat, 26 Aug 2017 15:59:22 UTC
 crowdsale.tokensSold=0
 crowdsale.weiRaised=0 0 ETH
 crowdsale.investorCount=0
@@ -162,14 +192,14 @@ crowdsale.weiRaisedIco=0 0 ETH
 crowdsale.preMinWei=33000000000000000000 33 ETH
 crowdsale.preMaxWei=333000000000000000000 333 ETH
 crowdsale.minWei=1000000000000000000 1 ETH
-crowdsale.maxWei=333000000000000000000 333 ETH
+crowdsale.maxWei=3.3333e+22 33333 ETH
 crowdsale.requiredSignedAddress=false
 crowdsale.signerAddress=0x0000000000000000000000000000000000000000
 crowdsale.getState()=1
 crowdsale.isFinalizerSane()=false
 crowdsale.isPricingSane()=true
-finaliserContractAddress=0x354059c8c025b0bb359d8a9a6afaf1e550b2ea4b
-finaliser.token=0x1029670471248c1046263e47c431a061a7fa34ab
+finaliserContractAddress=0x9fb3c6433aa45e3eb6df7d4f1ed943a8138a4923
+finaliser.token=0xe00ccdd988b1395489290c4c22e85a9c989f40f6
 finaliser.testAddressTokens=88
 finaliser.allocatedBonus=0
 finaliser.teamBonus=5
@@ -178,17 +208,17 @@ finaliser.teamAddresses=0xa33a6c312d9ad0e0f2e95541beed0cc081621fd0
 finaliser.testAddresses=0xa66a85ede0cbe03694aa9d9de0bb19c99ff55bd9
 
 Stitch Contracts Together
-stitch1Tx gas=400000 gasUsed=45352 costETH=0.000816336 costUSD=0.214204933728 @ ETH/USD=262.398 gasPrice=18000000000 block=674 txId=0x482d2926b5bbf9489f178fd6c4e85c315d3be5bd2303a953cd3bc59e149843a5
-stitch2Tx gas=400000 gasUsed=45352 costETH=0.000816336 costUSD=0.214204933728 @ ETH/USD=262.398 gasPrice=18000000000 block=675 txId=0xf10fcab372f4ce0f8b845b9b8fab0267a38e098716daf042cc63fc8e97f9b9f5
-stitch3Tx gas=400000 gasUsed=43488 costETH=0.000782784 costUSD=0.205400956032 @ ETH/USD=262.398 gasPrice=18000000000 block=675 txId=0xce81729924891013d0d85723937b557996b832029bcf4f97032ce91417893de7
-stitch4Tx gas=400000 gasUsed=43498 costETH=0.000782964 costUSD=0.205448187672 @ ETH/USD=262.398 gasPrice=18000000000 block=675 txId=0xf8fda1f1aaedb3d81041f35ea1df6873f64a52bdbd936ee94adc98ed65422931
-stitch5Tx gas=400000 gasUsed=44997 costETH=0.000809946 costUSD=0.212528210508 @ ETH/USD=262.398 gasPrice=18000000000 block=675 txId=0x93fc1a6d98a5ff837139c5b26cc920af3e845a40b4148f272f2de547abd80de4
-stitch6Tx gas=400000 gasUsed=44271 costETH=0.000796878 costUSD=0.209099193444 @ ETH/USD=262.398 gasPrice=18000000000 block=675 txId=0xab3a50c31512d4d2247a84d6a2f635c1d36adb94943c4c690f976a6790cd675b
-stitch7Tx gas=400000 gasUsed=44271 costETH=0.000796878 costUSD=0.209099193444 @ ETH/USD=262.398 gasPrice=18000000000 block=675 txId=0xab3a50c31512d4d2247a84d6a2f635c1d36adb94943c4c690f976a6790cd675b
+stitch1Tx gas=400000 gasUsed=45352 costETH=0.000816336 costUSD=0.214204933728 @ ETH/USD=262.398 gasPrice=18000000000 block=106 txId=0x9514963726484302f4e8e9b58b7456013910ab4a5254210f48891fd3dfc80927
+stitch2Tx gas=400000 gasUsed=45352 costETH=0.000816336 costUSD=0.214204933728 @ ETH/USD=262.398 gasPrice=18000000000 block=106 txId=0xc128338e948dd85d7e9331f872140aab4d7eccc23652cf9438890c4bedc62d3f
+stitch3Tx gas=400000 gasUsed=43488 costETH=0.000782784 costUSD=0.205400956032 @ ETH/USD=262.398 gasPrice=18000000000 block=106 txId=0xad136840f0d0f4e952fe10726b5e8d012b700ff64fec3b5bf6c1edee5f42dbae
+stitch4Tx gas=400000 gasUsed=43498 costETH=0.000782964 costUSD=0.205448187672 @ ETH/USD=262.398 gasPrice=18000000000 block=106 txId=0xe26a946effec673fde8805a87634911fc222ebd2cf37047181fd0100c17940bb
+stitch5Tx gas=400000 gasUsed=44997 costETH=0.000809946 costUSD=0.212528210508 @ ETH/USD=262.398 gasPrice=18000000000 block=106 txId=0x942abda32a1e5f6841aff5941e8590e2bdf3bf36ce63407722884cf053029288
+stitch6Tx gas=400000 gasUsed=44271 costETH=0.000796878 costUSD=0.209099193444 @ ETH/USD=262.398 gasPrice=18000000000 block=106 txId=0x3c6c58e77ef266fecdd6a60eb046d74abfb981747a9b6e3af79907b1cb6db350
+stitch7Tx gas=400000 gasUsed=44271 costETH=0.000796878 costUSD=0.209099193444 @ ETH/USD=262.398 gasPrice=18000000000 block=106 txId=0x3c6c58e77ef266fecdd6a60eb046d74abfb981747a9b6e3af79907b1cb6db350
  # Account                                             EtherBalanceChange                Token Name
 -- ------------------------------------------ --------------------------- -------------------- ---------------------------
- 0 0xa00af22d07c87d96eeeb0ed583f8f6ac7812827e       75.159463062000000000           0.00000000 Account #0 - Miner
- 1 0xa11aae29840fbb5c86e6fd4cf809eba183aef433       -0.159463062000000000           0.00000000 Account #1 - Contract Owner
+ 0 0xa00af22d07c87d96eeeb0ed583f8f6ac7812827e      110.160593264000000000           0.00000000 Account #0 - Miner
+ 1 0xa11aae29840fbb5c86e6fd4cf809eba183aef433       -0.160593264000000000           0.00000000 Account #1 - Contract Owner
  2 0xa22ab8a9d641ce77e06d98b7d7065d324d3d6976        0.000000000000000000           0.00000000 Account #2 - Multisig
  3 0xa33a6c312d9ad0e0f2e95541beed0cc081621fd0        0.000000000000000000           0.00000000 Account #3 - Team #1
  4 0xa44a08d3f6933c69212114bb66e2df1813651844        0.000000000000000000           0.00000000 Account #4 - Team #2
@@ -197,10 +227,10 @@ stitch7Tx gas=400000 gasUsed=44271 costETH=0.000796878 costUSD=0.209099193444 @ 
  7 0xa77a2b9d4b1c010a22a7c565dc418cef683dbcec        0.000000000000000000           0.00000000 Account #7 - Test Address #2
  8 0xa88a05d2b88283ce84c8325760b72a64591279a2        0.000000000000000000           0.00000000 Account #8
  9 0xa99a0ae3354c06b1459fd441a32a3f71005d7da0        0.000000000000000000           0.00000000 Account #9
-10 0x1029670471248c1046263e47c431a061a7fa34ab        0.000000000000000000           0.00000000 Token 'DAY' 'Day'
-11 0xa83b361b5b868fc289d586c3a1d3712d8075d8f8        0.000000000000000000           0.00000000 Pricing
-12 0x43ac93ca1533f31e82ae941b6f477096cf9a28e6        0.000000000000000000           0.00000000 Crowdsale
-13 0x354059c8c025b0bb359d8a9a6afaf1e550b2ea4b        0.000000000000000000           0.00000000 BonusFinalizerAgent
+10 0xe00ccdd988b1395489290c4c22e85a9c989f40f6        0.000000000000000000           0.00000000 Token 'DAY' 'Day'
+11 0xf3d9d349146b55cf4e0b622edc71bc4af76b014c        0.000000000000000000           0.00000000 Pricing
+12 0xb797d2439cd318684f93de852b4928ea75ae6917        0.000000000000000000           0.00000000 Crowdsale
+13 0x9fb3c6433aa45e3eb6df7d4f1ed943a8138a4923        0.000000000000000000           0.00000000 BonusFinalizerAgent
 -- ------------------------------------------ --------------------------- -------------------- ---------------------------
                                                                                     0.00000000 Total Token Balances
 -- ------------------------------------------ --------------------------- -------------------- ---------------------------
@@ -212,7 +242,7 @@ PASS Stitch Contracts Together 4
 PASS Stitch Contracts Together 5
 PASS Stitch Contracts Together 6
 PASS Stitch Contracts Together 7
-tokenContractAddress=0x1029670471248c1046263e47c431a061a7fa34ab
+tokenContractAddress=0xe00ccdd988b1395489290c4c22e85a9c989f40f6
 token.owner=0xa11aae29840fbb5c86e6fd4cf809eba183aef433
 token.symbol=DAY
 token.name=Day
@@ -224,18 +254,33 @@ token.nextIcoContributorId=334
 token.maxAddresses=3333
 token.totalPreIcoAddresses=333
 token.totalIcoAddresses=2894
-pricingContractAddress=0xa83b361b5b868fc289d586c3a1d3712d8075d8f8
+token.totalPostIcoAddresses=101
+token.minMintingPower=500000000000000000 0.05%
+token.maxMintingPower=1000000000000000000 0.1%
+token.halvingCycle=88
+token.initialBlockTimestamp=1577836800 Wed, 01 Jan 2020 00:00:00 UTC
+token.mintingDec=19
+token.bounty=0
+token.minBalanceToSell=8888
+token.teamLockPeriodInSec=15780000
+token.DayInSecs=84600
+token.releaseAgent=0x9fb3c6433aa45e3eb6df7d4f1ed943a8138a4923
+token.released=false
+token.upgradeMaster=0xa11aae29840fbb5c86e6fd4cf809eba183aef433
+token.upgradeAgent=0x0000000000000000000000000000000000000000
+token.totalUpgraded=0
+pricingContractAddress=0xf3d9d349146b55cf4e0b622edc71bc4af76b014c
 pricing.oneTokenInWei=41666666666666666 0.041666666666666666 ETH
-crowdsaleContractAddress=0x43ac93ca1533f31e82ae941b6f477096cf9a28e6
+crowdsaleContractAddress=0xb797d2439cd318684f93de852b4928ea75ae6917
 crowdsale.owner=0xa11aae29840fbb5c86e6fd4cf809eba183aef433
 crowdsale.weiIcoCap=3.8383e+22 38383 ETH
-crowdsale.token=0x1029670471248c1046263e47c431a061a7fa34ab
-crowdsale.pricingStrategy=0xa83b361b5b868fc289d586c3a1d3712d8075d8f8
-crowdsale.finalizeAgent=0x354059c8c025b0bb359d8a9a6afaf1e550b2ea4b
+crowdsale.token=0xe00ccdd988b1395489290c4c22e85a9c989f40f6
+crowdsale.pricingStrategy=0xf3d9d349146b55cf4e0b622edc71bc4af76b014c
+crowdsale.finalizeAgent=0x9fb3c6433aa45e3eb6df7d4f1ed943a8138a4923
 crowdsale.multisigWallet=0xa22ab8a9d641ce77e06d98b7d7065d324d3d6976
 crowdsale.minimumFundingGoal=1.5e+21 1500 ETH
-crowdsale.startsAt=1503740355 Sat, 26 Aug 2017 09:39:15 UTC
-crowdsale.endsAt=1503740520 Sat, 26 Aug 2017 09:42:00 UTC
+crowdsale.startsAt=1503762997 Sat, 26 Aug 2017 15:56:37 UTC
+crowdsale.endsAt=1503763162 Sat, 26 Aug 2017 15:59:22 UTC
 crowdsale.tokensSold=0
 crowdsale.weiRaised=0 0 ETH
 crowdsale.investorCount=0
@@ -247,14 +292,14 @@ crowdsale.weiRaisedIco=0 0 ETH
 crowdsale.preMinWei=33000000000000000000 33 ETH
 crowdsale.preMaxWei=333000000000000000000 333 ETH
 crowdsale.minWei=1000000000000000000 1 ETH
-crowdsale.maxWei=333000000000000000000 333 ETH
+crowdsale.maxWei=3.3333e+22 33333 ETH
 crowdsale.requiredSignedAddress=false
 crowdsale.signerAddress=0x0000000000000000000000000000000000000000
-crowdsale.getState()=3
+crowdsale.getState()=2
 crowdsale.isFinalizerSane()=true
 crowdsale.isPricingSane()=true
-finaliserContractAddress=0x354059c8c025b0bb359d8a9a6afaf1e550b2ea4b
-finaliser.token=0x1029670471248c1046263e47c431a061a7fa34ab
+finaliserContractAddress=0x9fb3c6433aa45e3eb6df7d4f1ed943a8138a4923
+finaliser.token=0xe00ccdd988b1395489290c4c22e85a9c989f40f6
 finaliser.testAddressTokens=88
 finaliser.allocatedBonus=0
 finaliser.teamBonus=5
@@ -262,75 +307,95 @@ finaliser.totalBountyInDay=8888
 finaliser.teamAddresses=0xa33a6c312d9ad0e0f2e95541beed0cc081621fd0
 finaliser.testAddresses=0xa66a85ede0cbe03694aa9d9de0bb19c99ff55bd9
 
-Waiting until startAt date at 1503740355 Sat, 26 Aug 2017 19:39:15 AEST currentDate=Sat, 26 Aug 2017 19:39:19 AEST
-Waited until start date at 1503740355 Sat, 26 Aug 2017 19:39:15 AEST currentDate=Sat, 26 Aug 2017 19:39:19 AEST
+Waiting until startAt date at 1503762997 Sun, 27 Aug 2017 01:56:37 AEST currentDate=Sun, 27 Aug 2017 01:56:26 AEST
+Waited until start date at 1503762997 Sun, 27 Aug 2017 01:56:37 AEST currentDate=Sun, 27 Aug 2017 01:56:37 AEST
 Send Valid Contribution - 100 ETH From Account8 - After Crowdsale Start
-validContribution1Tx gas=400000 gasUsed=299638 costETH=0.005393484 costUSD=1.415239414632 @ ETH/USD=262.398 gasPrice=18000000000 block=678 txId=0xe50980e2f517fae4cead5770093579be50da5174aac4acf101cc3fc5fea71587
+validContribution1Tx gas=400000 gasUsed=299798 costETH=0.005396364 costUSD=1.415995120872 @ ETH/USD=262.398 gasPrice=18000000000 block=113 txId=0x7475de2d6408cee4fc7af306af14cdd084bfbc46746b2e3f8270245cb70b1d9f
+validContribution2Tx gas=400000 gasUsed=239798 costETH=0.004316364 costUSD=1.132605280872 @ ETH/USD=262.398 gasPrice=18000000000 block=113 txId=0x0522e1714af410217cea35690cb9c4099f9ac8760834dab3c47b5f12df7b43e1
  # Account                                             EtherBalanceChange                Token Name
 -- ------------------------------------------ --------------------------- -------------------- ---------------------------
- 0 0xa00af22d07c87d96eeeb0ed583f8f6ac7812827e       90.164856546000000000           0.00000000 Account #0 - Miner
- 1 0xa11aae29840fbb5c86e6fd4cf809eba183aef433       -0.159463062000000000           0.00000000 Account #1 - Contract Owner
- 2 0xa22ab8a9d641ce77e06d98b7d7065d324d3d6976      100.000000000000000000           0.00000000 Account #2 - Multisig
+ 0 0xa00af22d07c87d96eeeb0ed583f8f6ac7812827e      145.170305992000000000           0.00000000 Account #0 - Miner
+ 1 0xa11aae29840fbb5c86e6fd4cf809eba183aef433       -0.160593264000000000           0.00000000 Account #1 - Contract Owner
+ 2 0xa22ab8a9d641ce77e06d98b7d7065d324d3d6976    21000.000000000000000000           0.00000000 Account #2 - Multisig
  3 0xa33a6c312d9ad0e0f2e95541beed0cc081621fd0        0.000000000000000000           0.00000000 Account #3 - Team #1
  4 0xa44a08d3f6933c69212114bb66e2df1813651844        0.000000000000000000           0.00000000 Account #4 - Team #2
  5 0xa55a151eb00fded1634d27d1127b4be4627079ea        0.000000000000000000           0.00000000 Account #5 - Team #3
  6 0xa66a85ede0cbe03694aa9d9de0bb19c99ff55bd9        0.000000000000000000           0.00000000 Account #6 - Test Address #1
  7 0xa77a2b9d4b1c010a22a7c565dc418cef683dbcec        0.000000000000000000           0.00000000 Account #7 - Test Address #2
- 8 0xa88a05d2b88283ce84c8325760b72a64591279a2     -100.005393484000000000        2400.00000000 Account #8
- 9 0xa99a0ae3354c06b1459fd441a32a3f71005d7da0        0.000000000000000000           0.00000000 Account #9
-10 0x1029670471248c1046263e47c431a061a7fa34ab        0.000000000000000000           0.00000000 Token 'DAY' 'Day'
-11 0xa83b361b5b868fc289d586c3a1d3712d8075d8f8        0.000000000000000000           0.00000000 Pricing
-12 0x43ac93ca1533f31e82ae941b6f477096cf9a28e6        0.000000000000000000           0.00000000 Crowdsale
-13 0x354059c8c025b0bb359d8a9a6afaf1e550b2ea4b        0.000000000000000000           0.00000000 BonusFinalizerAgent
+ 8 0xa88a05d2b88283ce84c8325760b72a64591279a2   -20000.005396364000000000      480000.00000000 Account #8
+ 9 0xa99a0ae3354c06b1459fd441a32a3f71005d7da0    -1000.004316364000000000       24000.00000000 Account #9
+10 0xe00ccdd988b1395489290c4c22e85a9c989f40f6        0.000000000000000000           0.00000000 Token 'DAY' 'Day'
+11 0xf3d9d349146b55cf4e0b622edc71bc4af76b014c        0.000000000000000000           0.00000000 Pricing
+12 0xb797d2439cd318684f93de852b4928ea75ae6917        0.000000000000000000           0.00000000 Crowdsale
+13 0x9fb3c6433aa45e3eb6df7d4f1ed943a8138a4923        0.000000000000000000           0.00000000 BonusFinalizerAgent
 -- ------------------------------------------ --------------------------- -------------------- ---------------------------
-                                                                                 2400.00000000 Total Token Balances
+                                                                               504000.00000000 Total Token Balances
 -- ------------------------------------------ --------------------------- -------------------- ---------------------------
 
-PASS Send Valid Contribution - 100 ETH From Account8 - After Crowdsale Start - Add Contribution
-tokenContractAddress=0x1029670471248c1046263e47c431a061a7fa34ab
+PASS Send Valid Contribution - 100 ETH From Account8 - After Crowdsale Start - ac8 contributes 20,000 ETH
+PASS Send Valid Contribution - 100 ETH From Account8 - After Crowdsale Start - ac9 contributes 1,000 ETH
+tokenContractAddress=0xe00ccdd988b1395489290c4c22e85a9c989f40f6
 token.owner=0xa11aae29840fbb5c86e6fd4cf809eba183aef433
 token.symbol=DAY
 token.name=Day
 token.decimals=8
-token.totalSupply=2401
+token.totalSupply=504001
 token.mintingFinished=false
 token.latestAllUpdate=0
-token.nextIcoContributorId=335
+token.nextIcoContributorId=336
 token.maxAddresses=3333
 token.totalPreIcoAddresses=333
 token.totalIcoAddresses=2894
-pricingContractAddress=0xa83b361b5b868fc289d586c3a1d3712d8075d8f8
+token.totalPostIcoAddresses=101
+token.minMintingPower=500000000000000000 0.05%
+token.maxMintingPower=1000000000000000000 0.1%
+token.halvingCycle=88
+token.initialBlockTimestamp=1577836800 Wed, 01 Jan 2020 00:00:00 UTC
+token.mintingDec=19
+token.bounty=0
+token.minBalanceToSell=8888
+token.teamLockPeriodInSec=15780000
+token.DayInSecs=84600
+token.releaseAgent=0x9fb3c6433aa45e3eb6df7d4f1ed943a8138a4923
+token.released=false
+token.upgradeMaster=0xa11aae29840fbb5c86e6fd4cf809eba183aef433
+token.upgradeAgent=0x0000000000000000000000000000000000000000
+token.totalUpgraded=0
+Transfer 0 #113: _from=0x0000000000000000000000000000000000000000 _to=0xa88a05d2b88283ce84c8325760b72a64591279a2 _value=480000
+Transfer 1 #113: _from=0x0000000000000000000000000000000000000000 _to=0xa99a0ae3354c06b1459fd441a32a3f71005d7da0 _value=24000
+pricingContractAddress=0xf3d9d349146b55cf4e0b622edc71bc4af76b014c
 pricing.oneTokenInWei=41666666666666666 0.041666666666666666 ETH
-crowdsaleContractAddress=0x43ac93ca1533f31e82ae941b6f477096cf9a28e6
+crowdsaleContractAddress=0xb797d2439cd318684f93de852b4928ea75ae6917
 crowdsale.owner=0xa11aae29840fbb5c86e6fd4cf809eba183aef433
 crowdsale.weiIcoCap=3.8383e+22 38383 ETH
-crowdsale.token=0x1029670471248c1046263e47c431a061a7fa34ab
-crowdsale.pricingStrategy=0xa83b361b5b868fc289d586c3a1d3712d8075d8f8
-crowdsale.finalizeAgent=0x354059c8c025b0bb359d8a9a6afaf1e550b2ea4b
+crowdsale.token=0xe00ccdd988b1395489290c4c22e85a9c989f40f6
+crowdsale.pricingStrategy=0xf3d9d349146b55cf4e0b622edc71bc4af76b014c
+crowdsale.finalizeAgent=0x9fb3c6433aa45e3eb6df7d4f1ed943a8138a4923
 crowdsale.multisigWallet=0xa22ab8a9d641ce77e06d98b7d7065d324d3d6976
 crowdsale.minimumFundingGoal=1.5e+21 1500 ETH
-crowdsale.startsAt=1503740355 Sat, 26 Aug 2017 09:39:15 UTC
-crowdsale.endsAt=1503740520 Sat, 26 Aug 2017 09:42:00 UTC
-crowdsale.tokensSold=2400
-crowdsale.weiRaised=100000000000000000000 100 ETH
-crowdsale.investorCount=1
+crowdsale.startsAt=1503762997 Sat, 26 Aug 2017 15:56:37 UTC
+crowdsale.endsAt=1503763162 Sat, 26 Aug 2017 15:59:22 UTC
+crowdsale.tokensSold=504000
+crowdsale.weiRaised=2.1e+22 21000 ETH
+crowdsale.investorCount=2
 crowdsale.loadedRefund=0
 crowdsale.weiRefunded=0 0 ETH
 crowdsale.finalized=false
 crowdsale.requireCustomerId=false
-crowdsale.weiRaisedIco=100000000000000000000 100 ETH
+crowdsale.weiRaisedIco=2.1e+22 21000 ETH
 crowdsale.preMinWei=33000000000000000000 33 ETH
 crowdsale.preMaxWei=333000000000000000000 333 ETH
 crowdsale.minWei=1000000000000000000 1 ETH
-crowdsale.maxWei=333000000000000000000 333 ETH
+crowdsale.maxWei=3.3333e+22 33333 ETH
 crowdsale.requiredSignedAddress=false
 crowdsale.signerAddress=0x0000000000000000000000000000000000000000
 crowdsale.getState()=3
 crowdsale.isFinalizerSane()=true
 crowdsale.isPricingSane()=true
-Invested 0 #678 {"contributorId":"334","customerId":"0","investor":"0xa88a05d2b88283ce84c8325760b72a64591279a2","tokenAmount":"240000000000","weiAmount":"100000000000000000000"}
-finaliserContractAddress=0x354059c8c025b0bb359d8a9a6afaf1e550b2ea4b
-finaliser.token=0x1029670471248c1046263e47c431a061a7fa34ab
+Invested 0 #113 {"contributorId":"334","customerId":"0","investor":"0xa88a05d2b88283ce84c8325760b72a64591279a2","tokenAmount":"48000000000000","weiAmount":"2e+22"}
+Invested 1 #113 {"contributorId":"335","customerId":"0","investor":"0xa99a0ae3354c06b1459fd441a32a3f71005d7da0","tokenAmount":"2400000000000","weiAmount":"1e+21"}
+finaliserContractAddress=0x9fb3c6433aa45e3eb6df7d4f1ed943a8138a4923
+finaliser.token=0xe00ccdd988b1395489290c4c22e85a9c989f40f6
 finaliser.testAddressTokens=88
 finaliser.allocatedBonus=0
 finaliser.teamBonus=5

@@ -78,8 +78,37 @@ The token contract is [ERC20](https://github.com/ethereum/eips/issues/20) compli
 * **LOW IMPORTANCE** - In *DayToken*, `isValidContributorId(...)` and `isValidContributorAddress(...)` should be made constant
 * **LOW IMPORTANCE** - Remove `DayToken.updateAllBalances()`. After enquiring about the potentially large gas cost of executing
   this function, the developers have stated that this function is not required any more, as balances are now calculated on the fly
-  and this function is now disabled by default, using the switch `updateAllBalancesEnabled`.
- 
+  and this function is now disabled by default, using the switch `updateAllBalancesEnabled`
+* **LOW/MEDIUM? IMPORTANCE** `totalSupply` (504,001) does not match up with the total token balances from the accounts (504,000)
+        # Account                                             EtherBalanceChange                Token Name
+      -- ------------------------------------------ --------------------------- -------------------- ---------------------------
+       0 0xa00af22d07c87d96eeeb0ed583f8f6ac7812827e      145.170305992000000000           0.00000000 Account #0 - Miner
+       1 0xa11aae29840fbb5c86e6fd4cf809eba183aef433       -0.160593264000000000           0.00000000 Account #1 - Contract Owner
+       2 0xa22ab8a9d641ce77e06d98b7d7065d324d3d6976    21000.000000000000000000           0.00000000 Account #2 - Multisig
+       3 0xa33a6c312d9ad0e0f2e95541beed0cc081621fd0        0.000000000000000000           0.00000000 Account #3 - Team #1
+       4 0xa44a08d3f6933c69212114bb66e2df1813651844        0.000000000000000000           0.00000000 Account #4 - Team #2
+       5 0xa55a151eb00fded1634d27d1127b4be4627079ea        0.000000000000000000           0.00000000 Account #5 - Team #3
+       6 0xa66a85ede0cbe03694aa9d9de0bb19c99ff55bd9        0.000000000000000000           0.00000000 Account #6 - Test Address #1
+       7 0xa77a2b9d4b1c010a22a7c565dc418cef683dbcec        0.000000000000000000           0.00000000 Account #7 - Test Address #2
+       8 0xa88a05d2b88283ce84c8325760b72a64591279a2   -20000.005396364000000000      480000.00000000 Account #8
+       9 0xa99a0ae3354c06b1459fd441a32a3f71005d7da0    -1000.004316364000000000       24000.00000000 Account #9
+      10 0xe00ccdd988b1395489290c4c22e85a9c989f40f6        0.000000000000000000           0.00000000 Token 'DAY' 'Day'
+      11 0xf3d9d349146b55cf4e0b622edc71bc4af76b014c        0.000000000000000000           0.00000000 Pricing
+      12 0xb797d2439cd318684f93de852b4928ea75ae6917        0.000000000000000000           0.00000000 Crowdsale
+      13 0x9fb3c6433aa45e3eb6df7d4f1ed943a8138a4923        0.000000000000000000           0.00000000 BonusFinalizerAgent
+      -- ------------------------------------------ --------------------------- -------------------- ---------------------------
+                                                                                     504000.00000000 Total Token Balances
+      -- ------------------------------------------ --------------------------- -------------------- ---------------------------
+      
+      PASS Send Valid Contribution - 100 ETH From Account8 - After Crowdsale Start - ac8 contributes 20,000 ETH
+      PASS Send Valid Contribution - 100 ETH From Account8 - After Crowdsale Start - ac9 contributes 1,000 ETH
+      ...
+      token.totalSupply=504001
+
+  The reason for this is that I deployed the *DayToken* with an `_initialSupply` of 1 . This issue will be of **LOW IMPORTANCE**
+  if this contract will only be deployed with an `_initialSupply` of 0. 
+      
+
 <br />
 
 <hr />

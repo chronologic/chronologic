@@ -284,7 +284,7 @@ function printTokenContractDetails() {
     console.log("RESULT: token.maxAddresses=" + contract.maxAddresses());
     console.log("RESULT: token.totalPreIcoAddresses=" + contract.totalPreIcoAddresses());
     console.log("RESULT: token.totalIcoAddresses=" + contract.totalIcoAddresses());
-    console.log("RESULT: token.totalTeamAddresses=" + contract.totalTeamAddresses());
+    // console.log("RESULT: token.totalTeamAddresses=" + contract.totalTeamAddresses());
     console.log("RESULT: token.totalPostIcoAddresses=" + contract.totalPostIcoAddresses());
     
     // token.maxAddresses=3333
