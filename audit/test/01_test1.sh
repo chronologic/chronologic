@@ -101,10 +101,9 @@ printf "ENDTIME              = '$ENDTIME' '$ENDTIME_S'\n" | tee -a $TEST1OUTPUT
 `cp $CONTRACTSDIR/UpgradeAgent.sol .`
 `cp $CONTRACTSDIR/UpgradeableToken.sol .`
 `cp $CONTRACTSDIR/PricingStrategy.sol .`
+`cp modifiedContracts/* .`
 
 # --- Modify dates ---
-`perl -pi -e "s/uint256 minBalanceToSell;/uint256 public minBalanceToSell;/" $TOKENTEMPSOL`
-`perl -pi -e "s/uint256 teamLockPeriodInSec;/uint256 public teamLockPeriodInSec;/" $TOKENTEMPSOL`
 `perl -pi -e "s/address crowdsaleAddress;/address public crowdsaleAddress;/" $TOKENTEMPSOL`
 `perl -pi -e "s/address BonusFinalizeAgentAddress;/address public BonusFinalizeAgentAddress;/" $TOKENTEMPSOL`
 
@@ -133,13 +132,13 @@ DIFFS1=`diff $CONTRACTSDIR/$FINALIZEAGENTSOL $FINALIZEAGENTTEMPSOL`
 echo "--- Differences $CONTRACTSDIR/$FINALIZEAGENTSOL $FINALIZEAGENTTEMPSOL ---" | tee -a $TEST1OUTPUT
 echo "$DIFFS1" | tee -a $TEST1OUTPUT
 
-echo "var tokenOutput=`solc_4.1.11 --optimize --combined-json abi,bin,interface $TOKENTEMPSOL`;" > $TOKENJS
+echo "var tokenOutput=`solc --optimize --combined-json abi,bin,interface $TOKENTEMPSOL`;" > $TOKENJS
 
-echo "var pricingOutput=`solc_4.1.11 --optimize --combined-json abi,bin,interface $PRICINGTEMPSOL`;" > $PRICINGJS
+echo "var pricingOutput=`solc --optimize --combined-json abi,bin,interface $PRICINGTEMPSOL`;" > $PRICINGJS
 
-echo "var crowdsaleOutput=`solc_4.1.11 --optimize --combined-json abi,bin,interface $CROWDSALETEMPSOL`;" > $CROWDSALEJS
+echo "var crowdsaleOutput=`solc --optimize --combined-json abi,bin,interface $CROWDSALETEMPSOL`;" > $CROWDSALEJS
 
-echo "var finaliserOutput=`solc_4.1.11 --optimize --combined-json abi,bin,interface $FINALIZEAGENTTEMPSOL`;" > $FINALIZEAGENTJS
+echo "var finaliserOutput=`solc --optimize --combined-json abi,bin,interface $FINALIZEAGENTTEMPSOL`;" > $FINALIZEAGENTJS
 
 geth --verbosity 3 attach $GETHATTACHPOINT << EOF | tee -a $TEST1OUTPUT
 loadScript("$TOKENJS");
@@ -178,30 +177,32 @@ var _tokenSymbol = "DAY";
 var _tokenDecimals = 8;
 var _tokenInitialSupply = 100000000;
 var _tokenMintable = true;
-var _maxAddresses = 7;
+var _maxAddresses = 3333;
+var _totalPreIcoAddresses = 333;
+var _totalIcoAddresses = 2894;
+var _totalPostIcoAddresses = 88 + 18 - 5;
+var _updateAllBalancesEnabled = false;
 var _minMintingPower = 500000000000000000;
 var _maxMintingPower = 1000000000000000000;
 var _halvingCycle = 88;
-var _initalBlockTimestamp = $ENDTIME;
-var _mintingDec = 19;
-var _bounty = 100000000;
 var _minBalanceToSell = 8888;
 var _DayInSecs = 84600;
 var _teamLockPeriodInSec = 15780000;
 // function DayToken(string _name, string _symbol, uint _initialSupply, uint8 _decimals, 
-//   bool _mintable, uint _maxAddresses, uint256 _minMintingPower, uint256 _maxMintingPower, 
-//   uint _halvingCycle, uint _initialBlockTimestamp, uint256 _mintingDec, uint _bounty, 
-//   uint256 _minBalanceToSell, uint256 _DayInSecs, uint256 _teamLockPeriodInSec) UpgradeableToken(msg.sender)
+//   bool _mintable, uint _maxAddresses, uint _totalPreIcoAddresses, uint _totalIcoAddresses, 
+//   uint _totalPostIcoAddresses, uint256 _minMintingPower, uint256 _maxMintingPower, uint _halvingCycle, 
+//   bool _updateAllBalancesEnabled, uint256 _minBalanceToSell, 
+//   uint256 _dayInSecs, uint256 _teamLockPeriodInSec) 
 // -----------------------------------------------------------------------------
 console.log("RESULT: " + deployTokenMessage);
 var tokenContract = web3.eth.contract(tokenAbi);
-console.log(JSON.stringify(tokenContract));
+// console.log(JSON.stringify(tokenContract));
 var tokenTx = null;
 var tokenAddress = null;
 
 var token = tokenContract.new(_tokenName, _tokenSymbol, _tokenInitialSupply, _tokenDecimals, _tokenMintable,
-    _maxAddresses, _minMintingPower, _maxMintingPower, _halvingCycle, _initalBlockTimestamp, _mintingDec, _bounty,
-    _minBalanceToSell, _DayInSecs, _teamLockPeriodInSec, {from: contractOwnerAccount, data: tokenBin, gas: 6000000},
+    _maxAddresses, _totalPreIcoAddresses, _totalIcoAddresses, _totalPostIcoAddresses, _minMintingPower, _maxMintingPower, _halvingCycle,
+    _updateAllBalancesEnabled, _minBalanceToSell, _DayInSecs, _teamLockPeriodInSec, {from: contractOwnerAccount, data: tokenBin, gas: 6000000},
   function(e, contract) {
     if (!e) {
       if (!contract.address) {
@@ -225,7 +226,7 @@ var _oneTokenInWei = 41666666666666666;
 // -----------------------------------------------------------------------------
 console.log("RESULT: " + deployPricingMessage);
 var pricingContract = web3.eth.contract(pricingAbi);
-console.log(JSON.stringify(pricingContract));
+// console.log(JSON.stringify(pricingContract));
 var pricingTx = null;
 var pricingAddress = null;
 
@@ -268,23 +269,19 @@ var _preMinWei = web3.toWei(33, "ether");
 var _preMaxWei = web3.toWei(333, "ether");
 var _minWei = web3.toWei(1, "ether");
 var _maxWei = web3.toWei(333, "ether");
-var _maxPreAddresses = 333;
-var _maxIcoAddresses = 3216;
 // function AddressCappedCrowdsale(address _token, PricingStrategy _pricingStrategy, 
 //   address _multisigWallet, uint _start, uint _end, uint _minimumFundingGoal, uint _weiIcoCap, 
-//   uint _preMinWei, uint _preMaxWei, uint _minWei,  uint _maxWei, uint _maxPreAddresses, 
-//   uint _maxIcoAddresses) 
+//   uint _preMinWei, uint _preMaxWei, uint _minWei,  uint _maxWei) 
 // -----------------------------------------------------------------------------
 console.log("RESULT: " + deployCrowdsaleMessage);
 var crowdsaleContract = web3.eth.contract(crowdsaleAbi);
-console.log(JSON.stringify(crowdsaleContract));
+// console.log(JSON.stringify(crowdsaleContract));
 var crowdsaleTx = null;
 var crowdsaleAddress = null;
 
 var crowdsale = crowdsaleContract.new(tokenAddress, pricingAddress, multisig,
     $STARTTIME, $ENDTIME, _minimumFundingGoal, _cap, _preMinWei, _preMaxWei,
-    _minWei, _maxWei, _maxPreAddresses, _maxIcoAddresses,
-     {from: contractOwnerAccount, data: crowdsaleBin, gas: 6000000},
+    _minWei, _maxWei, {from: contractOwnerAccount, data: crowdsaleBin, gas: 6000000},
   function(e, contract) {
     if (!e) {
       if (!contract.address) {
@@ -322,7 +319,7 @@ var _totalBountyInDay = 8888;
 // -----------------------------------------------------------------------------
 console.log("RESULT: " + deployFinaliserMessage);
 var finaliserContract = web3.eth.contract(finaliserAbi);
-console.log(JSON.stringify(finaliserContract));
+// console.log(JSON.stringify(finaliserContract));
 var finaliserTx = null;
 var finaliserAddress = null;
 
@@ -406,13 +403,22 @@ console.log("RESULT: Waited until start date at " + startsAtTime + " " + startsA
 // -----------------------------------------------------------------------------
 var validContribution1Message = "Send Valid Contribution - 100 ETH From Account8 - After Crowdsale Start";
 console.log("RESULT: " + validContribution1Message);
+
+var addContributor1Tx = crowdsale.preallocate(account8, web3.toWei(20000, "ether"), 1, {from: contractOwnerAccount, gas: 400000});
+
+while (txpool.status.pending > 0) {
+}
+
 var validContribution1Tx = eth.sendTransaction({from: account8, to: crowdsaleAddress, gas: 400000, value: web3.toWei("100", "ether")});
 
 while (txpool.status.pending > 0) {
 }
+
+printTxData("addContributor1Tx", addContributor1Tx);
 printTxData("validContribution1Tx", validContribution1Tx);
 printBalances();
-failIfGasEqualsGasUsed(validContribution1Tx, validContribution1Message);
+failIfGasEqualsGasUsed(addContributor1Tx, validContribution1Message + " - Add Contributor");
+failIfGasEqualsGasUsed(validContribution1Tx, validContribution1Message + " - Add Contribution");
 printTokenContractDetails();
 printPricingContractDetails();
 printCrowdsaleContractDetails();

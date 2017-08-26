@@ -8,7 +8,7 @@ Source file [../../contracts/ERC20.sol](../../contracts/ERC20.sol).
 
 ```javascript
 // BK Ok
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 // BK Ok
 import './ERC20Basic.sol';
 /**
@@ -17,13 +17,13 @@ import './ERC20Basic.sol';
  */
 contract ERC20 is ERC20Basic {
   // BK Ok
-  function allowance(address owner, address spender) constant returns (uint);
+  function allowance(address _owner, address _spender) constant returns (uint remaining);
   // BK Ok
   function transferFrom(address _from, address _to, uint _value) returns (bool success);
   // BK Ok
   function approve(address _spender, uint _value) returns (bool success);
   // BK Ok - Event
-  event Approval(address indexed owner, address indexed spender, uint value);
+  event Approval(address indexed _owner, address indexed _spender, uint _value);
 }
 
 ```

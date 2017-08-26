@@ -8,12 +8,12 @@ Source file [../../contracts/SafeMathLib.sol](../../contracts/SafeMathLib.sol).
 
 ```javascript
 // BK Ok
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 // BK Ok
 contract SafeMathLib {
   // BK Ok
-  function safeMul(uint a, uint b) returns (uint) {
+  function safeMul(uint a, uint b) constant returns (uint) {
     // BK Ok
     uint c = a * b;
     // BK Ok
@@ -23,7 +23,7 @@ contract SafeMathLib {
   }
 
   // BK Ok
-  function safeSub(uint a, uint b) returns (uint) {
+  function safeSub(uint a, uint b) constant returns (uint) {
     // BK Ok
     assert(b <= a);
     // BK Ok
@@ -31,7 +31,7 @@ contract SafeMathLib {
   }
 
   // BK Ok
-  function safeAdd(uint a, uint b) returns (uint) {
+  function safeAdd(uint a, uint b) constant returns (uint) {
     // BK Ok
     uint c = a + b;
     // BK Ok

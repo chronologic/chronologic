@@ -70,10 +70,10 @@ contract Crowdsale is Haltable, SafeMathLib {
   uint public weiRaisedIco = 0;
 
   /* Min and Max contribution during pre-ICO and during ICO   */
-  uint public preMinWei;
-  uint public preMaxWei;
-  uint public minWei;
-  uint public maxWei;
+  uint preMinWei;
+  uint preMaxWei;
+  uint minWei;
+  uint maxWei;
   
   /**
     * Do we verify that contributor has been cleared on the server side (accredited investors only).

@@ -8,7 +8,7 @@ Source file [../../contracts/StandardToken.sol](../../contracts/StandardToken.so
 
 ```javascript
 // BK Ok
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 // BK Next 2 Ok
 import './ERC20.sol';
@@ -107,7 +107,7 @@ contract StandardToken is ERC20, SafeMathLib {
     //  already 0 to mitigate the race condition described here:
     //  https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729
     // BK Ok
-    require(!((_value != 0) && (allowed[msg.sender][_spender] != 0)));
+    require((_value == 0) || (allowed[msg.sender][_spender] == 0));
 
     // BK Ok
     allowed[msg.sender][_spender] = _value;

@@ -8,7 +8,7 @@ Source file [../../contracts/BonusFinalizeAgent.sol](../../contracts/BonusFinali
 
 ```javascript
 // BK Ok
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 // BK Next 3 Ok
 import "./Crowdsale.sol";
@@ -33,9 +33,13 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
   DayToken public token;
   // BK Ok
   Crowdsale public crowdsale;
-  /* Total number of team members */
+  /* Total number of addresses for team members */
   // BK Ok
-  uint public totalMembers;
+  uint public totalTeamAddresses;
+  /* Total number of test addresses */
+  // BK Ok
+  uint public totalTestAddresses;
+
   /* Number of tokens to be assigned per test address */
   // BK Ok
   uint public testAddressTokens;
@@ -53,6 +57,10 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
   /** List of test addresses*/
   // BK Ok
   address[] public testAddresses;
+  /* Stores the id of the next Team contributor */
+  uint public nextTeamContributorId;
+  /* Stores the id of the next Test contributor */
+  uint public nextTestContributorId;
   
   // BK Next 2 Ok
   event TestAddressAdded(address testAddress, uint id, uint balance);
@@ -71,12 +79,14 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
     require(address(crowdsale) != 0);
 
     // BK Ok
-    totalMembers = _teamAddresses.length;
+    totalTeamAddresses = _teamAddresses.length;
     // BK Ok
     teamAddresses = _teamAddresses;
     // BK Ok
     teamBonus = _teamBonus;
 
+    // BK Ok
+    totalTestAddresses = _testAddresses.length;
     // BK Ok
     testAddresses = _testAddresses;
     // BK Ok
@@ -86,17 +96,27 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
 
     //if any of the address is 0 or invalid throw
     // BK Ok
-    for (uint j = 0; j < totalMembers; j++) {
+    for (uint j = 0; j < totalTeamAddresses; j++) {
       // BK Ok
       require(_teamAddresses[j] != 0);
     }
+
+    // BK Ok
+    nextTeamContributorId = token.totalPreIcoAddresses() + token.totalIcoAddresses() + 1;
+    // BK Ok
+    nextTestContributorId = token.totalPreIcoAddresses() + token.totalIcoAddresses() + 
+      totalTeamAddresses + 1;
   }
 
   /* Can we run finalize properly */
   // BK Ok - Constant function
   function isSane() public constant returns (bool) {
-    // BK Ok - This contract must be set as a token's mintingAgent and the token's releaseAgent
-    return (token.mintAgents(address(this)) == true) && (token.releaseAgent() == address(this));
+    // check addresses add up
+    // BK Ok
+    uint totalAddresses = token.totalPreIcoAddresses() + token.totalIcoAddresses() + totalTeamAddresses + 
+      totalTestAddresses + token.totalPostIcoAddresses();
+    // BK Ok
+    return (totalAddresses == token.maxAddresses()) && (token.mintAgents(address(this)) == true) && (token.releaseAgent() == address(this));
   }
 
   /** Called once by crowdsale finalize() if the sale was success. */
@@ -114,30 +134,39 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
     
     //Mint the total bounty to be given out on daily basis and store it in the DayToken contract
     // BK Ok
-    token.mint(token, totalBountyInDay);
-
-    // Calculate team bonus and assign them the addresses with tokens
-    // BK Ok
-    for (uint i = 0; i < totalMembers; i++) {
+    if (token.updateAllBalancesEnabled()) {
       // BK Ok
-      allocatedBonus = safeMul(tokensSold, teamBonus) / 10000;
+      token.mint(token, totalBountyInDay);
+    }
+
+    // Calculate team bonus to allocate
+    // BK Ok
+    allocatedBonus = safeMul(tokensSold, teamBonus) / 10000;
+
+    // assign addresses with tokens
+    // BK Ok
+    for (uint i = 0; i < totalTeamAddresses; i++) {
       // BK Ok
       token.mint(teamAddresses[i], allocatedBonus);
       // BK Ok
-      uint id = token.addAddressWithId(teamAddresses[i], 3228 + i);
+      token.addTeamAddress(teamAddresses[i], nextTeamContributorId);
       // BK Ok - Log event
-      TeamMemberId(teamAddresses[i], id);
+      TeamMemberId(teamAddresses[i], nextTeamContributorId);
+      // BK Ok
+      nextTeamContributorId++;
     }
 
     //Add Test Addresses
     // BK Ok
-    for (uint j = 0; j < testAddresses.length; j++) {
+    for (uint j = 0; j < totalTestAddresses; j++) {
       // BK Ok
       token.mint(testAddresses[j],testAddressTokens);
       // BK Ok
-      id = token.addAddressWithId(testAddresses[j],  3228 + i + j);
+      token.addTeamAddress(testAddresses[j],  nextTestContributorId);
       // BK Ok - Log event
-      TestAddressAdded(testAddresses[j], id, testAddressTokens);
+      TestAddressAdded(testAddresses[j], nextTestContributorId, testAddressTokens);
+      // BK Ok
+      nextTestContributorId++;
     }
     
     // Make token transferable

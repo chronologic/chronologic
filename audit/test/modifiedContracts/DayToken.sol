@@ -96,8 +96,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     /* Duration in secs that we consider as a day. (For test deployment purposes, 
        if we want to decrease length of a day. default: 84600)*/
     uint256 public DayInSecs;
-    address public crowdsaleAddress;
-    address public BonusFinalizeAgentAddress;
+    address crowdsaleAddress;
+    address BonusFinalizeAgentAddress;
 
     event UpdatedTokenInformation(string newName, string newSymbol); 
     event UpdateFailed(uint id); 

@@ -8,7 +8,7 @@ Source file [../../contracts/UpgradeableToken.sol](../../contracts/UpgradeableTo
 
 ```javascript
 // BK Ok
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 // BK Next 3 Ok
 import './ERC20.sol';
@@ -50,7 +50,7 @@ contract UpgradeableToken is StandardToken {
   enum UpgradeState {Unknown, NotAllowed, WaitingForAgent, ReadyToUpgrade, Upgrading}
 
   /**
-   * Somebody has upgraded some of his tokens.
+   * Somebody has upgraded some of their tokens.
    */
   // BK Ok
   event Upgrade(address indexed _from, address indexed _to, uint256 _value);
