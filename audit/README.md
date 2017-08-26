@@ -75,6 +75,9 @@ The token contract is [ERC20](https://github.com/ethereum/eips/issues/20) compli
 * **LOW IMPORTANCE** - In *AddressCappedCrowdsale*, `maxIcoAddresses` is never used
   * [x] Fixed in [fd679446](https://github.com/chronologic/chronologic/commit/fd679446f01c2d29b02856719548d6a35e8c34c8)
 * **LOW IMPORTANCE** - In *DayToken*, `isValidContributorId(...)` and `isValidContributorAddress(...)` should be made constant
+* **LOW IMPORTANCE** - Remove `DayToken.updateAllBalances()`. After enquiring about the potentially large gas cost of executing
+  this function, the developers have stated that this function is not required any more, as balances are now calculated on the fly
+  and this function is now disabled by default, using the switch `updateAllBalancesEnabled`.
  
 <br />
 
@@ -134,9 +137,24 @@ The token contract is [ERC20](https://github.com/ethereum/eips/issues/20) compli
 
 ### Not Reviewed
 
-* Outside Scope
-  * [ ] [code-review/ConsenSysWallet.md](code-review/ConsenSysWallet.md)
-    * [ ] contract MultiSigWallet
-* Unused Testing Framework
-  * [ ] [code-review/Migrations.md](code-review/Migrations.md)
-    * [ ] contract Migrations 
+#### ConsenSys Multisig Wallet
+
+The [../contracts/ConsenSysWallet.sol](../contracts/ConsenSysWallet.sol) is outside the scope of this review. The following are
+the differences between the version in this repository and the original ConsenSys
+[MultiSigWallet.sol](https://raw.githubusercontent.com/ConsenSys/MultiSigWallet/e3240481928e9d2b57517bd192394172e31da487/contracts/solidity/MultiSigWallet.sol):
+
+    $ diff -w OriginalConsenSysMultisigWallet.sol ConsenSysWallet.sol 
+    1c1
+    < pragma solidity 0.4.4;
+    ---
+    > pragma solidity ^0.4.13;
+    367d366
+    < 
+
+<br />
+
+#### Unused Testing Framework
+
+The following file is used for the testing framework are is outside the scope of this review: 
+* [../contracts/Migrations.sol](../contracts/Migrations.sol)
+
