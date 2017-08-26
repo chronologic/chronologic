@@ -64,8 +64,8 @@ function printBalances() {
   var decimals = token == null ? 18 : token.decimals();
   var i = 0;
   var totalTokenBalance = new BigNumber(0);
-  console.log("RESULT:  # Account                                             EtherBalanceChange                Token Name");
-  console.log("RESULT: -- ------------------------------------------ --------------------------- -------------------- ---------------------------");
+  console.log("RESULT:  # Account                                             EtherBalanceChange                          Token Name");
+  console.log("RESULT: -- ------------------------------------------ --------------------------- ------------------------------ ---------------------------");
   accounts.forEach(function(e) {
     var etherBalanceBaseBlock = eth.getBalance(e, baseBlock);
     var etherBalance = web3.fromWei(eth.getBalance(e).minus(etherBalanceBaseBlock), "ether");
@@ -74,9 +74,9 @@ function printBalances() {
     console.log("RESULT: " + pad2(i) + " " + e  + " " + pad(etherBalance) + " " + padToken(tokenBalance, decimals) + " " + accountNames[e]);
     i++;
   });
-  console.log("RESULT: -- ------------------------------------------ --------------------------- -------------------- ---------------------------");
+  console.log("RESULT: -- ------------------------------------------ --------------------------- ------------------------------ ---------------------------");
   console.log("RESULT:                                                                           " + padToken(totalTokenBalance, decimals) + " Total Token Balances");
-  console.log("RESULT: -- ------------------------------------------ --------------------------- -------------------- ---------------------------");
+  console.log("RESULT: -- ------------------------------------------ --------------------------- ------------------------------ ---------------------------");
   console.log("RESULT: ");
 }
 

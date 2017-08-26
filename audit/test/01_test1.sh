@@ -174,8 +174,8 @@ var deployTokenMessage = "Deploy CrowdsaleToken Contract";
 // -----------------------------------------------------------------------------
 var _tokenName = "Day";
 var _tokenSymbol = "DAY";
-var _tokenDecimals = 8;
-var _tokenInitialSupply = 100000000;
+var _tokenDecimals = 18;
+var _tokenInitialSupply = 11000000000000000000;
 var _tokenMintable = true;
 var _maxAddresses = 3333;
 var _totalPreIcoAddresses = 333;
@@ -401,7 +401,7 @@ console.log("RESULT: Waited until start date at " + startsAtTime + " " + startsA
 
 
 // -----------------------------------------------------------------------------
-var validContribution1Message = "Send Valid Contribution - 100 ETH From Account8 - After Crowdsale Start";
+var validContribution1Message = "Send Valid Contribution After Crowdsale Start";
 console.log("RESULT: " + validContribution1Message);
 
 // var addContributor1Tx = crowdsale.preallocate(account8, web3.toWei(20000, "ether"), 1, {from: contractOwnerAccount, gas: 400000});
