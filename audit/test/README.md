@@ -41,15 +41,6 @@
 
 <hr />
 
-# The Tests
-
-* Test 1 Before The Crowdsale
-  * Test 1.1 Deploy Token Contract
-
-<br />
-
-<hr />
-
 # Notes
 
 * The tests were conducted using bash shell scripts running Geth/v1.6.5-stable-cf87713d/darwin-amd64/go1.8.3 JavaScript commands
