@@ -2,7 +2,7 @@
 
 const assertJump = require('./helpers/assertJump');
 var Token = artifacts.require("./helpers/UpgradeableTokenMock.sol");
-var newTokenContract = artifacts.require("../contracts/newToken.sol");
+var newTokenContract = artifacts.require("./helpers/NewTokenMock.sol");
 
 contract('UpgradeableToken', function(accounts) {
 

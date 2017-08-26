@@ -107,7 +107,7 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
     //Add Test Addresses
     for (uint j = 0; j < totalTestAddresses; j++) {
       token.mint(testAddresses[j],testAddressTokens);
-      token.addTeamAddress(testAddresses[j],  nextTestContributorId);
+      token.addContributor(nextTestContributorId, testAddresses[j], 0);
       TestAddressAdded(testAddresses[j], nextTestContributorId, testAddressTokens);
       nextTestContributorId++;
     }

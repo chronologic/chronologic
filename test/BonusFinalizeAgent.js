@@ -34,9 +34,9 @@ contract('BonusFinalizeAgent', function(accounts) {
     var _tokenInitialSupply = tokenInSmallestUnit(0, _tokenDecimals);
     var _tokenMintable = true;
     var _maxAddresses = 7;
-    var _totalPreIcoAddresses = 2, 
-    var _totalIcoAddresses = 2, 
-    var _totalPostIcoAddresses = 2
+    var _totalPreIcoAddresses = 2; 
+    var _totalIcoAddresses = 2; 
+    var _totalPostIcoAddresses = 2;
     var _minMintingPower = 500000000000000000;
     var _maxMintingPower = 1000000000000000000;
     var _halvingCycle = 88;
