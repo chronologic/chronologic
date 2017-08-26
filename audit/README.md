@@ -3,8 +3,9 @@
 Status: Work in progress
 
 Commits [3ba1fe83](https://github.com/chronologic/chronologic/commit/3ba1fe830881ca9e85f2c2db3e77b3b333bc4dd1),
-[fd679446](https://github.com/chronologic/chronologic/commit/fd679446f01c2d29b02856719548d6a35e8c34c8) and
-[be2bbba9](https://github.com/chronologic/chronologic/commit/be2bbba97ba1c78206d2a21724f6e0b94c9afd93).
+[fd679446](https://github.com/chronologic/chronologic/commit/fd679446f01c2d29b02856719548d6a35e8c34c8),
+[be2bbba9](https://github.com/chronologic/chronologic/commit/be2bbba97ba1c78206d2a21724f6e0b94c9afd93) and
+[73a775a6](https://github.com/chronologic/chronologic/commit/73a775a61af2c3acdc81dce604aa005e6bd96290).
 
 ## Summary
 

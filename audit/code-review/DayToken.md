@@ -181,6 +181,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         // Create initially all balance on the team multisig
         balances[owner] = totalSupply; 
         maxAddresses = _maxAddresses;
+        require(maxAddresses > 1); // else division by zero will occur in setInitialMintingPowerOf
         totalPreIcoAddresses = _totalPreIcoAddresses;
         totalIcoAddresses = _totalIcoAddresses;
         totalPostIcoAddresses = _totalPostIcoAddresses;
@@ -276,17 +277,17 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     }
 
     /* increment  nextPreIcoContributorId */
-    function incrementPreIcoContributorId() {
+    function incrementPreIcoContributorId() onlyCrowdsaleOrOwnerOrFinalizer {
         nextPreIcoContributorId++;
     }
 
     /* increment  nextIcoContributorId */
-    function incrementIcoContributorId() {
+    function incrementIcoContributorId() onlyCrowdsaleOrOwnerOrFinalizer {
         nextIcoContributorId++;
     }
 
     /* increment  nextPostIcoContributorId */
-    function incrementPostIcoContributorId() {
+    function incrementPostIcoContributorId() onlyCrowdsaleOrOwnerOrFinalizer {
         nextPostIcoContributorId++;
     }
 
@@ -679,10 +680,11 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         */
     function fetchSuccessfulSaleProceed() public  returns(bool) {
         require(soldAddresses[msg.sender] == true);
+        // to prevent re-entrancy attack
+        soldAddresses[msg.sender] = false;
         uint saleProceed = safeAdd(minBalanceToSell, sellingPriceInDayOf[msg.sender]);
         balances[this] = safeSub(balances[this], saleProceed);
         balances[msg.sender] = safeAdd(balances[msg.sender], saleProceed);
-        soldAddresses[msg.sender] = false;
         return true;
                 
     }

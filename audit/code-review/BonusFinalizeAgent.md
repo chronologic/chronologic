@@ -116,7 +116,9 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
     uint totalAddresses = token.totalPreIcoAddresses() + token.totalIcoAddresses() + totalTeamAddresses + 
       totalTestAddresses + token.totalPostIcoAddresses();
     // BK Ok
-    return (totalAddresses == token.maxAddresses()) && (token.mintAgents(address(this)) == true) && (token.releaseAgent() == address(this));
+    return (totalAddresses == token.maxAddresses()) && 
+      (token.mintAgents(address(this)) == true) && 
+      (token.releaseAgent() == address(this));
   }
 
   /** Called once by crowdsale finalize() if the sale was success. */
