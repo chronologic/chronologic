@@ -83,6 +83,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     uint256 public halvingCycle; 
     /* Unix timestamp when minting is to be started */
     uint256 public initialBlockTimestamp;
+    /* Flag to prevent setting initialBlockTimestamp more than once */
+    bool public isInitialBlockTimestampSet;
     /* number of decimals in minting power */
     uint256 public mintingDec; 
     /* Enable calling UpdateAllBalances() */
@@ -97,7 +99,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
        if we want to decrease length of a day. default: 84600)*/
     uint256 public DayInSecs;
     address public crowdsaleAddress;
-    address public BonusFinalizeAgentAddress;
+    address public bonusFinalizeAgentAddress;
 
     event UpdatedTokenInformation(string newName, string newSymbol); 
     event UpdateFailed(uint id); 
@@ -112,8 +114,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         _;
     }
 
-    modifier onlyCrowdsaleOrOwner(){
-        require(msg.sender==crowdsaleAddress || msg.sender==owner);
+    modifier onlyCrowdsaleOrOwnerOrFinalizer(){
+        require(msg.sender==crowdsaleAddress || msg.sender==owner || msg.sender == bonusFinalizeAgentAddress);
         _;
     }
 
@@ -123,7 +125,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     }
 
     modifier onlyBonusFinalizeAgent(){
-        require(msg.sender == BonusFinalizeAgentAddress);
+        require(msg.sender == bonusFinalizeAgentAddress);
         _;
     }
     string public name; 
@@ -176,6 +178,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         // setting future date far far away, year 2020, 
         // call setInitialBlockTimestamp to set proper timestamp
         initialBlockTimestamp = 1577836800;
+        isInitialBlockTimestampSet = false;
         // use setMintingDec to change this
         mintingDec = 19;
         latestAllUpdate = 0;
@@ -200,6 +203,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     * @param _initialBlockTimestamp timestamp to be set.
     */
     function setInitialBlockTimestamp(uint _initialBlockTimestamp) onlyOwner {
+        require(!isInitialBlockTimestampSet);
+        isInitialBlockTimestampSet = true;
         initialBlockTimestamp = _initialBlockTimestamp;
     }
 
@@ -215,7 +220,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     * to check if an id is a valid contributor
     * @param _id contributor id to check.
     */
-    function isValidContributorId(uint _id) constant returns (bool isValidContributor) {
+    function isValidContributorId(uint _id) returns (bool isValidContributor) {
         return (_id > 0 && _id <= maxAddresses && contributors[_id].adr != 0 
             && idOf[contributors[_id].adr] == _id); // cross checking
     }
@@ -224,7 +229,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     * to check if an address is a valid contributor
     * @param _address  contributor address to check.
     */
-    function isValidContributorAddress(address _address) constant returns (bool isValidContributor) {
+    function isValidContributorAddress(address _address) returns (bool isValidContributor) {
         return isValidContributorId(idOf[_address]);
     }
 
@@ -392,14 +397,9 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * @param _adr address whose balance is to be returned.
         */
     function balanceOf(address _adr) public constant returns (uint256 balance) {
-        uint id = idOf[_adr]; 
-        if (isDayTokenActivated()) {
-            if (isValidContributorId(id)) {
-                return ( availableBalanceOf(id) );
-            }
-        }
-        return balances[_adr];    
+        return balanceById(idOf[_adr]);   
     }
+
 
     /**
         * Standard ERC20 function overridden.
@@ -462,6 +462,19 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     }
 
     /**
+        * Update totalTransferredDay if valid contributor
+        * @param _adr address whose totalTransferredDay is to be updated
+        * @param _value Number of Day tokens to be updated, negative if to be subtracted
+        */
+    function updateTotalTransferredDay(address _adr, int _value) internal {
+        uint id = idOf[_adr];
+        if (isValidContributorId(id)) {
+            updateBalanceOf(id);
+            contributors[id].totalTransferredDay = contributors[id].totalTransferredDay + int(-(_value));
+        } 
+    }
+
+    /**
         * Standard ERC20 function overidden.
         * Used to transfer day tokens from caller's address to another
         * @param _to address to which Day tokens are to be transferred
@@ -475,19 +488,9 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         // Check sender account has enough balance and transfer amount is non zero
         require ( balanceOf(msg.sender) >= _value && _value != 0 ); 
          
-        uint msgSenderId = idOf[msg.sender];
-        if (isValidContributorId(msgSenderId))
-        {
-            updateBalanceOf(msgSenderId);
-            contributors[msgSenderId].totalTransferredDay = contributors[msgSenderId].totalTransferredDay + int(-(_value));
-        }
+        updateTotalTransferredDay(msg.sender, int(-(_value)));
 
-        uint toId = idOf[_to];
-        if (isValidContributorId(toId))
-        {
-            updateBalanceOf(toId);
-            contributors[toId].totalTransferredDay = contributors[toId].totalTransferredDay + int(_value);
-        }
+        updateTotalTransferredDay(_to, int(_value));
 
         balances[msg.sender] = safeSub(balances[msg.sender], _value); 
         balances[_to] = safeAdd(balances[_to], _value); 
@@ -495,6 +498,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
 
         return true;
     }
+    
+
     /**
         * Standard ERC20 Standard Token function overridden. Added Team address vesting period lock. 
         */
@@ -510,19 +515,9 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         // and _value is allowed to be transferred
         require ( balanceOf(_from) >= _value && _value != 0  &&  _value <= _allowance); 
 
-        uint fromId = idOf[_from];
-        if (isValidContributorId(fromId))
-        {
-            updateBalanceOf(fromId);
-            contributors[fromId].totalTransferredDay = contributors[fromId].totalTransferredDay + int(-(_value));
-        }
+        updateTotalTransferredDay(_from, int(-(_value)));
 
-        uint toId = idOf[_to];
-        if (isValidContributorId(toId))
-        {
-            updateBalanceOf(toId);
-            contributors[toId].totalTransferredDay = contributors[toId].totalTransferredDay + int(_value);
-        }
+        updateTotalTransferredDay(_to, int(_value));
 
         allowed[_from][msg.sender] = safeSub(_allowance, _value);
         balances[_from] = safeSub(balances[_from], _value);
@@ -567,12 +562,13 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * @param _adr Address of the contributor to be added  
         * @param _initialContributionDay Initial Contribution of the contributor to be added
         */
-  function addContributor(uint contributorId, address _adr, uint _initialContributionDay) onlyCrowdsaleOrOwner {
+  function addContributor(uint contributorId, address _adr, uint _initialContributionDay) onlyCrowdsaleOrOwnerOrFinalizer {
         require(contributorId <= maxAddresses);
-        require(idOf[_adr] == 0);
+        //should not be an existing contributor
+        require(!isValidContributorAddress(_adr));
         contributors[contributorId].adr = _adr;
-        setInitialMintingPowerOf(contributorId);
         idOf[_adr] = contributorId;
+        setInitialMintingPowerOf(contributorId);
         contributors[contributorId].initialContributionDay = _initialContributionDay;
         ContributorAdded(_adr, contributorId);
         contributors[contributorId].status = sellingStatus.NOTONSALE;
@@ -587,7 +583,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     /** Function to be called once to add the deployed BonusFinalizeAgent Contract
         */
     function setBonusFinalizeAgentAddress(address adr) onlyOwner {
-        BonusFinalizeAgentAddress = adr;
+        bonusFinalizeAgentAddress = adr;
     }
 
     /** Function to be called by minting addresses in order to sell their address
@@ -699,42 +695,46 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         teamIssuedTimestamp[_adr] = block.timestamp;
     }
 
-    /** Function to add reserved aution addresses post-ICO. Only by owner
-        * @param receiver Address of the minting to be added
-        * @param customerId Server side id of the customer
+    /** Function to add new contributor once ICO is over. Only by owner
+        * @param _receiver Address of the minting to be added
+        * @param _customerId Server side id of the customer
         */
-    function postAllocate(address receiver, uint128 customerId) public onlyOwner {
+    function addContributorPostIco(address _receiver, uint128 _customerId, 
+        uint _nextContributorId, uint _maxIcoPhaseAddresses) internal onlyOwner {
+
         require(released == true);
-        require(nextPostIcoContributorId <= maxAddresses);
-        addContributor(nextPostIcoContributorId, receiver, 0);
-        PostInvested(receiver, 0, 0, customerId, nextPostIcoContributorId);
+        require(_nextContributorId <= _maxIcoPhaseAddresses);
+        addContributor(_nextContributorId, _receiver, 0);
+        PostInvested(_receiver, 0, 0, _customerId, _nextContributorId);
+    }
+
+    /** Function to add reserved aution addresses post-ICO. Only by owner
+        * @param _receiver Address of the minting to be added
+        * @param _customerId Server side id of the customer
+        */
+    function postAllocateAuctionAddresses(address _receiver, uint128 _customerId) public onlyOwner {
+        addContributorPostIco(_receiver, _customerId, nextPostIcoContributorId, maxAddresses);
         //increment counter
         nextPostIcoContributorId++;
     }
 
     /** Function to add Remaining ICO addresses post-ICO. Only by owner
-        * @param receiver Address of the minting to be added
-        * @param customerId Server side id of the customer
+        * @param _receiver Address of the minting to be added
+        * @param _customerId Server side id of the customer
         */
-    function postAllocateRemainingIcoAddresses(address receiver, uint128 customerId) public onlyOwner {
-        require(released == true);
-        require(nextIcoContributorId <= totalPreIcoAddresses + totalIcoAddresses);
-        addContributor(nextIcoContributorId, receiver, 0);
-        PostInvested(receiver, 0, 0, customerId, nextIcoContributorId);
+    function postAllocateRemainingIcoAddresses(address _receiver, uint128 _customerId) public onlyOwner {
+        addContributorPostIco(_receiver, _customerId, nextIcoContributorId, totalPreIcoAddresses + totalIcoAddresses);
         //increment counter
         nextIcoContributorId++;
     }
 
 
     /** Function to add Remaining Pre ICO addresses post-ICO. Only by owner
-        * @param receiver Address of the minting to be added
-        * @param customerId Server side id of the customer
+        * @param _receiver Address of the minting to be added
+        * @param _customerId Server side id of the customer
         */
-    function postAllocateRemainingPreIcoAddresses(address receiver, uint128 customerId) public onlyOwner {
-        require(released == true);
-        require(nextPreIcoContributorId <= totalPreIcoAddresses);
-        addContributor(nextPreIcoContributorId, receiver, 0);
-        PostInvested(receiver, 0, 0, customerId, nextPreIcoContributorId);
+    function postAllocateRemainingPreIcoAddresses(address _receiver, uint128 _customerId) public onlyOwner {
+        addContributorPostIco(_receiver, _customerId, nextPreIcoContributorId, totalPreIcoAddresses); 
         //increment counter
         nextPreIcoContributorId++;
     }

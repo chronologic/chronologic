@@ -76,11 +76,11 @@ contract StandardToken is ERC20, SafeMathLib {
         && balances[_to] + _value > balances[_to]  // Overflow check
         ){
     // BK Ok
-    balances[_to] = safeAdd(balances[_to],_value);
+    allowed[_from][msg.sender] = safeSub(_allowance,_value);
     // BK Ok
     balances[_from] = safeSub(balances[_from],_value);
     // BK Ok
-    allowed[_from][msg.sender] = safeSub(_allowance,_value);
+    balances[_to] = safeAdd(balances[_to],_value);
     // BK Ok - Log event
     Transfer(_from, _to, _value);
     // BK Ok

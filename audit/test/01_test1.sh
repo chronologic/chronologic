@@ -105,7 +105,7 @@ printf "ENDTIME              = '$ENDTIME' '$ENDTIME_S'\n" | tee -a $TEST1OUTPUT
 
 # --- Modify dates ---
 `perl -pi -e "s/address crowdsaleAddress;/address public crowdsaleAddress;/" $TOKENTEMPSOL`
-`perl -pi -e "s/address BonusFinalizeAgentAddress;/address public BonusFinalizeAgentAddress;/" $TOKENTEMPSOL`
+`perl -pi -e "s/address bonusFinalizeAgentAddress;/address public bonusFinalizeAgentAddress;/" $TOKENTEMPSOL`
 
 `perl -pi -e "s/uint preMinWei;/uint public preMinWei;/" Crowdsale.sol`
 `perl -pi -e "s/uint preMaxWei;/uint public preMaxWei;/" Crowdsale.sol`
@@ -404,20 +404,20 @@ console.log("RESULT: Waited until start date at " + startsAtTime + " " + startsA
 var validContribution1Message = "Send Valid Contribution - 100 ETH From Account8 - After Crowdsale Start";
 console.log("RESULT: " + validContribution1Message);
 
-var addContributor1Tx = crowdsale.preallocate(account8, web3.toWei(20000, "ether"), 1, {from: contractOwnerAccount, gas: 400000});
+// var addContributor1Tx = crowdsale.preallocate(account8, web3.toWei(20000, "ether"), 1, {from: contractOwnerAccount, gas: 400000});
 
-while (txpool.status.pending > 0) {
-}
+// while (txpool.status.pending > 0) {
+// }
 
 var validContribution1Tx = eth.sendTransaction({from: account8, to: crowdsaleAddress, gas: 400000, value: web3.toWei("100", "ether")});
 
 while (txpool.status.pending > 0) {
 }
 
-printTxData("addContributor1Tx", addContributor1Tx);
+// printTxData("addContributor1Tx", addContributor1Tx);
 printTxData("validContribution1Tx", validContribution1Tx);
 printBalances();
-failIfGasEqualsGasUsed(addContributor1Tx, validContribution1Message + " - Add Contributor");
+// failIfGasEqualsGasUsed(addContributor1Tx, validContribution1Message + " - Add Contributor");
 failIfGasEqualsGasUsed(validContribution1Tx, validContribution1Message + " - Add Contribution");
 printTokenContractDetails();
 printPricingContractDetails();

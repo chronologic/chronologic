@@ -162,7 +162,7 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
       // BK Ok
       token.mint(testAddresses[j],testAddressTokens);
       // BK Ok
-      token.addTeamAddress(testAddresses[j],  nextTestContributorId);
+      token.addContributor(nextTestContributorId, testAddresses[j], 0);
       // BK Ok - Log event
       TestAddressAdded(testAddresses[j], nextTestContributorId, testAddressTokens);
       // BK Ok
