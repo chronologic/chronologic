@@ -43,10 +43,12 @@ contract StandardToken is ERC20, SafeMathLib {
         && _allowance >= _value    // Transfer approved
         && _value > 0              // Non-zero transfer
         && balances[_to] + _value > balances[_to]  // Overflow check
-        ){
-    balances[_to] = safeAdd(balances[_to],_value);
-    balances[_from] = safeSub(balances[_from],_value);
+        ){ 
+
     allowed[_from][msg.sender] = safeSub(_allowance,_value);
+    balances[_from] = safeSub(balances[_from],_value);
+    balances[_to] = safeAdd(balances[_to],_value);
+    
     Transfer(_from, _to, _value);
     return true;
         }

@@ -42,9 +42,9 @@ contract('AddressCappedCrowdsale: Success Scenario', function(accounts) {
     var _tokenMintable = true;
     var decimals = _tokenDecimals;
     var _maxAddresses = 3333;
-    var _totalPreIcoAddresses = 333, 
-    var _totalIcoAddresses = 2894, 
-    var _totalPostIcoAddresses = 88
+    var _totalPreIcoAddresses = 333; 
+    var _totalIcoAddresses = 2894; 
+    var _totalPostIcoAddresses = 88;
     var _minMintingPower = 5000000000000000000;
     var _maxMintingPower = 10000000000000000000;
     var _halvingCycle = 88;

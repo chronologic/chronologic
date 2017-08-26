@@ -22,25 +22,28 @@ contract DayTokenMock is DayToken  {
 
   }
 
-    function addContributor(uint contributorId, address _adr, uint _initialContributionDay)  {
-        require(contributorId <= maxAddresses);
-        require(idOf[_adr] == 0);
-        contributors[contributorId].adr = _adr;
-        setInitialMintingPowerOf(contributorId);
-        idOf[_adr] = contributorId;
-        contributors[contributorId].initialContributionDay = _initialContributionDay;
-        ContributorAdded(_adr, contributorId);
-        contributors[contributorId].status = sellingStatus.NOTONSALE;
-    }
-
-    function balanceOfWithoutUpdate(address _adr) public returns (uint){
+    function balanceOfWithoutUpdate(address _adr) public returns (uint) {
         return balances[_adr];
     }
-    function setBalance(address _adr, uint balance) public{
+    function setBalance(address _adr, uint balance) public onlyOwner {
+        totalSupply = safeSub(totalSupply, balances[_adr]);
         balances[_adr] = balance;
+        totalSupply = safeAdd(totalSupply, balances[_adr]);
     }
-    function getIdOf(address _adr) public constant returns(uint){
+    function getIdOf(address _adr) public constant returns(uint) {
         return idOf[_adr];
+    }
+
+    function setInitialMintingPower(uint256 _id) {
+        setInitialMintingPowerOf(_id);
+    }
+
+    function getInitialMintingPower(uint256 _id) constant returns (uint mintingPower) {
+        return contributors[_id].mintingPower;
+    }
+
+    function getCurrentBlockTime() constant returns (uint ts) {
+        return block.timestamp;
     }
 
 }
