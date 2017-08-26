@@ -2,7 +2,9 @@
 
 Status: Work in progress
 
-Commits [3ba1fe83](https://github.com/chronologic/chronologic/commit/3ba1fe830881ca9e85f2c2db3e77b3b333bc4dd1) and [fd679446](https://github.com/chronologic/chronologic/commit/fd679446f01c2d29b02856719548d6a35e8c34c8).
+Commits [3ba1fe83](https://github.com/chronologic/chronologic/commit/3ba1fe830881ca9e85f2c2db3e77b3b333bc4dd1),
+[fd679446](https://github.com/chronologic/chronologic/commit/fd679446f01c2d29b02856719548d6a35e8c34c8) and
+[be2bbba9](https://github.com/chronologic/chronologic/commit/be2bbba97ba1c78206d2a21724f6e0b94c9afd93).
 
 ## Summary
 
@@ -58,12 +60,15 @@ The token contract is [ERC20](https://github.com/ethereum/eips/issues/20) compli
   * [x] Fixed in [fd679446](https://github.com/chronologic/chronologic/commit/fd679446f01c2d29b02856719548d6a35e8c34c8)
 * **MEDIUM IMPORTANCE** - In *DayToken* and *Crowdsale*, please convert the magic numbers like `333`, `3227`, `3227`, `3245` into
   constant variable that will explain the meaning of these numbers
+  * [x] Fixed in [be2bbba9](https://github.com/chronologic/chronologic/commit/be2bbba97ba1c78206d2a21724f6e0b94c9afd93)
 * **LOW IMPORTANCE** - In *DayToken*, `minBalanceToSell`, `crowdsaleAddress` and `BonusFinalizeAgentAddress` should be made public to
   provide visibility
   * [x] Fixed for `minBalanceToSell` in [fd679446](https://github.com/chronologic/chronologic/commit/fd679446f01c2d29b02856719548d6a35e8c34c8)
 * **LOW IMPORTANCE** - In *DayToken*, `DayInSecs` should be renamed `dayInSecs` and `BonusFinalizeAgentAddress` should be renamed
   `bonusFinalizeAgentAddress` for variable naming consistency
+  * [x] Fixed for `bonusFinalizeAgentAddress` in [be2bbba9](https://github.com/chronologic/chronologic/commit/be2bbba97ba1c78206d2a21724f6e0b94c9afd93)
 * **LOW IMPORTANCE** - In *DayToken*, `modifier onlyCrowdsale()` is unused and can be removed to simplify the contract
+  * [x] Fixed in [be2bbba9](https://github.com/chronologic/chronologic/commit/be2bbba97ba1c78206d2a21724f6e0b94c9afd93)
 * **LOW IMPORTANCE** - Un-indent `function transferFrom(...)` in *DayToken*
   * [x] Fixed in [fd679446](https://github.com/chronologic/chronologic/commit/fd679446f01c2d29b02856719548d6a35e8c34c8)
 * **LOW IMPORTANCE** - In *Crowdsale*, `preMinWei`, `preMaxWei`, `minWei` and `maxWei` should be made public to provide visibility
