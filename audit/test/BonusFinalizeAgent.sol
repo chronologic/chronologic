@@ -99,25 +99,22 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
     // Calculate team bonus to allocate
     allocatedBonus = safeMul(tokensSold, teamBonus) / 10000;
 
-    // BK NOTE - The following block works when the token.addContributor(...) statement is commented out
     // assign addresses with tokens
     for (uint i = 0; i < totalTeamAddresses; i++) {
       token.mint(teamAddresses[i], allocatedBonus);
-      // token.addTeamAddress(teamAddresses[i], nextTeamContributorId);
+      token.addTeamAddress(teamAddresses[i], nextTeamContributorId);
       TeamMemberId(teamAddresses[i], nextTeamContributorId);
       nextTeamContributorId++;
     }
 
-    // BK NOTE - The following block works when the token.addContributor(...) statement is commented out
     //Add Test Addresses
     for (uint j = 0; j < totalTestAddresses; j++) {
       token.mint(testAddresses[j],testAddressTokens);
-      // token.addContributor(nextTestContributorId, testAddresses[j], 0);
-      token.addContributorTest(nextTestContributorId, testAddresses[j], 0);
+      token.addContributor(nextTestContributorId, testAddresses[j], 0);
       TestAddressAdded(testAddresses[j], nextTestContributorId, testAddressTokens);
       nextTestContributorId++;
     }
-
+    
     // Make token transferable
     // realease them in the wild
     // Hell yeah!!! we did it.

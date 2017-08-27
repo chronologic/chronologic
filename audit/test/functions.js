@@ -17,6 +17,12 @@ addAccount(eth.accounts[6], "Account #6 - Test Address #1");
 addAccount(eth.accounts[7], "Account #7 - Test Address #2");
 addAccount(eth.accounts[8], "Account #8");
 addAccount(eth.accounts[9], "Account #9");
+addAccount(eth.accounts[10], "Account #A");
+addAccount(eth.accounts[11], "Account #B");
+addAccount(eth.accounts[12], "Account #C");
+addAccount(eth.accounts[13], "Account #D");
+addAccount(eth.accounts[14], "Account #E");
+addAccount(eth.accounts[15], "Account #E");
 
 
 var minerAccount = eth.accounts[0];
@@ -29,6 +35,12 @@ var testAddress1 = eth.accounts[6];
 var testAddress2 = eth.accounts[7];
 var account8 = eth.accounts[8];
 var account9 = eth.accounts[9];
+var account10 = eth.accounts[10];
+var account11 = eth.accounts[11];
+var account12 = eth.accounts[12];
+var account13 = eth.accounts[13];
+var account14 = eth.accounts[14];
+var account15 = eth.accounts[15];
 
 var baseBlock = eth.blockNumber;
 

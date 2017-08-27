@@ -101,7 +101,7 @@ printf "ENDTIME              = '$ENDTIME' '$ENDTIME_S'\n" | tee -a $TEST1OUTPUT
 `cp $CONTRACTSDIR/UpgradeAgent.sol .`
 `cp $CONTRACTSDIR/UpgradeableToken.sol .`
 `cp $CONTRACTSDIR/PricingStrategy.sol .`
-`cp modifiedContracts/* .`
+# `cp modifiedContracts/* .`
 
 # --- Modify dates ---
 `perl -pi -e "s/address crowdsaleAddress;/address public crowdsaleAddress;/" $TOKENTEMPSOL`
@@ -439,12 +439,37 @@ console.log("RESULT: Waited until endsAt date at " + endsAtTime + " " + endsAtTi
 var finaliseMessage = "Finalise Crowdsale";
 // -----------------------------------------------------------------------------
 console.log("RESULT: " + finaliseMessage);
-var finaliseTx = crowdsale.finalize({from: contractOwnerAccount, gas: 400000});
+var finaliseTx = crowdsale.finalize({from: contractOwnerAccount, gas: 4000000});
 while (txpool.status.pending > 0) {
 }
 printTxData("finaliseTx", finaliseTx);
 printBalances();
 failIfGasEqualsGasUsed(finaliseTx, finaliseMessage);
+printTokenContractDetails();
+printPricingContractDetails();
+printCrowdsaleContractDetails();
+printFinaliserContractDetails();
+console.log("RESULT: ");
+
+
+// -----------------------------------------------------------------------------
+var transfersMessage = "Testing token transfers";
+console.log("RESULT: " + transfersMessage);
+// -----------------------------------------------------------------------------
+var transfers1Tx = token.transfer(account10, "1000000000000000000", {from: account8, gas: 500000});
+var transfers2Tx = token.approve(account11,  "2000000000000000000", {from: account9, gas: 500000});
+while (txpool.status.pending > 0) {
+}
+var transfers3Tx = token.transferFrom(account9, account12, "2000000000000000000", {from: account11, gas: 500000});
+while (txpool.status.pending > 0) {
+}
+printTxData("transfers1Tx", transfers1Tx);
+printTxData("transfers2Tx", transfers2Tx);
+printTxData("transfers3Tx", transfers3Tx);
+printBalances();
+failIfGasEqualsGasUsed(transfers1Tx, transfersMessage + " - transfer 1 token ac8 -> ac10");
+failIfGasEqualsGasUsed(transfers2Tx, transfersMessage + " - approve 2 tokens ac9 -> ac11");
+failIfGasEqualsGasUsed(transfers3Tx, transfersMessage + " - transferFrom 2 tokens ac9 -> ac12");
 printTokenContractDetails();
 printPricingContractDetails();
 printCrowdsaleContractDetails();
