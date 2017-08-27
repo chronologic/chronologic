@@ -72,6 +72,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     mapping (address => uint256) public sellingPriceInDayOf;
 
     /* Stores number of days since minting epoch when all the balances are updated */
+    // BK Ok - This is not expected to be used
     uint256 public latestAllUpdate;
 
     /* Stores the id of the next Pre ICO contributor */
@@ -415,6 +416,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * For public calls.
         * @param _adr address whose balance is to be returned.
         */
+    // BK NOTE - This function does not work for non-minting addresses because `balanceById(...)` does not work for non-minting
+    // BK NOTE - addresses
     function balanceOf(address _adr) public constant returns (uint256 balance) {
         return balanceById(idOf[_adr]);   
     }
@@ -428,6 +431,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * For public calls.
         * @param _id address whose balance is to be returned.
         */
+    // BK NOTE - This function does not work for non-minting addresses because `adr` will be 0x0 for non-minting addresses
+    // BK NOTE - and so `balances[adr]` will always be 0.
     function balanceById(uint _id) public constant returns (uint256 balance) {
         address adr = contributors[_id].adr; 
         if (isDayTokenActivated()) {

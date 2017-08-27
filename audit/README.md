@@ -100,7 +100,7 @@ The token contract is [ERC20](https://github.com/ethereum/eips/issues/20) compli
       -- ------------------------------------------ --------------------------- ------------------------------ ---------------------------
                                                                                      504000.000000000008064000 Total Token Balances
       -- ------------------------------------------ --------------------------- ------------------------------ ---------------------------
-      
+
       PASS Send Valid Contribution After Crowdsale Start - ac8 contributes 20,000 ETH
       PASS Send Valid Contribution After Crowdsale Start - ac9 contributes 1,000 ETH
       ...
@@ -108,7 +108,34 @@ The token contract is [ERC20](https://github.com/ethereum/eips/issues/20) compli
 
   The reason for this is that I deployed the *DayToken* with an `_initialSupply` of 11 and these 11 tokens should have been 
   assigned to the contract owner account 0xa11a . This issue will be of **LOW IMPORTANCE** if this contract will only be
-  deployed with an `_initialSupply` of 0. 
+  deployed with an `_initialSupply` of 0.
+
+  This issue may be fixed by the next issue.
+
+* **HIGH IMPORTANCE** `DayToken.balanceOf(...)` does not work as expected for non-minting addresses. If DAY tokens are transferred
+  from a minting address to a non-minting address, the non-minting address is not registered in the `DayToken.contributors` data
+  structure.
+
+  Following is the `DayToken.balanceOf(...)` function:
+
+      function balanceOf(address _adr) public constant returns (uint256 balance) {
+          return balanceById(idOf[_adr]);   
+      }
+
+  And following is the `DayToken.balanceById(...)` function:
+
+      function balanceById(uint _id) public constant returns (uint256 balance) {
+          address adr = contributors[_id].adr; 
+          if (isDayTokenActivated()) {
+              if (isValidContributorId(_id)) {
+                  return ( availableBalanceOf(_id) );
+              }
+          }
+          return balances[adr]; 
+      }
+
+  As the non-minting address is not registered in the `DayToken.contributors` data structure, `adr` will be set to `0x0`. The
+  balance of any non-minting address will therefore always be 0.
 
 <br />
 
