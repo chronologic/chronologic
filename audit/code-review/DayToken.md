@@ -31,6 +31,7 @@ import "./SafeMathLib.sol";
  */
 contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
 
+    // BK Ok
     enum sellingStatus {NOTONSALE, EXPIRED, ONSALE}
 
     /** Basic structure for a contributor with a minting Address
@@ -76,13 +77,17 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     uint256 public latestAllUpdate;
 
     /* Stores the id of the next Pre ICO contributor */
+    // BK Ok
     uint256 public nextPreIcoContributorId;
     /* Maximum number of addresses for Pre ICO */
+    // BK Ok
     uint256 public totalPreIcoAddresses;
 
     /* Stores the id of the next ICO contributor */
+    // BK Ok
     uint256 public nextIcoContributorId;
     /* Maximum number of addresses for ICO */
+    // BK Ok
     uint256 public totalIcoAddresses;
 
     /* Stores the id of the next Post ICO contributor (for auctionable addresses) */
@@ -183,12 +188,14 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         balances[owner] = totalSupply; 
         maxAddresses = _maxAddresses;
         require(maxAddresses > 1); // else division by zero will occur in setInitialMintingPowerOf
+        // BK Ok
         totalPreIcoAddresses = _totalPreIcoAddresses;
         totalIcoAddresses = _totalIcoAddresses;
         totalPostIcoAddresses = _totalPostIcoAddresses;
         // starts with 1
         nextPreIcoContributorId = 1;
         // calculate first contributor id for ICO phase
+        // BK Ok
         nextIcoContributorId = totalPreIcoAddresses + 1;
         // calculate first contributor id to be auctioned post ICO
         nextPostIcoContributorId = maxAddresses - totalPostIcoAddresses + 1;
@@ -240,6 +247,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     * to check if an id is a valid contributor
     * @param _id contributor id to check.
     */
+    // BK NOTE - This could be set as a constant function
+    // BK Ok
     function isValidContributorId(uint _id) returns (bool isValidContributor) {
         return (_id > 0 && _id <= maxAddresses && contributors[_id].adr != 0 
             && idOf[contributors[_id].adr] == _id); // cross checking
@@ -249,6 +258,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     * to check if an address is a valid contributor
     * @param _address  contributor address to check.
     */
+    // BK NOTE - This could be set as a constant function
+    // BK Ok
     function isValidContributorAddress(address _address) returns (bool isValidContributor) {
         return isValidContributorId(idOf[_address]);
     }
@@ -258,7 +269,10 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     * In case of Team address check if lock-in period is over (returns true for all non team addresses)
     * @param _address team address to check lock in period for.
     */
+    // BK NOTE - This could be set as a constant function
+    // BK Ok
     function isTeamLockInPeriodOverIfTeamAddress(address _address) returns (bool isLockInPeriodOver) {
+        // BK Ok
         isLockInPeriodOver = true;
         if (teamIssuedTimestamp[_address] != 0) {
                 if (block.timestamp - teamIssuedTimestamp[_address] < teamLockPeriodInSec)
@@ -273,22 +287,30 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     * Can be called only by owner
     * @param _mintingDec bounty to be set.
     */
+    // BK NOTE - This is the minting decimal places. Changing this after deployment may result in unexpected calculations
+    // BK Ok - Only owner can execute this function
     function setMintingDec(uint256 _mintingDec) onlyOwner {
         mintingDec = _mintingDec;
     }
 
     /* increment  nextPreIcoContributorId */
+    // BK Ok - Only owner or crowdsale related contracts can execute this function
     function incrementPreIcoContributorId() onlyCrowdsaleOrOwnerOrFinalizer {
+        // BK Ok
         nextPreIcoContributorId++;
     }
 
     /* increment  nextIcoContributorId */
+    // BK Ok - Only owner or crowdsale related contracts can execute this function
     function incrementIcoContributorId() onlyCrowdsaleOrOwnerOrFinalizer {
+        // BK Ok
         nextIcoContributorId++;
     }
 
     /* increment  nextPostIcoContributorId */
+    // BK Ok - Only owner or crowdsale related contracts can execute this function
     function incrementPostIcoContributorId() onlyCrowdsaleOrOwnerOrFinalizer {
+        // BK Ok
         nextPostIcoContributorId++;
     }
 
@@ -433,6 +455,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         */
     // BK NOTE - This function does not work for non-minting addresses because `adr` will be 0x0 for non-minting addresses
     // BK NOTE - and so `balances[adr]` will always be 0.
+    // BK NOTE - A fix would be to add `, address a` to the parameter and perform the check `if (adr == 0x0) adr = a;` after
+    // BK NOTE - the first statement 
     function balanceById(uint _id) public constant returns (uint256 balance) {
         address adr = contributors[_id].adr; 
         if (isDayTokenActivated()) {

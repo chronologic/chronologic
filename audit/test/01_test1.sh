@@ -101,7 +101,7 @@ printf "ENDTIME              = '$ENDTIME' '$ENDTIME_S'\n" | tee -a $TEST1OUTPUT
 `cp $CONTRACTSDIR/UpgradeAgent.sol .`
 `cp $CONTRACTSDIR/UpgradeableToken.sol .`
 `cp $CONTRACTSDIR/PricingStrategy.sol .`
-#`cp modifiedContracts/* .`
+`cp modifiedContracts/* .`
 
 # --- Modify dates ---
 `perl -pi -e "s/address crowdsaleAddress;/address public crowdsaleAddress;/" $TOKENTEMPSOL`

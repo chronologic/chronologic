@@ -136,6 +136,29 @@ The token contract is [ERC20](https://github.com/ethereum/eips/issues/20) compli
 
   As the non-minting address is not registered in the `DayToken.contributors` data structure, `adr` will be set to `0x0`. The
   balance of any non-minting address will therefore always be 0.
+  
+  A suggested fix follows:
+  
+      function balanceOf(address _adr) public constant returns (uint256 balance) {
+          return balanceById(idOf[_adr], _adr);   
+      }
+      
+      function balanceById(uint _id, address a) public constant returns (uint256 balance) {
+          address adr = contributors[_id].adr;
+          // BK TEST
+          if (adr == 0x0)
+            adr = a; 
+          if (isDayTokenActivated()) {
+              if (isValidContributorId(_id)) {
+                  return ( availableBalanceOf(_id) );
+              }
+          }
+          return balances[adr]; 
+      }
+
+* **LOW IMPORTANCE** `DayToken.isTeamLockInPeriodOverIfTeamAddress(...)` can be set as a constant function
+* **LOW IMPORTANCE** `DayToken.isValidContributorId(...)` can be set as a constant function
+* **LOW IMPORTANCE** `DayToken.isValidContributorAddress(...)` can be set as a constant function
 
 <br />
 
