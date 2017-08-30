@@ -2,14 +2,14 @@
 # Day Token [Work in Progress]
 
 - [Chronologic Website](https://chronologic.network)
-- [Chronologic Whitepaper](https://chronologic.network/uploads/Chronologic_Whitepaper.pdf)
+- [Chronologic Whitepaper](https://chronologic.network/paper)
 - [The Big Picture: TimeMints, ChronoPower & Proof-of-Time](https://blog.chronologic.network/the-big-picture-timemints-chronopower-proof-of-time-f881158b044d) blogpost.
 
 
 ## Technical definition
 An ERC20 compliant Token &amp; Crowdsale Application on Ethereum Platform written in truffle framework.
 
-At the technical level DayToken is a self-minting ERC20-compliant token. Details about the token can be found in the [Chronologic Whitepaper](https://chronologic.network/uploads/Chronologic_Whitepaper.pdf)
+At the technical level DayToken is a self-minting ERC20-compliant token. Details about the token can be found in the [Chronologic Whitepaper](https://chronologic.network/paper)
 
 Tests for the token are written using Mocha and Chai framework.
 
