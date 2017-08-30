@@ -442,8 +442,6 @@ contract UpgradeableToken is StandardToken {
 }
 
 
-
-
 /**
  * A crowdsale token.
  *
@@ -495,22 +493,28 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     /* Stores number of days since minting epoch when all the balances are updated */
     uint256 public latestAllUpdate;
 
-    /* Stores the id of the next Pre ICO contributor */
-    uint256 public nextPreIcoContributorId;
-    /* Maximum number of addresses for Pre ICO */
-    uint256 public totalPreIcoAddresses;
+    /* Stores the id of the first  contributor */
+    uint256 public firstContributorId;
+    /* Stores total Pre + Post ICO TimeMints */
+    uint256 public totalNormalContributorIds;
+    /* Stores total Normal TimeMints allocated */
+    uint256 public totalNormalContributorIdsAllocated = 0;
+    
+    /* Stores the id of the first team TimeMint */
+    uint256 public firstTeamContributorId;
+    /* Stores the total team TimeMints */
+    uint256 public totalTeamContributorIds;
+    /* Stores total team TimeMints allocated */
+    uint256 public totalTeamContributorIdsAllocated = 0;
 
-    /* Stores the id of the next ICO contributor */
-    uint256 public nextIcoContributorId;
-    /* Maximum number of addresses for ICO */
-    uint256 public totalIcoAddresses;
+    /* Stores the id of the first Post ICO contributor (for auctionable TimeMints) */
+    uint256 public firstPostIcoContributorId;
+    /* Stores total Post ICO TimeMints (for auction) */
+    uint256 public totalPostIcoContributorIds;
+    /* Stores total Auction TimeMints allocated */
+    uint256 public totalPostIcoContributorIdsAllocated = 0;
 
-    /* Stores the id of the next Post ICO contributor (for auctionable addresses) */
-    uint256 public nextPostIcoContributorId;
-    /* Maximum number of addresses for Post ICO (Auction) */
-    uint256 public totalPostIcoAddresses;
-
-    /* Maximum number of address: total. (3333) */
+    /* Maximum number of address */
     uint256 public maxAddresses;
 
     /* Min Minting power with 19 decimals: 0.5% : 5000000000000000000 */
@@ -521,6 +525,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     uint256 public halvingCycle; 
     /* Unix timestamp when minting is to be started */
     uint256 public initialBlockTimestamp;
+    /* Flag to prevent setting initialBlockTimestamp more than once */
+    bool public isInitialBlockTimestampSet;
     /* number of decimals in minting power */
     uint256 public mintingDec; 
     /* Enable calling UpdateAllBalances() */
@@ -534,8 +540,9 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     /* Duration in secs that we consider as a day. (For test deployment purposes, 
        if we want to decrease length of a day. default: 84600)*/
     uint256 public DayInSecs;
-    address crowdsaleAddress;
-    address BonusFinalizeAgentAddress;
+
+    /* Total number of DayTokens to be stored in the DayToken contract as bounty */
+    uint public totalBountyInDay;
 
     event UpdatedTokenInformation(string newName, string newSymbol); 
     event UpdateFailed(uint id); 
@@ -543,27 +550,17 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     event MintingAdrTransferred(address from, address to);
     event ContributorAdded(address adr, uint id);
     event OnSale(uint id, address adr, uint minPriceinDay, uint expiryBlockNumber);
-    event PostInvested(address investor, uint weiAmount, uint tokenAmount, uint128 customerId, uint contributorId);
+    event PostInvested(address investor, uint weiAmount, uint tokenAmount, uint customerId, uint contributorId);
     
-    modifier onlyCrowdsale(){
-        require(msg.sender==crowdsaleAddress);
-        _;
-    }
-
-    modifier onlyCrowdsaleOrOwner(){
-        require(msg.sender==crowdsaleAddress || msg.sender==owner);
-        _;
-    }
+    event TeamAddressAdded(address teamAddress, uint id);
+    // Tell us invest was success
+    event Invested(address receiver, uint weiAmount, uint tokenAmount, uint customerId, uint contributorId);
 
     modifier onlyContributor(uint id){
         require(isValidContributorId(id));
         _;
     }
 
-    modifier onlyBonusFinalizeAgent(){
-        require(msg.sender == BonusFinalizeAgentAddress);
-        _;
-    }
     string public name; 
 
     string public symbol; 
@@ -582,10 +579,9 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * _mintable Are new tokens created over the crowdsale or do we distribute only the initial supply?
         */
     function DayToken(string _name, string _symbol, uint _initialSupply, uint8 _decimals, 
-        bool _mintable, uint _maxAddresses, uint _totalPreIcoAddresses, uint _totalIcoAddresses, 
-        uint _totalPostIcoAddresses, uint256 _minMintingPower, uint256 _maxMintingPower, uint _halvingCycle, 
-        bool _updateAllBalancesEnabled, uint256 _minBalanceToSell, 
-        uint256 _dayInSecs, uint256 _teamLockPeriodInSec) 
+        bool _mintable, uint _maxAddresses, uint _firstTeamContributorId, uint _totalTeamContributorIds, 
+        uint _totalPostIcoContributorIds, uint256 _minMintingPower, uint256 _maxMintingPower, uint _halvingCycle, 
+        uint256 _minBalanceToSell, uint256 _dayInSecs, uint256 _teamLockPeriodInSec) 
         UpgradeableToken(msg.sender) {
         
         // Create any address, can be transferred
@@ -596,28 +592,35 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         symbol = _symbol;  
         totalSupply = _initialSupply; 
         decimals = _decimals; 
+        totalBountyInDay = 0;
         // Create initially all balance on the team multisig
         balances[owner] = totalSupply; 
         maxAddresses = _maxAddresses;
-        totalPreIcoAddresses = _totalPreIcoAddresses;
-        totalIcoAddresses = _totalIcoAddresses;
-        totalPostIcoAddresses = _totalPostIcoAddresses;
-        // starts with 1
-        nextPreIcoContributorId = 1;
-        // calculate first contributor id for ICO phase
-        nextIcoContributorId = totalPreIcoAddresses + 1;
+        require(maxAddresses > 1); // else division by zero will occur in setInitialMintingPowerOf
+        
+        firstContributorId = 1;
+        totalNormalContributorIds = maxAddresses - _totalTeamContributorIds - _totalPostIcoContributorIds;
+
+        // check timeMint total is sane
+        require(totalNormalContributorIds >= 1);
+
+        firstTeamContributorId = _firstTeamContributorId;
+        totalTeamContributorIds = _totalTeamContributorIds;
+        totalPostIcoContributorIds = _totalPostIcoContributorIds;
+        
         // calculate first contributor id to be auctioned post ICO
-        nextPostIcoContributorId = maxAddresses - totalPostIcoAddresses + 1;
+        firstPostIcoContributorId = maxAddresses - totalPostIcoContributorIds + 1;
         minMintingPower = _minMintingPower;
         maxMintingPower = _maxMintingPower;
         halvingCycle = _halvingCycle;
         // setting future date far far away, year 2020, 
         // call setInitialBlockTimestamp to set proper timestamp
         initialBlockTimestamp = 1577836800;
+        isInitialBlockTimestampSet = false;
         // use setMintingDec to change this
         mintingDec = 19;
         latestAllUpdate = 0;
-        updateAllBalancesEnabled = _updateAllBalancesEnabled;
+        updateAllBalancesEnabled = false;
         minBalanceToSell = _minBalanceToSell;
         DayInSecs = _dayInSecs;
         teamLockPeriodInSec = _teamLockPeriodInSec;
@@ -637,7 +640,9 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     * Can be called only by owner
     * @param _initialBlockTimestamp timestamp to be set.
     */
-    function setInitialBlockTimestamp(uint _initialBlockTimestamp) onlyOwner {
+    function setInitialBlockTimestamp(uint _initialBlockTimestamp) internal onlyOwner {
+        require(!isInitialBlockTimestampSet);
+        isInitialBlockTimestampSet = true;
         initialBlockTimestamp = _initialBlockTimestamp;
     }
 
@@ -687,28 +692,14 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     * @param _mintingDec bounty to be set.
     */
     function setMintingDec(uint256 _mintingDec) onlyOwner {
+        require(!isInitialBlockTimestampSet);
         mintingDec = _mintingDec;
-    }
-
-    /* increment  nextPreIcoContributorId */
-    function incrementPreIcoContributorId() {
-        nextPreIcoContributorId++;
-    }
-
-    /* increment  nextIcoContributorId */
-    function incrementIcoContributorId() {
-        nextIcoContributorId++;
-    }
-
-    /* increment  nextPostIcoContributorId */
-    function incrementPostIcoContributorId() {
-        nextPostIcoContributorId++;
     }
 
     /**
         * When token is released to be transferable, enforce no new tokens can be created.
         */
-    function releaseTokenTransfer() public onlyReleaseAgent {
+    function releaseTokenTransfer() public onlyOwner {
         mintingFinished = true; 
         super.releaseTokenTransfer(); 
     }
@@ -790,11 +781,12 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * Can only be called internally
         * Can calculate balance based on last updated.
         * @param _id id whose balnce is to be calculated
+        * @param _dayCount day count upto which balance is to be updated
         */
-    function availableBalanceOf(uint256 _id) internal returns (uint256) {
+    function availableBalanceOf(uint256 _id, uint _dayCount) internal returns (uint256) {
         uint256 balance = balances[contributors[_id].adr]; 
-        for (uint i = contributors[_id].lastUpdatedOn + 1; i <= getDayCount(); i++) {
-            balance = balance + ( contributors[_id].mintingPower * balance ) / ( 10**(mintingDec + 2) * 2**(getPhaseCount(i)-1) );
+        for (uint i = contributors[_id].lastUpdatedOn + 1; i <= _dayCount; i++) {
+            balance = safeAdd( balance, ( contributors[_id].mintingPower * balance ) / ( 10**(mintingDec + 2) * 2**(getPhaseCount(i)-1) ));
         } 
         return balance; 
     }
@@ -808,12 +800,13 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     function updateBalanceOf(uint256 _id) internal returns (bool success) {
         // check if its contributor
         if (isValidContributorId(_id)) {
+            uint dayCount = getDayCount();
             // proceed only if not already updated today
-            if (contributors[_id].lastUpdatedOn != getDayCount()) {
+            if (contributors[_id].lastUpdatedOn != dayCount) {
                 totalSupply = safeSub(totalSupply, balances[contributors[_id].adr]);
-                balances[contributors[_id].adr] = availableBalanceOf(_id);
+                balances[contributors[_id].adr] = availableBalanceOf(_id, dayCount);
                 totalSupply = safeAdd(totalSupply, balances[contributors[_id].adr]);
-                contributors[_id].lastUpdatedOn = getDayCount();
+                contributors[_id].lastUpdatedOn = dayCount;
                 return true; 
             }
         }
@@ -830,14 +823,13 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * @param _adr address whose balance is to be returned.
         */
     function balanceOf(address _adr) public constant returns (uint256 balance) {
-        uint id = idOf[_adr]; 
-        if (isDayTokenActivated()) {
-            if (isValidContributorId(id)) {
-                return ( availableBalanceOf(id) );
-            }
-        }
-        return balances[_adr];    
+        uint id = idOf[_adr];
+        if (id != 0)
+            return balanceById(id);
+        else 
+            return balances[_adr]; 
     }
+
 
     /**
         * Standard ERC20 function overridden.
@@ -851,7 +843,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         address adr = contributors[_id].adr; 
         if (isDayTokenActivated()) {
             if (isValidContributorId(_id)) {
-                return ( availableBalanceOf(_id) );
+                return ( availableBalanceOf(_id, getDayCount()) );
             }
         }
         return balances[adr]; 
@@ -878,8 +870,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
 
         latestAllUpdate = today;
         // award bounty
-        balances[msg.sender] = safeAdd(balances[msg.sender],bounty);
         balances[this] = safeSub(balances[this], bounty);
+        balances[msg.sender] = safeAdd(balances[msg.sender],bounty);
         UpToDate(true); 
     }
 
@@ -888,8 +880,17 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * Can be called only by owner
         * @param _bounty bounty to be set.
         */
-    function setBounty(uint256 _bounty) onlyOwner {
+    function setBounty(uint256 _bounty) public onlyOwner {
         bounty = _bounty;
+    }
+
+     /**
+        * Enable/Disable updateAllBalances functionality
+        * Can be called only by owner
+        * @param _isEnabled state to  set.
+        */
+    function enableUpdateAllBalances(bool _isEnabled) public onlyOwner {
+        updateAllBalancesEnabled = _isEnabled;
     }
 
     /**
@@ -897,6 +898,19 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         */
     function getTotalSupply() public constant returns (uint) {
         return totalSupply;
+    }
+
+    /**
+        * Update totalTransferredDay if valid contributor
+        * @param _adr address whose totalTransferredDay is to be updated
+        * @param _value Number of Day tokens to be updated, negative if to be subtracted
+        */
+    function updateTotalTransferredDay(address _adr, int _value) internal {
+        uint id = idOf[_adr];
+        if (isValidContributorId(id)) {
+            updateBalanceOf(id);
+            contributors[id].totalTransferredDay = contributors[id].totalTransferredDay + int(-(_value));
+        } 
     }
 
     /**
@@ -913,19 +927,9 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         // Check sender account has enough balance and transfer amount is non zero
         require ( balanceOf(msg.sender) >= _value && _value != 0 ); 
          
-        uint msgSenderId = idOf[msg.sender];
-        if (isValidContributorId(msgSenderId))
-        {
-            updateBalanceOf(msgSenderId);
-            contributors[msgSenderId].totalTransferredDay = contributors[msgSenderId].totalTransferredDay + int(-(_value));
-        }
+        updateTotalTransferredDay(msg.sender, int(-(_value)));
 
-        uint toId = idOf[_to];
-        if (isValidContributorId(toId))
-        {
-            updateBalanceOf(toId);
-            contributors[toId].totalTransferredDay = contributors[toId].totalTransferredDay + int(_value);
-        }
+        updateTotalTransferredDay(_to, int(_value));
 
         balances[msg.sender] = safeSub(balances[msg.sender], _value); 
         balances[_to] = safeAdd(balances[_to], _value); 
@@ -933,6 +937,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
 
         return true;
     }
+    
+
     /**
         * Standard ERC20 Standard Token function overridden. Added Team address vesting period lock. 
         */
@@ -948,19 +954,9 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         // and _value is allowed to be transferred
         require ( balanceOf(_from) >= _value && _value != 0  &&  _value <= _allowance); 
 
-        uint fromId = idOf[_from];
-        if (isValidContributorId(fromId))
-        {
-            updateBalanceOf(fromId);
-            contributors[fromId].totalTransferredDay = contributors[fromId].totalTransferredDay + int(-(_value));
-        }
+        updateTotalTransferredDay(_from, int(-(_value)));
 
-        uint toId = idOf[_to];
-        if (isValidContributorId(toId))
-        {
-            updateBalanceOf(toId);
-            contributors[toId].totalTransferredDay = contributors[toId].totalTransferredDay + int(_value);
-        }
+        updateTotalTransferredDay(_to, int(_value));
 
         allowed[_from][msg.sender] = safeSub(_allowance, _value);
         balances[_from] = safeSub(balances[_from], _value);
@@ -981,7 +977,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         require(isDayTokenActivated());
 
         // _to should be non minting address
-        require(idOf[_to] == 0);
+        require(!isValidContributorAddress(_to));
         
         uint id = idOf[_from];
         // update balance of from address before transferring minting power
@@ -1005,28 +1001,18 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * @param _adr Address of the contributor to be added  
         * @param _initialContributionDay Initial Contribution of the contributor to be added
         */
-  function addContributor(uint contributorId, address _adr, uint _initialContributionDay) onlyCrowdsaleOrOwner {
+  function addContributor(uint contributorId, address _adr, uint _initialContributionDay) internal onlyOwner {
         require(contributorId <= maxAddresses);
-        require(idOf[_adr] == 0);
+        //should not be an existing contributor
+        require(!isValidContributorAddress(_adr));
         contributors[contributorId].adr = _adr;
-        setInitialMintingPowerOf(contributorId);
         idOf[_adr] = contributorId;
+        setInitialMintingPowerOf(contributorId);
         contributors[contributorId].initialContributionDay = _initialContributionDay;
         ContributorAdded(_adr, contributorId);
         contributors[contributorId].status = sellingStatus.NOTONSALE;
     }
 
-    /** Function to be called once to add the deployed Crowdsale Contract
-        */
-    function addCrowdsaleAddress(address _adr) onlyOwner {
-        crowdsaleAddress = _adr;
-    }
-
-    /** Function to be called once to add the deployed BonusFinalizeAgent Contract
-        */
-    function setBonusFinalizeAgentAddress(address adr) onlyOwner {
-        BonusFinalizeAgentAddress = adr;
-    }
 
     /** Function to be called by minting addresses in order to sell their address
         * @param _minPriceInDay Minimum price in DAY tokens set by the seller
@@ -1057,7 +1043,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     function getOnSaleAddresses() constant public {
         for(uint i=1; i <= maxAddresses; i++)
         {
-            if (contributors[i].adr != 0) {
+            if (isValidContributorId(i)) {
                 if(contributors[i].expiryBlockNumber!=0 && block.number > contributors[i].expiryBlockNumber ){
                     contributors[i].status = sellingStatus.EXPIRED;
                 }
@@ -1100,10 +1086,11 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         */
     function fetchSuccessfulSaleProceed() public  returns(bool) {
         require(soldAddresses[msg.sender] == true);
+        // to prevent re-entrancy attack
+        soldAddresses[msg.sender] = false;
         uint saleProceed = safeAdd(minBalanceToSell, sellingPriceInDayOf[msg.sender]);
         balances[this] = safeSub(balances[this], saleProceed);
         balances[msg.sender] = safeAdd(balances[msg.sender], saleProceed);
-        soldAddresses[msg.sender] = false;
         return true;
                 
     }
@@ -1129,119 +1116,81 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         return true;
     }
 
+
     /** Function to add a team address as a contributor and store it's time issued to calculate vesting period
-        * Called by BonusFinalizeAgent
+        * Called by owner
         */
-    function addTeamAddress(address _adr, uint id) onlyBonusFinalizeAgent {
-        addContributor(id, _adr, 0);
-        teamIssuedTimestamp[_adr] = block.timestamp;
-    }
-
-    /** Function to add reserved aution addresses post-ICO. Only by owner
-        * @param receiver Address of the minting to be added
-        * @param customerId Server side id of the customer
-        */
-    function postAllocate(address receiver, uint128 customerId) public onlyOwner {
-        require(released == true);
-        require(nextPostIcoContributorId <= maxAddresses);
-        addContributor(nextPostIcoContributorId, receiver, 0);
-        PostInvested(receiver, 0, 0, customerId, nextPostIcoContributorId);
-        //increment counter
-        nextPostIcoContributorId++;
-    }
-
-    /** Function to add Remaining ICO addresses post-ICO. Only by owner
-        * @param receiver Address of the minting to be added
-        * @param customerId Server side id of the customer
-        */
-    function postAllocateRemainingIcoAddresses(address receiver, uint128 customerId) public onlyOwner {
-        require(released == true);
-        require(nextIcoContributorId <= totalPreIcoAddresses + totalIcoAddresses);
-        addContributor(nextIcoContributorId, receiver, 0);
-        PostInvested(receiver, 0, 0, customerId, nextIcoContributorId);
-        //increment counter
-        nextIcoContributorId++;
+    function addTeamTimeMInts(address _adr, uint _id, uint _tokens, bool _isTest) public onlyOwner {
+        //check if Id is in range of team Ids
+        require(_id >= firstTeamContributorId && _id < firstTeamContributorId + totalTeamContributorIds);
+        require(totalTeamContributorIdsAllocated < totalTeamContributorIds);
+        addContributor(_id, _adr, 0);
+        totalTeamContributorIdsAllocated++;
+        // enforce lockin period if not test address
+        if(!_isTest) teamIssuedTimestamp[_adr] = block.timestamp;
+        mint(_adr, _tokens);
+        TeamAddressAdded(_adr, _id);
     }
 
 
-    /** Function to add Remaining Pre ICO addresses post-ICO. Only by owner
-        * @param receiver Address of the minting to be added
-        * @param customerId Server side id of the customer
+    /** Function to add reserved aution TimeMints post-ICO. Only by owner
+        * @param _receiver Address of the minting to be added
+        * @param _customerId Server side id of the customer
+        * @param _id contributorId
         */
-    function postAllocateRemainingPreIcoAddresses(address receiver, uint128 customerId) public onlyOwner {
+    function postAllocateAuctionTimeMints(address _receiver, uint _customerId, uint _id) public onlyOwner {
+
+        //check if Id is in range of Auction Ids
+        require(_id >= firstPostIcoContributorId && _id < firstPostIcoContributorId + totalPostIcoContributorIds);
+        require(totalPostIcoContributorIdsAllocated < totalPostIcoContributorIds);
+        
         require(released == true);
-        require(nextPreIcoContributorId <= totalPreIcoAddresses);
-        addContributor(nextPreIcoContributorId, receiver, 0);
-        PostInvested(receiver, 0, 0, customerId, nextPreIcoContributorId);
-        //increment counter
-        nextPreIcoContributorId++;
+        addContributor(_id, _receiver, 0);
+        totalPostIcoContributorIdsAllocated++;
+        PostInvested(_receiver, 0, 0, _customerId, _id);
+    }
+
+
+    /** Function to add all contributors except team, test and Auctions TimeMints. Only by owner
+        * @param _receiver Address of the minting to be added
+        * @param _customerId Server side id of the customer
+        * @param _id contributor id
+        * @param _tokens day tokens to allocate
+        * @param _weiAmount ether invested in wei
+        */
+    function allocateNormalTimeMints(address _receiver, uint _customerId, uint _id, uint _tokens, uint _weiAmount) public onlyOwner {
+        // check if Id is in range of Normal Ids
+        require(_id >= firstContributorId && _id <= totalNormalContributorIds);
+        require(totalNormalContributorIdsAllocated < totalNormalContributorIds);
+        addContributor(_id, _receiver, _tokens);
+        totalNormalContributorIdsAllocated++;
+        mint(_receiver, _tokens);
+        Invested(_receiver, _weiAmount, _tokens, _customerId, _id);
+        
+    }
+
+
+    /** Function to release token
+        * Called by owner
+        */
+    function releaseToken(uint _initialBlockTimestamp, uint _totalBountyInDay) public onlyOwner {
+        setInitialBlockTimestamp(_initialBlockTimestamp);
+
+        //Mint the total bounty to be given out on daily basis and store it in the DayToken contract
+        if (updateAllBalancesEnabled) {
+            require (bounty > 0);
+            require (_totalBountyInDay > bounty);
+            totalBountyInDay = _totalBountyInDay;
+            mint(this, totalBountyInDay);
+        }
+
+        // Make token transferable
+        releaseTokenTransfer();
     }
     
 }
 
 
-
-
-////////////////// >>>>> Pricing Contracts <<<<< ///////////////////
-
-
-
-/**
- * Interface for defining crowdsale pricing.
- */
-contract PricingStrategy {
-
-  /** Interface declaration. */
-  function isPricingStrategy() public constant returns (bool) {
-    return true;
-  }
-  
-  /** Self check if all references are correctly set.
-   *
-   * Checks that pricing strategy matches crowdsale parameters.
-   */
-  function isSane(address crowdsale) public constant returns (bool) {
-    require(crowdsale != 0); 
-    return true;
-  }
-
-  /**
-   * When somebody tries to buy tokens for X eth, calculate how many tokens they get.
-   *
-   *
-   * @param value - What is the value of the transaction send in as wei
-   * @param decimals - how many decimal units the token has
-   * @return Amount of tokens the investor receives
-   */
-  function calculatePrice(uint value, uint decimals) public constant returns (uint tokenAmount);
-}
-
-
-
-/**
- * Fixed crowdsale pricing - everybody gets the same price.
- */
-contract FlatPricing is PricingStrategy, SafeMathLib {
-
-  /* How many weis one token costs */
-  uint public oneTokenInWei;
-
-  function FlatPricing(uint _oneTokenInWei) {
-    require(_oneTokenInWei > 0);
-    oneTokenInWei = _oneTokenInWei;
-  }
-
-  /**
-   * Calculate the current price for buy in amount.
-   *
-   * 
-   */
-  function calculatePrice(uint value, uint decimals) public constant returns (uint) {
-    uint multiplier = 10 ** decimals;
-    return safeMul(value, multiplier) / oneTokenInWei;
-  }
-
-}
 
 
 ////////////////// >>>>> Wallet Contract <<<<< ///////////////////
@@ -1610,688 +1559,4 @@ contract MultiSigWallet {
             _transactionIds[i - from] = transactionIdsTemp[i];
     }
 }
-
-
-////////////////// >>>>> Crowdsale Contracts <<<<< ///////////////////
-
-
-
-/**
- * Finalize agent defines what happens at the end of succeseful crowdsale.
- *
- * - Allocate tokens for founders, bounties and community
- * - Make tokens transferable
- * - etc.
- */
-contract FinalizeAgent {
-
-  function isFinalizeAgent() public constant returns(bool) {
-    return true;
-  }
-
-  /** Return true if we can run finalizeCrowdsale() properly.
-   *
-   * This is a safety check function that doesn't allow crowdsale to begin
-   * unless the finalizer has been set up properly.
-   */
-  function isSane() public constant returns (bool);
-
-  /** Called once by crowdsale finalize() if the sale was success. */
-  function finalizeCrowdsale();
-
-}
-
-
-/**
- * Abstract base contract for token sales.
- *
- * Handle
- * - start and end dates
- * - accepting investments
- * - minimum funding goal and refund
- * - various statistics during the crowdfund
- * - different pricing strategies
- * - different investment policies (require server side customer id, allow only whitelisted addresses)
- *
- */
-contract Crowdsale is Haltable, SafeMathLib {
-
-  /* Max investment count when we are still allowed to change the multisig address */
-  uint public MAX_INVESTMENTS_BEFORE_MULTISIG_CHANGE = 5;
-
-  /* The token we are selling */
-  DayToken public token;
-
-  /* How we are going to price our offering */
-  PricingStrategy public pricingStrategy;
-
-  /* Post-success callback */
-  FinalizeAgent public finalizeAgent;
-
-  /* tokens will be transfered from this address */
-  address public multisigWallet;
-
-  /* if the funding goal is not reached, investors may withdraw their funds */
-  uint public minimumFundingGoal;
-
-  /* the UNIX timestamp start date of the crowdsale */
-  uint public startsAt;
-
-  /* the UNIX timestamp end date of the crowdsale */
-  uint public endsAt;
-
-  /* the number of tokens already sold through this contract*/
-  uint public tokensSold = 0;
-
-  /* How many wei of funding we have raised */
-  uint public weiRaised = 0;
-
-  /* How many distinct addresses have invested */
-  uint public investorCount = 0;
-
-  /* How much wei we have returned back to the contract after a failed crowdfund. */
-  uint public loadedRefund = 0;
-
-  /* How much wei we have given back to investors.*/
-  uint public weiRefunded = 0;
-
-  /* Has this crowdsale been finalized */
-  bool public finalized;
-
-  /* Do we need to have unique contributor id for each customer */
-  bool public requireCustomerId;
-
-  /* Wei Funding raised during ICO period */
-  uint public weiRaisedIco = 0;
-
-  /* Min and Max contribution during pre-ICO and during ICO   */
-  uint preMinWei;
-  uint preMaxWei;
-  uint minWei;
-  uint maxWei;
-  
-  /**
-    * Do we verify that contributor has been cleared on the server side (accredited investors only).
-    * This method was first used in FirstBlood crowdsale to ensure all contributors have accepted 
-    * terms on sale (on the web).
-    */
-  bool public requiredSignedAddress;
-
-  /* Server side address that signed allowed contributors (Ethereum addresses) that can participate in 
-  the crowdsale */
-  address public signerAddress;
-
-  /** How much ETH each address has invested to this crowdsale */
-  mapping (address => uint256) public investedAmountOf;
-
-  /** How much tokens this crowdsale has credited for each investor address */
-  mapping (address => uint256) public tokenAmountOf;
-
-  /** This is for manual testing for the interaction from owner wallet. 
-    * You can set it to any value and inspect this in blockchain explorer to 
-    * see that crowdsale interaction works. 
-    */
-  uint public ownerTestValue;
-
-  /** State machine
-   *
-   * - Preparing: All contract initialization calls and variables have not been set yet
-   * - Prefunding: We have not passed start time yet
-   * - Funding: Active crowdsale
-   * - Success: Minimum funding goal reached
-   * - Failure: Minimum funding goal not reached before ending time
-   * - Finalized: The finalized has been called and succesfully executed
-   * - Refunding: Refunds are loaded on the contract for reclaim.
-   */
-  enum State{Unknown, Preparing, PreFunding, Funding, Success, Failure, Finalized, Refunding}
-
-  // A new investment was made
-  event Invested(address investor, uint weiAmount, uint tokenAmount, uint128 customerId, 
-    uint contributorId);
-
-  // Refund was processed for a contributor
-  event Refund(address investor, uint weiAmount);
-
-  // The rules were changed what kind of investments we accept
-  event InvestmentPolicyChanged(bool requireCustomerId, bool requiredSignedAddress, address signerAddress);
-
-
-  // Crowdsale end time has been changed
-  event EndsAtChanged(uint endsAt);
-
-  function Crowdsale(address _token, PricingStrategy _pricingStrategy, address _multisigWallet, 
-    uint _start, uint _end, uint _minimumFundingGoal, uint _preMinWei, uint _preMaxWei, 
-    uint _minWei, uint _maxWei) {
-
-    owner = msg.sender;
-
-    token = DayToken(_token);
-
-    setPricingStrategy(_pricingStrategy);
-
-    multisigWallet = _multisigWallet;
-    require(multisigWallet != 0);
-    
-    require(_start != 0);
-    startsAt = _start;
-
-    require(_end != 0);
-    endsAt = _end;
-
-    // Don't mess the dates
-    require(startsAt < endsAt);
-
-    //The token minting of the addresses shouldn't start before ICO ends.
-    require(endsAt <= token.initialBlockTimestamp());
-
-    // Minimum funding goal can be zero
-    minimumFundingGoal = _minimumFundingGoal;
-
-    preMinWei = _preMinWei;
-    preMaxWei = _preMaxWei;
-    minWei = _minWei;
-    maxWei = _maxWei;
-  }
-  
-  /**
-   * Make an investment.
-   *
-   * Crowdsale must be running for one to invest.
-   * We must have not pressed the emergency brake.
-   *
-   * @param receiver The Ethereum address who receives the tokens
-   * @param customerId (optional) UUID v4 to track the successful payments on the server side
-   *
-   */
-  function investInternal(address receiver, uint128 customerId) stopInEmergency private {
-
-    // Determine if it's a good time to accept investment from this participant
-    // Retail participants can only come in when the crowdsale is running
-    require(getState() == State.Funding);
-    uint weiAmount = msg.value;
-    
-    require(weiAmount >= minWei && weiAmount <= maxWei);
-    uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, token.decimals());
-    require(tokenAmount != 0);
-    uint contributorId = 0;
-
-    // if investor not already a contributor and minting addresses are still there, add as contributor
-    if (!token.isValidContributorAddress(receiver) && 
-        token.nextIcoContributorId() <= token.totalPreIcoAddresses() + token.totalIcoAddresses()) {
-      contributorId = token.nextIcoContributorId();
-      token.addContributor(contributorId, receiver, tokenAmount);
-      // increment counter
-      token.incrementIcoContributorId();
-    }
-
-    if (investedAmountOf[receiver] == 0) {
-        // A new investor
-        investorCount++;
-    }
-
-    // Update investor
-    investedAmountOf[receiver] = safeAdd(investedAmountOf[receiver],weiAmount);
-    tokenAmountOf[receiver] = safeAdd(tokenAmountOf[receiver],tokenAmount);
-
-    // Update totals
-    weiRaised = safeAdd(weiRaised,weiAmount);
-    tokensSold = safeAdd(tokensSold,tokenAmount);
-    weiRaisedIco = safeAdd(weiRaisedIco, weiAmount);
-
-    // Check that we did not bust the cap
-    require(!isBreakingCap(weiRaisedIco));
-
-    assignTokens(receiver, tokenAmount);
-
-    // Pocket the money
-    require(multisigWallet.send(weiAmount));
-
-    // Tell us invest was success
-    Invested(receiver, weiAmount, tokenAmount, customerId, contributorId);
-
-  }
-  
-  /**
-   * Preallocate tokens for the early investors.
-   *
-   * Preallocated tokens have been sold before the actual crowdsale opens.
-   * This function mints the tokens and moves the crowdsale needle.
-   *
-   * Investor count is not handled; it is assumed this goes for multiple investors
-   * and the token distribution happens outside the smart contract flow.
-   *
-   * No money is exchanged, as the crowdsale team already have received the payment.
-   *
-   * @param fullTokens tokens as full tokens - decimal places added internally
-   * @param weiPrice Price of a single full token in wei
-   *
-   */
-  function preallocate(address receiver, uint fullTokens, uint weiPrice) onlyOwner public {
-    require(getState() == State.PreFunding || getState() == State.Funding);
-    require(!token.isValidContributorAddress(receiver) && 
-      token.nextPreIcoContributorId() <= token.totalPreIcoAddresses());
-
-    uint tokenAmount = fullTokens * 10**uint(token.decimals());
-    uint weiAmount = weiPrice * fullTokens; // This can be also 0, we give out tokens for free
-
-    require(weiAmount >= preMinWei);
-    require(weiAmount <= preMaxWei);
-
-    weiRaised = safeAdd(weiRaised, weiAmount);
-    tokensSold = safeAdd(tokensSold, tokenAmount);
-
-    token.addContributor(token.nextPreIcoContributorId(), receiver, tokenAmount);
-
-    investedAmountOf[receiver] = safeAdd(investedAmountOf[receiver],weiAmount);
-    tokenAmountOf[receiver] = safeAdd(tokenAmountOf[receiver],tokenAmount);
-
-    assignTokens(receiver, tokenAmount);
-
-    // Tell us invest was success
-    Invested(receiver, weiAmount, tokenAmount, 0, token.nextPreIcoContributorId());
-
-    //increment counter
-    token.incrementPreIcoContributorId();
-  }
-
-  /**
-   * Track who is the customer making the payment so we can send thank you email.
-   */
-  function investWithCustomerId(address addr, uint128 customerId) public payable {
-    require(!requiredSignedAddress);
-    
-    require(customerId != 0);
-    
-    investInternal(addr, customerId);
-  }
-
-  /**
-   * Allow anonymous contributions to this crowdsale.
-   */
-  function invest(address addr) public payable {
-    require(!requireCustomerId);
-    
-    require(!requiredSignedAddress);
-    
-    investInternal(addr, 0);
-  }
-
-  /**
-   * Invest to tokens, recognize the payer.
-   *
-   */
-  function buyWithCustomerId(uint128 customerId) public payable {
-    investWithCustomerId(msg.sender, customerId);
-  }
-
-  /**
-   * The basic entry point to participate in the crowdsale process.
-   *
-   * Pay for funding, get invested tokens back in the sender address.
-   */
-  function buy() public payable {
-    invest(msg.sender);
-  }
-
-  /**
-   * The default entry point to participate the crowdsale process.
-   *
-   * Pay for funding, get invested tokens back in the sender address.
-   */
-  function () public payable {
-    invest(msg.sender);
-  }
-
-  /**
-   * Finalize a succcesful crowdsale.
-   * The owner can trigger a call to the contract that provides post-crowdsale actions, 
-   * like releasing the tokens.
-   */
-  function finalize() public inState(State.Success) onlyOwner stopInEmergency {
-
-    // Already finalized
-    require(!finalized);
-
-    // Finalizing is optional. We only call it if we are given a finalizing agent.
-    if (address(finalizeAgent) != 0) {
-      finalizeAgent.finalizeCrowdsale();
-    }
-
-    finalized = true;
-  }
-
-  /**
-   * Allow to (re)set finalize agent.
-   *
-   * Design choice: no state restrictions on setting this, so that we can fix fat finger mistakes.
-   */
-  function setFinalizeAgent(FinalizeAgent addr) onlyOwner {
-    finalizeAgent = addr;
-
-    // Don't allow setting bad agent
-    require(finalizeAgent.isFinalizeAgent());
-  }
-
-  /**
-   * Set policy do we need to have server-side customer ids for the investments.
-   *
-   */
-  function setRequireCustomerId(bool value) onlyOwner {
-    requireCustomerId = value;
-    InvestmentPolicyChanged(requireCustomerId, requiredSignedAddress, signerAddress);
-  }
-
-  /**
-   * Allow crowdsale owner to close early or extend the crowdsale.
-   *
-   * This is useful e.g. for a manual soft cap implementation:
-   * - after X amount is reached determine manual closing
-   *
-   * This may put the crowdsale to an invalid state,
-   * but we trust owners know what they are doing.
-   */
-  function setEndsAt(uint time) onlyOwner {
-    require(now <= time);
-    endsAt = time;
-    EndsAtChanged(endsAt);
-  }
-
-  /**
-   * Allow to (re)set pricing strategy.
-   * Design choice: no state restrictions on the set, so that we can fix fat finger mistakes.
-   */
-  function setPricingStrategy(PricingStrategy _pricingStrategy) onlyOwner {
-    pricingStrategy = _pricingStrategy;
-
-    // Don't allow setting bad agent
-    require(pricingStrategy.isPricingStrategy());
-  }
-
-  /**
-   * Allow to change the team multisig address in the case of emergency.
-   *
-   * This allows to save a deployed crowdsale wallet in the case the crowdsale has not yet begun
-   * (we have done only few test transactions). After the crowdsale is going
-   * then multisig address stays locked for the safety reasons.
-   */
-  function setMultisig(address addr) public onlyOwner {
-    // Change Multisig wallet address
-    require(investorCount <= MAX_INVESTMENTS_BEFORE_MULTISIG_CHANGE);
-    multisigWallet = addr;
-  }
-
-  /**
-   * Allow load refunds back on the contract for the refunding.
-   *
-   * The team can transfer the funds back on the smart contract in the case the minimum goal 
-   * was not reached.
-   */
-  function loadRefund() public payable inState(State.Failure) {
-    require(msg.value != 0);
-    loadedRefund = safeAdd(loadedRefund, msg.value);
-  }
-
-  /**
-   * Investors can claim refund.
-   */
-  function refund() public inState(State.Refunding) {
-    uint256 weiValue = investedAmountOf[msg.sender];
-    require(weiValue != 0);
-    investedAmountOf[msg.sender] = 0;
-    weiRefunded = safeAdd(weiRefunded,weiValue);
-    Refund(msg.sender, weiValue);
-    require(msg.sender.send(weiValue));
-  }
-
-  /**
-   * @return true if the crowdsale has raised enough money to be a succes
-   */
-  function isMinimumGoalReached() public constant returns (bool reached) {
-    return weiRaised >= minimumFundingGoal;
-  }
-
-  /**
-   * Check if the contract relationship looks good.
-   */
-  function isFinalizerSane() public constant returns (bool sane) {
-    return finalizeAgent.isSane();
-  }
-
-  /**
-   * Check if the contract relationship looks good.
-   */
-  function isPricingSane() public constant returns (bool sane) {
-    return pricingStrategy.isSane(address(this));
-  }
-
-  /**
-   * Crowdfund state machine management.
-   *
-   * We make it a function and do not assign the result to a variable, so there is no chance of the variable being stale.
-   */
-  function getState() public constant returns (State) {
-    if (finalized) return State.Finalized;
-    else if (address(finalizeAgent) == 0) return State.Preparing;
-    else if (!finalizeAgent.isSane()) return State.Preparing;
-    else if (!pricingStrategy.isSane(address(this))) return State.Preparing;
-    else if (block.timestamp < startsAt) return State.PreFunding;
-    else if (block.timestamp <= endsAt) return State.Funding;
-    else if (isMinimumGoalReached()) return State.Success;
-    else if (!isMinimumGoalReached() && weiRaised > 0 && loadedRefund >= weiRaised) return State.Refunding;
-    else return State.Failure;
-  }
-
-  /** This is for manual testing of multisig wallet interaction */
-  function setOwnerTestValue(uint val) onlyOwner {
-    ownerTestValue = val;
-  }
-
-  /** Interface marker. */
-  function isCrowdsale() public constant returns (bool) {
-    return true;
-  }
-
-  //
-  // Modifiers
-  //
-
-  /** Modified allowing execution only if the crowdsale is currently running.  */
-  modifier inState(State state) {
-    require(getState() == state);
-    _;
-  }
-
-
-  //
-  // Abstract functions
-  //
-
-  /**
-   * Check if the current invested breaks our cap rules.
-   *
-   * The child contract must define their own cap setting rules.
-   * We allow a lot of flexibility through different capping strategies (ETH, token count)
-   * Called from invest().
-   * @return true if taking this investment would break our cap rules
-   */
-  function isBreakingCap(uint weiRaisedTotal) constant returns (bool limitBroken);
-
-
-  /**
-   * Create new tokens or transfer issued tokens to the investor depending on the cap model.
-   */
-  function assignTokens(address receiver, uint tokenAmount) private;
-}
-
-
-
-/**
- * ICO crowdsale contract that is capped by Number of addresses (investors).
- *
- * - Tokens are dynamically created during the crowdsale
- *
- */
-contract AddressCappedCrowdsale is Crowdsale {
-
-    /* Maximum amount of wei this crowdsale can raise. */
-    uint public weiIcoCap;
-
-    /** Constructor to initialize all variables, including Crowdsale variables
-    * @param _token Address of the deployed DayToken contract
-    * @param _pricingStrategy Address of the deployed pricing statergy contract (FlatPricing)
-    * @param _multisigWallet Address of the deployed Multisig wallet
-    * @param _start unix timestamp for start of ICO
-    * @param _end unix timestamp for end of ICO
-    * @param _minimumFundingGoal Minimum amount to be raised in Wei
-    * @param _weiIcoCap Hard cap for amount to be raised during ICO in wei
-    * @param _preMinWei Minimum amount, in wei for a contribution during pre-ICO stage
-    * @param _preMaxWei Maximum amount, in Wei for a contribution during pre-ICO stage
-    * @param _minWei Minimum amount, in Wei for a contribution during ICO stage
-    * @param _maxWei Maximum amount, in Wei for a contribution during ICO stage
-    */
-    function AddressCappedCrowdsale(address _token, PricingStrategy _pricingStrategy, 
-        address _multisigWallet, uint _start, uint _end, uint _minimumFundingGoal, uint _weiIcoCap, 
-        uint _preMinWei, uint _preMaxWei, uint _minWei,  uint _maxWei) 
-        
-        Crowdsale(_token, _pricingStrategy, _multisigWallet, _start, _end, _minimumFundingGoal, 
-        _preMinWei, _preMaxWei, _minWei, _maxWei) {  
-        weiIcoCap = _weiIcoCap;
-        token = DayToken(_token);
-    }
-
-    /**
-    * Called from invest() to confirm if the curret investment does not break our cap rule.
-    */
-    function isBreakingCap(uint weiRaisedTotal) constant returns (bool limitBroken) {
-        return weiRaisedTotal > weiIcoCap;
-    }
-
-    /**
-    * Dynamically create tokens and assign them to the investor.
-    */
-    function assignTokens(address receiver, uint tokenAmount) private {
-        token.mint(receiver, tokenAmount);
-    }
-}
-
-
-////////////////// >>>>> FinalizeAgent Contracts <<<<< ///////////////////
-
-
-/**
- * At the end of the successful crowdsale allocate % bonus of tokens to the team.
- * After assigning addresses to team members, assign test addresses 
- * Mint total bounty and store it in the DayToken contract
- * Unlock tokens.
- *
- * BonusAllocationFinal must be set as the minting agent for the MintableToken.
- *
- */
-
- //TODO: Team address and test address cap? 
-contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
-
-  DayToken public token;
-  Crowdsale public crowdsale;
-  /* Total number of addresses for team members */
-  uint public totalTeamAddresses;
-  /* Total number of test addresses */
-  uint public totalTestAddresses;
-
-  /* Number of tokens to be assigned per test address */
-  uint public testAddressTokens;
-  uint public allocatedBonus;
-  /* Percentage of day tokens per team address eg 5% will be passed as 500 */
-  uint public teamBonus;
-  /* Total number of DayTokens to be stored in the DayToken contract as bounty */
-  uint public totalBountyInDay;
-  /** List of team addresses */
-  address[] public teamAddresses;
-  /** List of test addresses*/
-  address[] public testAddresses;
-  /* Stores the id of the next Team contributor */
-  uint public nextTeamContributorId;
-  /* Stores the id of the next Test contributor */
-  uint public nextTestContributorId;
-  
-  event TestAddressAdded(address testAddress, uint id, uint balance);
-  event TeamMemberId(address adr, uint contributorId);
-
-  function BonusFinalizeAgent(DayToken _token, Crowdsale _crowdsale,  address[] _teamAddresses, 
-    address[] _testAddresses, uint _testAddressTokens, uint _teamBonus, uint _totalBountyInDay) {
-    token = _token;
-    crowdsale = _crowdsale;
-
-    //crowdsale address must not be 0
-    require(address(crowdsale) != 0);
-
-    totalTeamAddresses = _teamAddresses.length;
-    teamAddresses = _teamAddresses;
-    teamBonus = _teamBonus;
-
-    totalTestAddresses = _testAddresses.length;
-    testAddresses = _testAddresses;
-    testAddressTokens = _testAddressTokens;
-    totalBountyInDay = _totalBountyInDay;
-
-    //if any of the address is 0 or invalid throw
-    for (uint j = 0; j < totalTeamAddresses; j++) {
-      require(_teamAddresses[j] != 0);
-    }
-
-    nextTeamContributorId = token.totalPreIcoAddresses() + token.totalIcoAddresses() + 1;
-    nextTestContributorId = token.totalPreIcoAddresses() + token.totalIcoAddresses() + 
-      totalTeamAddresses + 1;
-  }
-
-  /* Can we run finalize properly */
-  function isSane() public constant returns (bool) {
-    // check addresses add up
-    uint totalAddresses = token.totalPreIcoAddresses() + token.totalIcoAddresses() + totalTeamAddresses + 
-      totalTestAddresses + token.totalPostIcoAddresses();
-    return (totalAddresses == token.maxAddresses()) && (token.mintAgents(address(this)) == true) && (token.releaseAgent() == address(this));
-  }
-
-  /** Called once by crowdsale finalize() if the sale was success. */
-  function finalizeCrowdsale() {
-
-    // if finalized is not being called from the crowdsale 
-    // contract then throw
-    require(msg.sender == address(crowdsale));
-
-    // get the total sold tokens count.
-    uint tokensSold = crowdsale.tokensSold();
-    
-    //Mint the total bounty to be given out on daily basis and store it in the DayToken contract
-    if (token.updateAllBalancesEnabled()) {
-      token.mint(token, totalBountyInDay);
-    }
-
-    // Calculate team bonus to allocate
-    allocatedBonus = safeMul(tokensSold, teamBonus) / 10000;
-
-    // assign addresses with tokens
-    for (uint i = 0; i < totalTeamAddresses; i++) {
-      token.mint(teamAddresses[i], allocatedBonus);
-      token.addTeamAddress(teamAddresses[i], nextTeamContributorId);
-      TeamMemberId(teamAddresses[i], nextTeamContributorId);
-      nextTeamContributorId++;
-    }
-
-    //Add Test Addresses
-    for (uint j = 0; j < totalTestAddresses; j++) {
-      token.mint(testAddresses[j],testAddressTokens);
-      token.addTeamAddress(testAddresses[j],  nextTestContributorId);
-      TestAddressAdded(testAddresses[j], nextTestContributorId, testAddressTokens);
-      nextTestContributorId++;
-    }
-    
-    // Make token transferable
-    // realease them in the wild
-    // Hell yeah!!! we did it.
-    token.releaseTokenTransfer();
-  }
-}
-
-
   
