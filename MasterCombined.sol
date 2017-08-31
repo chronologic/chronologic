@@ -822,7 +822,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * For public calls.
         * @param _adr address whose balance is to be returned.
         */
-    function balanceOf(address _adr) public constant returns (uint256 balance) {
+    function balanceOf(address _adr) constant returns (uint balance) {
         uint id = idOf[_adr];
         if (id != 0)
             return balanceById(id);
@@ -851,8 +851,6 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
 
     /**
         * Updates balances of all minting addresses.
-        * Returns true/false based on success of update
-        * To be called daily. 
         * Rewards caller with bounty as DAY tokens.
         * For public calls.
         * Logs the ids whose balance could not be updated
@@ -1003,8 +1001,10 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         */
   function addContributor(uint contributorId, address _adr, uint _initialContributionDay) internal onlyOwner {
         require(contributorId <= maxAddresses);
-        //should not be an existing contributor
+        //address should not be an existing contributor
         require(!isValidContributorAddress(_adr));
+        //TimeMint should not be already allocated
+        require(!isValidContributorId(contributorId));
         contributors[contributorId].adr = _adr;
         idOf[_adr] = contributorId;
         setInitialMintingPowerOf(contributorId);
@@ -1189,8 +1189,6 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     }
     
 }
-
-
 
 
 ////////////////// >>>>> Wallet Contract <<<<< ///////////////////
