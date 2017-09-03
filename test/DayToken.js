@@ -67,7 +67,7 @@ contract('DayTokenMock', function(accounts) {
         }
     });
   
-   /it('Creation: should return the correct totalSupply after construction', async function() {
+   it('Creation: should return the correct totalSupply after construction', async function() {
         let totalSupply = (await tokenInstance.totalSupply()).valueOf();
         assert.equal(totalSupply, 10 * tokenInSmallestUnit(792, _tokenDecimals));
     });

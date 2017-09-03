@@ -54,9 +54,6 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     mapping (address => bool) public soldAddresses;
     mapping (address => uint256) public sellingPriceInDayOf;
 
-    /* Stores number of days since minting epoch when all the balances are updated */
-    uint256 public latestAllUpdate;
-
     /* Stores the id of the first  contributor */
     uint256 public firstContributorId;
     /* Stores total Pre + Post ICO TimeMints */
@@ -93,10 +90,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     bool public isInitialBlockTimestampSet;
     /* number of decimals in minting power */
     uint256 public mintingDec; 
-    /* Enable calling UpdateAllBalances() */
-    bool public updateAllBalancesEnabled;
-    /* Bounty to be given to the person calling UpdateAllBalances() */
-    uint256 public bounty;
+
     /* Minimum Balance in Day tokens required to sell a minting address */
     uint256 public minBalanceToSell;
     /* Team address lock down period from issued time, in seconds */
@@ -105,12 +99,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
        if we want to decrease length of a day. default: 84600)*/
     uint256 public DayInSecs;
 
-    /* Total number of DayTokens to be stored in the DayToken contract as bounty */
-    uint public totalBountyInDay;
-
     event UpdatedTokenInformation(string newName, string newSymbol); 
-    event UpdateFailed(uint id); 
-    event UpToDate (bool status);
     event MintingAdrTransferred(address from, address to);
     event ContributorAdded(address adr, uint id);
     event OnSale(uint id, address adr, uint minPriceinDay, uint expiryBlockNumber);
@@ -156,7 +145,6 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         symbol = _symbol;  
         totalSupply = _initialSupply; 
         decimals = _decimals; 
-        totalBountyInDay = 0;
         // Create initially all balance on the team multisig
         balances[owner] = totalSupply; 
         maxAddresses = _maxAddresses;
@@ -183,8 +171,6 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         isInitialBlockTimestampSet = false;
         // use setMintingDec to change this
         mintingDec = 19;
-        latestAllUpdate = 0;
-        updateAllBalancesEnabled = false;
         minBalanceToSell = _minBalanceToSell;
         DayInSecs = _dayInSecs;
         teamLockPeriodInSec = _teamLockPeriodInSec;
@@ -331,15 +317,6 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     }
 
 
-     /**
-        * Returns the amount of DAY tokens minted by the address
-        * @param _adr Address whose total minted is to be returned
-        */
-    function getTotalMinted(address _adr) public constant returns (uint256) {
-        uint id = idOf[_adr];
-        return uint(int(balances[_adr]) - ((int(contributors[id].initialContributionDay)+contributors[id].totalTransferredDay))); 
-    }
-
     /**
         * Calculates and returns the balance based on the minting power, day and phase.
         * Can only be called internally
@@ -413,47 +390,6 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         return balances[adr]; 
     }
 
-    /**
-        * Updates balances of all minting addresses.
-        * Rewards caller with bounty as DAY tokens.
-        * For public calls.
-        * Logs the ids whose balance could not be updated
-        */
-    function updateAllBalances() public {
-        require(updateAllBalancesEnabled);
-        require(isDayTokenActivated());
-        uint today = getDayCount();
-        require(today != latestAllUpdate); 
-
-        for (uint i = 1; i <= maxAddresses; i++) {
-            if (!updateBalanceOf(i))
-                UpdateFailed(i); 
-        }
-
-        latestAllUpdate = today;
-        // award bounty
-        balances[this] = safeSub(balances[this], bounty);
-        balances[msg.sender] = safeAdd(balances[msg.sender],bounty);
-        UpToDate(true); 
-    }
-
-    /**
-        * Used to set bounty reward for caller of updateAllBalances
-        * Can be called only by owner
-        * @param _bounty bounty to be set.
-        */
-    function setBounty(uint256 _bounty) public onlyOwner {
-        bounty = _bounty;
-    }
-
-     /**
-        * Enable/Disable updateAllBalances functionality
-        * Can be called only by owner
-        * @param _isEnabled state to  set.
-        */
-    function enableUpdateAllBalances(bool _isEnabled) public onlyOwner {
-        updateAllBalancesEnabled = _isEnabled;
-    }
 
     /**
         * Returns totalSupply of DAY tokens.
@@ -684,7 +620,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     /** Function to add a team address as a contributor and store it's time issued to calculate vesting period
         * Called by owner
         */
-    function addTeamTimeMInts(address _adr, uint _id, uint _tokens, bool _isTest) public onlyOwner {
+    function addTeamTimeMints(address _adr, uint _id, uint _tokens, bool _isTest) public onlyOwner {
         //check if Id is in range of team Ids
         require(_id >= firstTeamContributorId && _id < firstTeamContributorId + totalTeamContributorIds);
         require(totalTeamContributorIdsAllocated < totalTeamContributorIds);
@@ -737,16 +673,10 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     /** Function to release token
         * Called by owner
         */
-    function releaseToken(uint _initialBlockTimestamp, uint _totalBountyInDay) public onlyOwner {
+    function releaseToken(uint _initialBlockTimestamp) public onlyOwner {
+        require(!released); // check not already released
+        
         setInitialBlockTimestamp(_initialBlockTimestamp);
-
-        //Mint the total bounty to be given out on daily basis and store it in the DayToken contract
-        if (updateAllBalancesEnabled) {
-            require (bounty > 0);
-            require (_totalBountyInDay > bounty);
-            totalBountyInDay = _totalBountyInDay;
-            mint(this, totalBountyInDay);
-        }
 
         // Make token transferable
         releaseTokenTransfer();
