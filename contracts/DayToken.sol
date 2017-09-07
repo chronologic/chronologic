@@ -27,7 +27,6 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
      * initialContributionDay initial contribution of the contributor in wei
      * lastUpdatedOn day count from Minting Epoch when the account balance was last updated
      * mintingPower Initial Minting power of the address
-     * totalTransferredDay Total transferred day tokens: integer. Negative value indicates transfer from
      * expiryBlockNumber Variable to mark end of Minting address sale. Set by user
      * minPriceInDay minimum price of Minting address in Day tokens. Set by user
      * status Selling status Variable for transfer Minting address.
@@ -38,12 +37,14 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         uint256 initialContributionDay;
         uint256 lastUpdatedOn; //Day from Minting Epoch
         uint256 mintingPower;
-        int totalTransferredDay;
         uint expiryBlockNumber;
         uint256 minPriceinDay;
         sellingStatus status;
         uint256 sellingPriceInDay;
     }
+
+    /* Stores maximum days for which minting will happen since minting epoch */
+    uint256 public maxMintingDays = 1095;
 
     /* Mapping to store id of each minting address */
     mapping (address => uint) public idOf;
@@ -199,7 +200,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     /**
     * check if mintining power is activated and Day token and Timemint transfer is enabled
     */
-    function isDayTokenActivated() returns (bool isActivated) {
+    function isDayTokenActivated() constant returns (bool isActivated) {
         return (block.timestamp >= initialBlockTimestamp);
     }
 
@@ -208,7 +209,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     * to check if an id is a valid contributor
     * @param _id contributor id to check.
     */
-    function isValidContributorId(uint _id) returns (bool isValidContributor) {
+    function isValidContributorId(uint _id) constant returns (bool isValidContributor) {
         return (_id > 0 && _id <= maxAddresses && contributors[_id].adr != 0 
             && idOf[contributors[_id].adr] == _id); // cross checking
     }
@@ -217,7 +218,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     * to check if an address is a valid contributor
     * @param _address  contributor address to check.
     */
-    function isValidContributorAddress(address _address) returns (bool isValidContributor) {
+    function isValidContributorAddress(address _address) constant returns (bool isValidContributor) {
         return isValidContributorId(idOf[_address]);
     }
 
@@ -226,7 +227,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     * In case of Team address check if lock-in period is over (returns true for all non team addresses)
     * @param _address team address to check lock in period for.
     */
-    function isTeamLockInPeriodOverIfTeamAddress(address _address) returns (bool isLockInPeriodOver) {
+    function isTeamLockInPeriodOverIfTeamAddress(address _address) constant returns (bool isLockInPeriodOver) {
         isLockInPeriodOver = true;
         if (teamIssuedTimestamp[_address] != 0) {
                 if (block.timestamp - teamIssuedTimestamp[_address] < teamLockPeriodInSec)
@@ -326,8 +327,19 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         */
     function availableBalanceOf(uint256 _id, uint _dayCount) internal returns (uint256) {
         uint256 balance = balances[contributors[_id].adr]; 
-        for (uint i = contributors[_id].lastUpdatedOn + 1; i <= _dayCount; i++) {
-            balance = safeAdd( balance, ( contributors[_id].mintingPower * balance ) / ( 10**(mintingDec + 2) * 2**(getPhaseCount(i)-1) ));
+        uint maxUpdateDays = _dayCount < maxMintingDays ? _dayCount : maxMintingDays;
+        uint i = contributors[_id].lastUpdatedOn + 1;
+        while(i <= maxUpdateDays) {
+             uint phase = getPhaseCount(i);
+             uint phaseEndDay = phase * halvingCycle - 1; // as first day is 0
+             uint constantFactor = contributors[_id].mintingPower / 2**(phase-1);
+
+            for (uint j = i; j <= phaseEndDay && j <= maxUpdateDays; j++) {
+                balance = safeAdd( balance, constantFactor * balance / 10**(mintingDec + 2) );
+            }
+
+            i = j;
+            
         } 
         return balance; 
     }
@@ -343,7 +355,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         if (isValidContributorId(_id)) {
             uint dayCount = getDayCount();
             // proceed only if not already updated today
-            if (contributors[_id].lastUpdatedOn != dayCount) {
+            if (contributors[_id].lastUpdatedOn != dayCount && contributors[_id].lastUpdatedOn < maxMintingDays) {
                 totalSupply = safeSub(totalSupply, balances[contributors[_id].adr]);
                 balances[contributors[_id].adr] = availableBalanceOf(_id, dayCount);
                 totalSupply = safeAdd(totalSupply, balances[contributors[_id].adr]);
@@ -390,25 +402,11 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         return balances[adr]; 
     }
 
-
     /**
         * Returns totalSupply of DAY tokens.
         */
     function getTotalSupply() public constant returns (uint) {
         return totalSupply;
-    }
-
-    /**
-        * Update totalTransferredDay if valid contributor
-        * @param _adr address whose totalTransferredDay is to be updated
-        * @param _value Number of Day tokens to be updated, negative if to be subtracted
-        */
-    function updateTotalTransferredDay(address _adr, int _value) internal {
-        uint id = idOf[_adr];
-        if (isValidContributorId(id)) {
-            updateBalanceOf(id);
-            contributors[id].totalTransferredDay = contributors[id].totalTransferredDay + int(-(_value));
-        } 
     }
 
     /**
@@ -422,12 +420,12 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         // if Team address, check if lock-in period is over
         require(isTeamLockInPeriodOverIfTeamAddress(msg.sender));
 
+        updateBalanceOf(idOf[msg.sender]);
+
         // Check sender account has enough balance and transfer amount is non zero
         require ( balanceOf(msg.sender) >= _value && _value != 0 ); 
-         
-        updateTotalTransferredDay(msg.sender, int(-(_value)));
-
-        updateTotalTransferredDay(_to, int(_value));
+        
+        updateBalanceOf(idOf[_to]);
 
         balances[msg.sender] = safeSub(balances[msg.sender], _value); 
         balances[_to] = safeAdd(balances[_to], _value); 
@@ -448,13 +446,13 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
 
         uint _allowance = allowed[_from][msg.sender];
 
+        updateBalanceOf(idOf[_from]);
+
         // Check from account has enough balance, transfer amount is non zero 
         // and _value is allowed to be transferred
         require ( balanceOf(_from) >= _value && _value != 0  &&  _value <= _allowance); 
 
-        updateTotalTransferredDay(_from, int(-(_value)));
-
-        updateTotalTransferredDay(_to, int(_value));
+        updateBalanceOf(idOf[_to]);
 
         allowed[_from][msg.sender] = safeSub(_allowance, _value);
         balances[_from] = safeSub(balances[_from], _value);
@@ -487,7 +485,6 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         contributors[id].initialContributionDay = 0;
         // needed as id is assigned to new address
         contributors[id].lastUpdatedOn = getDayCount();
-        contributors[id].totalTransferredDay = int(balances[_to]);
         contributors[id].expiryBlockNumber = 0;
         contributors[id].status = sellingStatus.NOTONSALE;
         MintingAdrTransferred(_from, _to);
@@ -540,7 +537,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
 
     /** Function to be called by any user to get a list of all on sale addresses
         */
-    function getOnSaleAddresses() constant public {
+    function getOnSaleAddresses() public {
         for(uint i=1; i <= maxAddresses; i++)
         {
             if (isValidContributorId(i)) {
