@@ -38,9 +38,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         uint256 lastUpdatedOn; //Day from Minting Epoch
         uint256 mintingPower;
         uint expiryBlockNumber;
-        uint256 minPriceinDay;
+        uint256 minPriceInDay;
         sellingStatus status;
-        uint256 sellingPriceInDay;
     }
 
     /* Stores maximum days for which minting will happen since minting epoch */
@@ -103,7 +102,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     event UpdatedTokenInformation(string newName, string newSymbol); 
     event MintingAdrTransferred(address from, address to);
     event ContributorAdded(address adr, uint id);
-    event OnSale(uint id, address adr, uint minPriceinDay, uint expiryBlockNumber);
+    event OnSale(uint id, address adr, uint minPriceInDay, uint expiryBlockNumber);
     event PostInvested(address investor, uint weiAmount, uint tokenAmount, uint customerId, uint contributorId);
     
     event TeamAddressAdded(address teamAddress, uint id);
@@ -251,6 +250,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         * When token is released to be transferable, enforce no new tokens can be created.
         */
     function releaseTokenTransfer() public onlyOwner {
+        require(isInitialBlockTimestampSet);
         mintingFinished = true; 
         super.releaseTokenTransfer(); 
     }
@@ -486,6 +486,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         // needed as id is assigned to new address
         contributors[id].lastUpdatedOn = getDayCount();
         contributors[id].expiryBlockNumber = 0;
+        contributors[id].minPriceInDay = 0;
         contributors[id].status = sellingStatus.NOTONSALE;
         MintingAdrTransferred(_from, _to);
         return true;
@@ -506,6 +507,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         idOf[_adr] = contributorId;
         setInitialMintingPowerOf(contributorId);
         contributors[contributorId].initialContributionDay = _initialContributionDay;
+        contributors[contributorId].lastUpdatedOn = getDayCount();
         ContributorAdded(_adr, contributorId);
         contributors[contributorId].status = sellingStatus.NOTONSALE;
     }
@@ -527,7 +529,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         // update balance of sender address before checking for minimum required balance
         updateBalanceOf(id);
         require(balances[msg.sender] >= minBalanceToSell);
-        contributors[id].minPriceinDay = _minPriceInDay;
+        contributors[id].minPriceInDay = _minPriceInDay;
         contributors[id].expiryBlockNumber = _expiryBlockNumber;
         contributors[id].status = sellingStatus.ONSALE;
         balances[msg.sender] = safeSub(balances[msg.sender], minBalanceToSell);
@@ -537,7 +539,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
 
     /** Function to be called by any user to get a list of all on sale addresses
         */
-    function getOnSaleAddresses() public {
+    function listOnSaleAddresses() public {
         for(uint i=1; i <= maxAddresses; i++)
         {
             if (isValidContributorId(i)) {
@@ -545,7 +547,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
                     contributors[i].status = sellingStatus.EXPIRED;
                 }
                 if(contributors[i].status == sellingStatus.ONSALE){
-                    OnSale(i, contributors[i].adr, contributors[i].minPriceinDay, contributors[i].expiryBlockNumber);
+                    OnSale(i, contributors[i].adr, contributors[i].minPriceInDay, contributors[i].expiryBlockNumber);
                 }
             }
         }
@@ -563,7 +565,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         }
         address soldAddress = contributors[_offerId].adr;
         require(contributors[_offerId].status == sellingStatus.ONSALE);
-        require(_offerInDay >= contributors[_offerId].minPriceinDay);
+        require(_offerInDay >= contributors[_offerId].minPriceInDay);
         // first get the offered DayToken in the token contract & 
         // then transfer the total sum (minBalanceToSend+_offerInDay) to the seller
         balances[msg.sender] = safeSub(balances[msg.sender], _offerInDay);
@@ -579,7 +581,6 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     /** Function to allow seller to get back their deposited amount of day tokens(minBalanceToSell) and 
         * offer made by buyer after successful sale.
         * Throws if sale is not successful
-        * Resets all sale-related variables to 0 and status to NOTONSALE
         */
     function fetchSuccessfulSaleProceed() public  returns(bool) {
         require(soldAddresses[msg.sender] == true);
@@ -608,7 +609,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         updateBalanceOf(id);
         balances[msg.sender] = safeAdd(balances[msg.sender],minBalanceToSell);
         contributors[id].status = sellingStatus.NOTONSALE;
-        contributors[id].minPriceinDay = 0;
+        contributors[id].minPriceInDay = 0;
         contributors[id].expiryBlockNumber = 0;
         return true;
     }
