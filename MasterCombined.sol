@@ -908,7 +908,8 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     event UpdatedTokenInformation(string newName, string newSymbol); 
     event MintingAdrTransferred(address from, address to);
     event ContributorAdded(address adr, uint id);
-    event OnSale(uint id, address adr, uint minPriceInDay, uint expiryBlockNumber);
+    event TimeMintOnSale(uint id, address seller, uint minPriceInDay, uint expiryBlockNumber);
+    event TimeMintSold(uint id, address buyer, uint offerInDay);
     event PostInvested(address investor, uint weiAmount, uint tokenAmount, uint customerId, uint contributorId);
     
     event TeamAddressAdded(address teamAddress, uint id);
@@ -1269,6 +1270,115 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         return true;
     }
 
+
+    /** 
+        * Add any contributor structure (For every kind of contributors: Team/Pre-ICO/ICO/Test)
+        * @param _adr Address of the contributor to be added  
+        * @param _initialContributionDay Initial Contribution of the contributor to be added
+        */
+  function addContributor(uint contributorId, address _adr, uint _initialContributionDay) internal onlyOwner {
+        require(contributorId <= maxAddresses);
+        //address should not be an existing contributor
+        require(!isValidContributorAddress(_adr));
+        //TimeMint should not be already allocated
+        require(!isValidContributorId(contributorId));
+        contributors[contributorId].adr = _adr;
+        idOf[_adr] = contributorId;
+        setInitialMintingPowerOf(contributorId);
+        contributors[contributorId].initialContributionDay = _initialContributionDay;
+        contributors[contributorId].lastUpdatedOn = getDayCount();
+        ContributorAdded(_adr, contributorId);
+        contributors[contributorId].status = sellingStatus.NOTONSALE;
+    }
+
+
+    /** Function to be called by minting addresses in order to sell their address
+        * @param _minPriceInDay Minimum price in DAY tokens set by the seller
+        * @param _expiryBlockNumber Expiry Block Number set by the seller
+        */
+    function sellMintingAddress(uint256 _minPriceInDay, uint _expiryBlockNumber) public returns (bool) {
+        require(isDayTokenActivated());
+        require(_expiryBlockNumber > block.number);
+
+        // if Team address, check if lock-in period is over
+        require(isTeamLockInPeriodOverIfTeamAddress(msg.sender));
+
+        uint id = idOf[msg.sender];
+        require(contributors[id].status == sellingStatus.NOTONSALE);
+
+        // update balance of sender address before checking for minimum required balance
+        updateBalanceOf(id);
+        require(balances[msg.sender] >= minBalanceToSell);
+        contributors[id].minPriceInDay = _minPriceInDay;
+        contributors[id].expiryBlockNumber = _expiryBlockNumber;
+        contributors[id].status = sellingStatus.ONSALE;
+        balances[msg.sender] = safeSub(balances[msg.sender], minBalanceToSell);
+        balances[this] = safeAdd(balances[this], minBalanceToSell);
+        TimeMintOnSale(id, msg.sender, contributors[id].minPriceInDay, contributors[id].expiryBlockNumber);
+        return true;
+    }
+
+
+    /** Function to be called by any user to get a list of all On Sale TimeMints
+        */
+    function getOnSaleIds() constant public returns(uint[]) {
+        uint[] memory idsOnSale = new uint[](maxAddresses);
+        uint j = 0;
+        for(uint i=1; i <= maxAddresses; i++) {
+
+            if ( isValidContributorId(i) &&
+                block.number <= contributors[i].expiryBlockNumber && 
+                contributors[i].status == sellingStatus.ONSALE ) {
+                    idsOnSale[j] = i;
+                    j++;     
+            }
+            
+        }
+        return idsOnSale;
+    }
+
+
+    /** Function to be called by any user to get status of a Time Mint.
+        * returns status 0 - Not on sale, 1 - Expired, 2 - On sale,
+        * @param _id ID number of the Time Mint 
+        */
+    function getSellingStatus(uint _id) constant public returns(sellingStatus status) {
+        require(isValidContributorId(_id));
+        status = contributors[_id].status;
+        if ( block.number > contributors[_id].expiryBlockNumber && 
+                status == sellingStatus.ONSALE )
+            status = sellingStatus.EXPIRED;
+
+        return status;
+    }
+
+    /** Function to be called by any user to buy a onsale address by offering an amount
+        * @param _offerId ID number of the address to be bought by the buyer
+        * @param _offerInDay Offer given by the buyer in number of DAY tokens
+        */
+    function buyMintingAddress(uint _offerId, uint256 _offerInDay) public returns(bool){
+        if (contributors[_offerId].status == sellingStatus.ONSALE 
+            && block.number > contributors[_offerId].expiryBlockNumber)
+        {
+            contributors[_offerId].status = sellingStatus.EXPIRED;
+        }
+        address soldAddress = contributors[_offerId].adr;
+        require(contributors[_offerId].status == sellingStatus.ONSALE);
+        require(_offerInDay >= contributors[_offerId].minPriceInDay);
+        // first get the offered DayToken in the token contract & 
+        // then transfer the total sum (minBalanceToSend+_offerInDay) to the seller
+        balances[msg.sender] = safeSub(balances[msg.sender], _offerInDay);
+        balances[this] = safeAdd(balances[this], _offerInDay);
+        if(transferMintingAddress(contributors[_offerId].adr, msg.sender)) {
+            //mark the offer as sold & let seller pull the proceed to their own account.
+            sellingPriceInDayOf[soldAddress] = _offerInDay;
+            soldAddresses[soldAddress] = true; 
+            TimeMintSold(_offerId, msg.sender, _offerInDay);  
+        }
+        return true;
+    }
+
+
     /**
         * Transfer minting address from one user to another
         * Gives the transfer-to address, the id of the original address
@@ -1298,91 +1408,6 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         return true;
     }
 
-    /** 
-        * Add any contributor structure (For every kind of contributors: Team/Pre-ICO/ICO/Test)
-        * @param _adr Address of the contributor to be added  
-        * @param _initialContributionDay Initial Contribution of the contributor to be added
-        */
-  function addContributor(uint contributorId, address _adr, uint _initialContributionDay) internal onlyOwner {
-        require(contributorId <= maxAddresses);
-        //address should not be an existing contributor
-        require(!isValidContributorAddress(_adr));
-        //TimeMint should not be already allocated
-        require(!isValidContributorId(contributorId));
-        contributors[contributorId].adr = _adr;
-        idOf[_adr] = contributorId;
-        setInitialMintingPowerOf(contributorId);
-        contributors[contributorId].initialContributionDay = _initialContributionDay;
-        contributors[contributorId].lastUpdatedOn = getDayCount();
-        ContributorAdded(_adr, contributorId);
-        contributors[contributorId].status = sellingStatus.NOTONSALE;
-    }
-
-
-    /** Function to be called by minting addresses in order to sell their address
-        * @param _minPriceInDay Minimum price in DAY tokens set by the seller
-        * @param _expiryBlockNumber Expiry Block Number set by the seller
-        */
-    function sellMintingAddress(uint256 _minPriceInDay, uint _expiryBlockNumber) public returns (bool) {
-        require(isDayTokenActivated());
-
-        // if Team address, check if lock-in period is over
-        require(isTeamLockInPeriodOverIfTeamAddress(msg.sender));
-
-        uint id = idOf[msg.sender];
-        require(contributors[id].status == sellingStatus.NOTONSALE);
-
-        // update balance of sender address before checking for minimum required balance
-        updateBalanceOf(id);
-        require(balances[msg.sender] >= minBalanceToSell);
-        contributors[id].minPriceInDay = _minPriceInDay;
-        contributors[id].expiryBlockNumber = _expiryBlockNumber;
-        contributors[id].status = sellingStatus.ONSALE;
-        balances[msg.sender] = safeSub(balances[msg.sender], minBalanceToSell);
-        balances[this] = safeAdd(balances[this], minBalanceToSell);
-        return true;
-    }
-
-    /** Function to be called by any user to get a list of all on sale addresses
-        */
-    function listOnSaleAddresses() public {
-        for(uint i=1; i <= maxAddresses; i++)
-        {
-            if (isValidContributorId(i)) {
-                if(contributors[i].expiryBlockNumber!=0 && block.number > contributors[i].expiryBlockNumber ){
-                    contributors[i].status = sellingStatus.EXPIRED;
-                }
-                if(contributors[i].status == sellingStatus.ONSALE){
-                    OnSale(i, contributors[i].adr, contributors[i].minPriceInDay, contributors[i].expiryBlockNumber);
-                }
-            }
-        }
-    }
-
-    /** Function to be called by any user to buy a onsale address by offering an amount
-        * @param _offerId ID number of the address to be bought by the buyer
-        * @param _offerInDay Offer given by the buyer in number of DAY tokens
-        */
-    function buyMintingAddress(uint _offerId, uint256 _offerInDay) public returns(bool){
-        if(contributors[_offerId].status != sellingStatus.NOTONSALE 
-            && block.number > contributors[_offerId].expiryBlockNumber)
-        {
-            contributors[_offerId].status = sellingStatus.EXPIRED;
-        }
-        address soldAddress = contributors[_offerId].adr;
-        require(contributors[_offerId].status == sellingStatus.ONSALE);
-        require(_offerInDay >= contributors[_offerId].minPriceInDay);
-        // first get the offered DayToken in the token contract & 
-        // then transfer the total sum (minBalanceToSend+_offerInDay) to the seller
-        balances[msg.sender] = safeSub(balances[msg.sender], _offerInDay);
-        balances[this] = safeAdd(balances[this], _offerInDay);
-        if(transferMintingAddress(contributors[_offerId].adr, msg.sender)) {
-            //mark the offer as sold & let seller pull the proceed to their own account.
-            sellingPriceInDayOf[soldAddress] = _offerInDay;
-            soldAddresses[soldAddress] = true; 
-        }
-        return true;
-    }
 
     /** Function to allow seller to get back their deposited amount of day tokens(minBalanceToSell) and 
         * offer made by buyer after successful sale.
