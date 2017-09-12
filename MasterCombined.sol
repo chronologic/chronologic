@@ -1220,6 +1220,23 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         return totalSupply;
     }
 
+    /** Function to update balance of a Timemint
+        * returns true if balance updated, false otherwise
+        * @param _id TimeMint to update
+        */
+    function updateTimeMintBalance(uint _id) public returns (bool) {
+        require(isDayTokenActivated());
+        return updateBalanceOf(_id);
+    }
+
+    /** Function to update balance of sender's Timemint
+        * returns true if balance updated, false otherwise
+        */
+    function updateMyTimeMintBalance() public returns (bool) {
+        require(isDayTokenActivated());
+        return updateBalanceOf(idOf[msg.sender]);
+    }
+
     /**
         * Standard ERC20 function overidden.
         * Used to transfer day tokens from caller's address to another
