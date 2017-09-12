@@ -100,7 +100,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
     uint256 public DayInSecs;
 
     event UpdatedTokenInformation(string newName, string newSymbol); 
-    event MintingAdrTransferred(address from, address to);
+    event MintingAdrTransferred(uint id, address from, address to);
     event ContributorAdded(address adr, uint id);
     event TimeMintOnSale(uint id, address seller, uint minPriceInDay, uint expiryBlockNumber);
     event TimeMintSold(uint id, address buyer, uint offerInDay);
@@ -357,10 +357,14 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
             uint dayCount = getDayCount();
             // proceed only if not already updated today
             if (contributors[_id].lastUpdatedOn != dayCount && contributors[_id].lastUpdatedOn < maxMintingDays) {
-                totalSupply = safeSub(totalSupply, balances[contributors[_id].adr]);
-                balances[contributors[_id].adr] = availableBalanceOf(_id, dayCount);
-                totalSupply = safeAdd(totalSupply, balances[contributors[_id].adr]);
+                address adr = contributors[_id].adr;
+                uint oldBalance = balances[adr];
+                totalSupply = safeSub(totalSupply, oldBalance);
+                uint newBalance = availableBalanceOf(_id, dayCount);
+                balances[adr] = newBalance;
+                totalSupply = safeAdd(totalSupply, newBalance);
                 contributors[_id].lastUpdatedOn = dayCount;
+                Transfer(0, adr, newBalance - oldBalance);
                 return true; 
             }
         }
@@ -508,6 +512,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         contributors[id].status = sellingStatus.ONSALE;
         balances[msg.sender] = safeSub(balances[msg.sender], minBalanceToSell);
         balances[this] = safeAdd(balances[this], minBalanceToSell);
+        Transfer(msg.sender, this, minBalanceToSell);
         TimeMintOnSale(id, msg.sender, contributors[id].minPriceInDay, contributors[id].expiryBlockNumber);
         return true;
     }
@@ -563,6 +568,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         // then transfer the total sum (minBalanceToSend+_offerInDay) to the seller
         balances[msg.sender] = safeSub(balances[msg.sender], _offerInDay);
         balances[this] = safeAdd(balances[this], _offerInDay);
+        Transfer(msg.sender, this, _offerInDay);
         if(transferMintingAddress(contributors[_offerId].adr, msg.sender)) {
             //mark the offer as sold & let seller pull the proceed to their own account.
             sellingPriceInDayOf[soldAddress] = _offerInDay;
@@ -598,7 +604,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         contributors[id].expiryBlockNumber = 0;
         contributors[id].minPriceInDay = 0;
         contributors[id].status = sellingStatus.NOTONSALE;
-        MintingAdrTransferred(_from, _to);
+        MintingAdrTransferred(id, _from, _to);
         return true;
     }
 
@@ -614,6 +620,7 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         uint saleProceed = safeAdd(minBalanceToSell, sellingPriceInDayOf[msg.sender]);
         balances[this] = safeSub(balances[this], saleProceed);
         balances[msg.sender] = safeAdd(balances[msg.sender], saleProceed);
+        Transfer(this, msg.sender, saleProceed);
         return true;
                 
     }
@@ -632,10 +639,11 @@ contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken {
         balances[this] = safeSub(balances[this], minBalanceToSell);
         // update balance of seller address before refunding
         updateBalanceOf(id);
-        balances[msg.sender] = safeAdd(balances[msg.sender],minBalanceToSell);
+        balances[msg.sender] = safeAdd(balances[msg.sender], minBalanceToSell);
         contributors[id].status = sellingStatus.NOTONSALE;
         contributors[id].minPriceInDay = 0;
         contributors[id].expiryBlockNumber = 0;
+        Transfer(this, msg.sender, minBalanceToSell);
         return true;
     }
 
