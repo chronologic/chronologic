@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 import "./SafeMathLib.sol";
 import "./Haltable.sol";
@@ -19,7 +19,7 @@ import "./DayToken.sol";
  * - different investment policies (require server side customer id, allow only whitelisted addresses)
  *
  */
-contract Crowdsale is Haltable, SafeMathLib{
+contract Crowdsale is Haltable, SafeMathLib {
 
   /* Max investment count when we are still allowed to change the multisig address */
   uint public MAX_INVESTMENTS_BEFORE_MULTISIG_CHANGE = 5;
@@ -66,25 +66,24 @@ contract Crowdsale is Haltable, SafeMathLib{
   /* Do we need to have unique contributor id for each customer */
   bool public requireCustomerId;
 
-  /* Maximum number of addresses on sale for Pre-ICO */
-  uint public maxPreAddresses;
-
   /* Wei Funding raised during ICO period */
   uint public weiRaisedIco = 0;
 
   /* Min and Max contribution during pre-ICO and during ICO   */
-  uint preMinWei;
-  uint preMaxWei;
-  uint minWei;
-  uint maxWei;
+  uint public preMinWei;
+  uint public preMaxWei;
+  uint public minWei;
+  uint public maxWei;
   
   /**
     * Do we verify that contributor has been cleared on the server side (accredited investors only).
-    * This method was first used in FirstBlood crowdsale to ensure all contributors have accepted terms on sale (on the web).
+    * This method was first used in FirstBlood crowdsale to ensure all contributors have accepted 
+    * terms on sale (on the web).
     */
   bool public requiredSignedAddress;
 
-  /* Server side address that signed allowed contributors (Ethereum addresses) that can participate the crowdsale */
+  /* Server side address that signed allowed contributors (Ethereum addresses) that can participate in 
+  the crowdsale */
   address public signerAddress;
 
   /** How much ETH each address has invested to this crowdsale */
@@ -93,10 +92,10 @@ contract Crowdsale is Haltable, SafeMathLib{
   /** How much tokens this crowdsale has credited for each investor address */
   mapping (address => uint256) public tokenAmountOf;
 
-  /** Addresses that are allowed to invest even before ICO offical opens. For testing, for ICO partners, etc. */
-  mapping (address => bool) public earlyParticipantWhitelist;
-
-  /** This is for manul testing for the interaction from owner wallet. You can set it to any value and inspect this in blockchain explorer to see that crowdsale interaction works. */
+  /** This is for manual testing for the interaction from owner wallet. 
+    * You can set it to any value and inspect this in blockchain explorer to 
+    * see that crowdsale interaction works. 
+    */
   uint public ownerTestValue;
 
   /** State machine
@@ -112,7 +111,8 @@ contract Crowdsale is Haltable, SafeMathLib{
   enum State{Unknown, Preparing, PreFunding, Funding, Success, Failure, Finalized, Refunding}
 
   // A new investment was made
-  event Invested(address investor, uint weiAmount, uint tokenAmount, uint128 customerId, uint contributorId);
+  event Invested(address investor, uint weiAmount, uint tokenAmount, uint128 customerId, 
+    uint contributorId);
 
   // Refund was processed for a contributor
   event Refund(address investor, uint weiAmount);
@@ -120,13 +120,13 @@ contract Crowdsale is Haltable, SafeMathLib{
   // The rules were changed what kind of investments we accept
   event InvestmentPolicyChanged(bool requireCustomerId, bool requiredSignedAddress, address signerAddress);
 
-  // Address early participation whitelist status changed
-  event Whitelisted(address addr, bool status);
 
   // Crowdsale end time has been changed
   event EndsAtChanged(uint endsAt);
 
-  function Crowdsale(address _token, PricingStrategy _pricingStrategy, address _multisigWallet, uint _start, uint _end, uint _minimumFundingGoal, uint _preMinWei, uint _preMaxWei, uint _maxWei, uint _maxPreAddresses) {
+  function Crowdsale(address _token, PricingStrategy _pricingStrategy, address _multisigWallet, 
+    uint _start, uint _end, uint _minimumFundingGoal, uint _preMinWei, uint _preMaxWei, 
+    uint _minWei, uint _maxWei) {
 
     owner = msg.sender;
 
@@ -135,15 +135,12 @@ contract Crowdsale is Haltable, SafeMathLib{
     setPricingStrategy(_pricingStrategy);
 
     multisigWallet = _multisigWallet;
-   
+    require(multisigWallet != 0);
+    
     require(_start != 0);
-
-
     startsAt = _start;
 
     require(_end != 0);
-
-
     endsAt = _end;
 
     // Don't mess the dates
@@ -157,17 +154,10 @@ contract Crowdsale is Haltable, SafeMathLib{
 
     preMinWei = _preMinWei;
     preMaxWei = _preMaxWei;
+    minWei = _minWei;
     maxWei = _maxWei;
-    maxPreAddresses = _maxPreAddresses;
   }
-
-  /**
-   * Don't expect to just send in money and get tokens.
-   */
-  function() payable {
-    throw;
-  }
-
+  
   /**
    * Make an investment.
    *
@@ -181,24 +171,25 @@ contract Crowdsale is Haltable, SafeMathLib{
   function investInternal(address receiver, uint128 customerId) stopInEmergency private {
 
     // Determine if it's a good time to accept investment from this participant
-    if(getState() == State.Funding) {
-      // Retail participants can only come in when the crowdsale is running
-      // pass
-    } else {
-      // Unwanted state
-      throw;
-    }
-    
+    // Retail participants can only come in when the crowdsale is running
+    require(getState() == State.Funding);
     uint weiAmount = msg.value;
-    DayToken dayToken = DayToken(token);
-    require(dayToken.latestContributerId() >= 333);
-    minWei = calculateMinPrice();
+    
     require(weiAmount >= minWei && weiAmount <= maxWei);
-    uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, weiRaised, tokensSold, receiver, token.decimals());
+    uint tokenAmount = pricingStrategy.calculatePrice(weiAmount, token.decimals());
     require(tokenAmount != 0);
-    // Add a contributor structure
-    uint id = dayToken.addContributor(receiver, weiAmount);
-    if(investedAmountOf[receiver] == 0) {
+    uint contributorId = 0;
+
+    // if investor not already a contributor and minting addresses are still there, add as contributor
+    if (!token.isValidContributorAddress(receiver) && 
+        token.nextIcoContributorId() <= token.totalPreIcoAddresses() + token.totalIcoAddresses()) {
+      contributorId = token.nextIcoContributorId();
+      token.addContributor(contributorId, receiver, tokenAmount);
+      // increment counter
+      token.incrementIcoContributorId();
+    }
+
+    if (investedAmountOf[receiver] == 0) {
         // A new investor
         investorCount++;
     }
@@ -213,36 +204,18 @@ contract Crowdsale is Haltable, SafeMathLib{
     weiRaisedIco = safeAdd(weiRaisedIco, weiAmount);
 
     // Check that we did not bust the cap
-    require(!isBreakingCap(weiAmount, tokenAmount, weiRaisedIco, tokensSold));
+    require(!isBreakingCap(weiRaisedIco));
 
     assignTokens(receiver, tokenAmount);
 
     // Pocket the money
-    if(!multisigWallet.send(weiAmount)) throw;
+    require(multisigWallet.send(weiAmount));
 
     // Tell us invest was success
-    Invested(receiver, weiAmount, tokenAmount, customerId, id);
+    Invested(receiver, weiAmount, tokenAmount, customerId, contributorId);
+
   }
-  function calculateMinPrice() returns (uint256){
-    DayToken dayToken = DayToken(token);
-    uint256 minPrice;
-    uint256 id = dayToken.latestContributerId();
-    if(id >= 33 && id <= 38){
-      minPrice = 88;
-    }
-    else if(id >= 39 && id<=88){
-      minPrice = 33;
-    }
-    else if(id >= 89 && id <= 333){
-      minPrice = 8;
-    }
-    else if(id >= 334 && id <= 888){
-      minPrice = 3;
-    }
-    else {
-      minPrice = 1;
-    }
-  }
+  
   /**
    * Preallocate tokens for the early investors.
    *
@@ -259,6 +232,9 @@ contract Crowdsale is Haltable, SafeMathLib{
    *
    */
   function preallocate(address receiver, uint fullTokens, uint weiPrice) onlyOwner public {
+    require(getState() == State.PreFunding || getState() == State.Funding);
+    require(!token.isValidContributorAddress(receiver) && 
+      token.nextPreIcoContributorId() <= token.totalPreIcoAddresses());
 
     uint tokenAmount = fullTokens * 10**uint(token.decimals());
     uint weiAmount = weiPrice * fullTokens; // This can be also 0, we give out tokens for free
@@ -266,19 +242,21 @@ contract Crowdsale is Haltable, SafeMathLib{
     require(weiAmount >= preMinWei);
     require(weiAmount <= preMaxWei);
 
-    weiRaised = safeAdd(weiRaised,weiAmount);
-    tokensSold = safeAdd(tokensSold,tokenAmount);
+    weiRaised = safeAdd(weiRaised, weiAmount);
+    tokensSold = safeAdd(tokensSold, tokenAmount);
 
-    DayToken dayToken = DayToken(token);
-    uint id = dayToken.addContributor(receiver, weiAmount);
-    
+    token.addContributor(token.nextPreIcoContributorId(), receiver, tokenAmount);
+
     investedAmountOf[receiver] = safeAdd(investedAmountOf[receiver],weiAmount);
     tokenAmountOf[receiver] = safeAdd(tokenAmountOf[receiver],tokenAmount);
 
     assignTokens(receiver, tokenAmount);
 
     // Tell us invest was success
-    Invested(receiver, weiAmount, tokenAmount, 0, id);
+    Invested(receiver, weiAmount, tokenAmount, 0, token.nextPreIcoContributorId());
+
+    //increment counter
+    token.incrementPreIcoContributorId();
   }
 
   /**
@@ -312,7 +290,7 @@ contract Crowdsale is Haltable, SafeMathLib{
   }
 
   /**
-   * The basic entry point to participate the crowdsale process.
+   * The basic entry point to participate in the crowdsale process.
    *
    * Pay for funding, get invested tokens back in the sender address.
    */
@@ -321,9 +299,18 @@ contract Crowdsale is Haltable, SafeMathLib{
   }
 
   /**
-   * Finalize a succcesful crowdsale.
+   * The default entry point to participate the crowdsale process.
    *
-   * The owner can trigger a call the contract that provides post-crowdsale actions, like releasing the tokens.
+   * Pay for funding, get invested tokens back in the sender address.
+   */
+  function () public payable {
+    invest(msg.sender);
+  }
+
+  /**
+   * Finalize a succcesful crowdsale.
+   * The owner can trigger a call to the contract that provides post-crowdsale actions, 
+   * like releasing the tokens.
    */
   function finalize() public inState(State.Success) onlyOwner stopInEmergency {
 
@@ -331,7 +318,7 @@ contract Crowdsale is Haltable, SafeMathLib{
     require(!finalized);
 
     // Finalizing is optional. We only call it if we are given a finalizing agent.
-    if(address(finalizeAgent) != 0) {
+    if (address(finalizeAgent) != 0) {
       finalizeAgent.finalizeCrowdsale();
     }
 
@@ -367,21 +354,15 @@ contract Crowdsale is Haltable, SafeMathLib{
    *
    * This may put the crowdsale to an invalid state,
    * but we trust owners know what they are doing.
-   *
    */
   function setEndsAt(uint time) onlyOwner {
-
-    if(now > time) {
-      throw; // Don't change past
-    }
-
+    require(now <= time);
     endsAt = time;
     EndsAtChanged(endsAt);
   }
 
   /**
    * Allow to (re)set pricing strategy.
-   *
    * Design choice: no state restrictions on the set, so that we can fix fat finger mistakes.
    */
   function setPricingStrategy(PricingStrategy _pricingStrategy) onlyOwner {
@@ -399,23 +380,20 @@ contract Crowdsale is Haltable, SafeMathLib{
    * then multisig address stays locked for the safety reasons.
    */
   function setMultisig(address addr) public onlyOwner {
-
     // Change Multisig wallet address
-    if(investorCount > MAX_INVESTMENTS_BEFORE_MULTISIG_CHANGE) {
-      throw;
-    }
-
+    require(investorCount <= MAX_INVESTMENTS_BEFORE_MULTISIG_CHANGE);
     multisigWallet = addr;
   }
 
   /**
    * Allow load refunds back on the contract for the refunding.
    *
-   * The team can transfer the funds back on the smart contract in the case the minimum goal was not reached..
+   * The team can transfer the funds back on the smart contract in the case the minimum goal 
+   * was not reached.
    */
   function loadRefund() public payable inState(State.Failure) {
     require(msg.value != 0);
-    loadedRefund = safeAdd(loadedRefund,msg.value);
+    loadedRefund = safeAdd(loadedRefund, msg.value);
   }
 
   /**
@@ -427,7 +405,7 @@ contract Crowdsale is Haltable, SafeMathLib{
     investedAmountOf[msg.sender] = 0;
     weiRefunded = safeAdd(weiRefunded,weiValue);
     Refund(msg.sender, weiValue);
-    if (!msg.sender.send(weiValue)) throw;
+    require(msg.sender.send(weiValue));
   }
 
   /**
@@ -457,12 +435,12 @@ contract Crowdsale is Haltable, SafeMathLib{
    * We make it a function and do not assign the result to a variable, so there is no chance of the variable being stale.
    */
   function getState() public constant returns (State) {
-    if(finalized) return State.Finalized;
+    if (finalized) return State.Finalized;
     else if (address(finalizeAgent) == 0) return State.Preparing;
     else if (!finalizeAgent.isSane()) return State.Preparing;
     else if (!pricingStrategy.isSane(address(this))) return State.Preparing;
-    else if (block.timestamp < startsAt && token.latestContributerId() <= maxPreAddresses) return State.PreFunding;
-    else if (block.timestamp <= endsAt && !isCrowdsaleFull()) return State.Funding;
+    else if (block.timestamp < startsAt) return State.PreFunding;
+    else if (block.timestamp <= endsAt) return State.Funding;
     else if (isMinimumGoalReached()) return State.Success;
     else if (!isMinimumGoalReached() && weiRaised > 0 && loadedRefund >= weiRaised) return State.Refunding;
     else return State.Failure;
@@ -496,24 +474,13 @@ contract Crowdsale is Haltable, SafeMathLib{
   /**
    * Check if the current invested breaks our cap rules.
    *
-   *
    * The child contract must define their own cap setting rules.
    * We allow a lot of flexibility through different capping strategies (ETH, token count)
    * Called from invest().
-   *
-   * @param weiAmount The amount of wei the investor tries to invest in the current transaction
-   * @param tokenAmount The amount of tokens we try to give to the investor in the current transaction
-   * @param weiRaisedTotal What would be our total raised balance after this transaction
-   * @param tokensSoldTotal What would be our total sold tokens count after this transaction
-   *
    * @return true if taking this investment would break our cap rules
    */
-  function isBreakingCap(uint weiAmount, uint tokenAmount, uint weiRaisedTotal, uint tokensSoldTotal) constant returns (bool limitBroken);
+  function isBreakingCap(uint weiRaisedTotal) constant returns (bool limitBroken);
 
-  /**
-   * Check if the current crowdsale is full and we can no longer sell any tokens.
-   */
-  function isCrowdsaleFull() public constant returns (bool);
 
   /**
    * Create new tokens or transfer issued tokens to the investor depending on the cap model.

@@ -7,7 +7,8 @@ Source file [../../contracts/FinalizeAgent.sol](../../contracts/FinalizeAgent.so
 <hr />
 
 ```javascript
-pragma solidity ^0.4.11;
+// BK Ok
+pragma solidity ^0.4.13;
 
 /**
  * Finalize agent defines what happens at the end of succeseful crowdsale.
@@ -16,8 +17,10 @@ pragma solidity ^0.4.11;
  * - Make tokens transferable
  * - etc.
  */
+// BK Ok
 contract FinalizeAgent {
 
+  // BK Ok
   function isFinalizeAgent() public constant returns(bool) {
     return true;
   }
@@ -27,9 +30,11 @@ contract FinalizeAgent {
    * This is a safety check function that doesn't allow crowdsale to begin
    * unless the finalizer has been set up properly.
    */
+  // BK Ok
   function isSane() public constant returns (bool);
 
   /** Called once by crowdsale finalize() if the sale was success. */
+  // BK Ok
   function finalizeCrowdsale();
 
 }

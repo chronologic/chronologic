@@ -8,7 +8,7 @@ Source file [../../contracts/FlatPricing.sol](../../contracts/FlatPricing.sol).
 
 ```javascript
 // BK Ok
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 import "./PricingStrategy.sol";
 import "./SafeMathLib.sol";
@@ -26,6 +26,8 @@ contract FlatPricing is PricingStrategy, SafeMathLib {
   // BK Ok
   function FlatPricing(uint _oneTokenInWei) {
     // BK Ok
+    require(_oneTokenInWei > 0);
+    // BK Ok
     oneTokenInWei = _oneTokenInWei;
   }
 
@@ -40,7 +42,7 @@ contract FlatPricing is PricingStrategy, SafeMathLib {
   // BK NOTE - result = msg.value / 0.01
   // BK NOTE - So if 1 ETH is sent, result = 100 
   // BK Ok
-  function calculatePrice(uint value, uint weiRaised, uint tokensSold, address msgSender, uint decimals) public constant returns (uint) {
+  function calculatePrice(uint value, uint decimals) public constant returns (uint) {
     // BK Ok
     uint multiplier = 10 ** decimals;
     // BK Ok

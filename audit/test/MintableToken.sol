@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 import './ERC20.sol';
 import './Ownable.sol';
 import './StandardToken.sol';
@@ -44,16 +44,12 @@ contract MintableToken is StandardToken, Ownable {
   modifier onlyMintAgent() {
     // Only crowdsale contracts are allowed to mint new tokens
     require(mintAgents[msg.sender]);
-    // if(!mintAgents[msg.sender]) {
-    //     throw;
-    // }
     _;
   }
 
   /** Make sure we are not done yet. */
   modifier canMint() {
     require(!mintingFinished);
-    //if(mintingFinished) throw;
     _;
   }
 }

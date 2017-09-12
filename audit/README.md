@@ -2,9 +2,41 @@
 
 Status: Work in progress
 
+Commits [3ba1fe83](https://github.com/chronologic/chronologic/commit/3ba1fe830881ca9e85f2c2db3e77b3b333bc4dd1),
+[fd679446](https://github.com/chronologic/chronologic/commit/fd679446f01c2d29b02856719548d6a35e8c34c8),
+[be2bbba9](https://github.com/chronologic/chronologic/commit/be2bbba97ba1c78206d2a21724f6e0b94c9afd93) and
+[73a775a6](https://github.com/chronologic/chronologic/commit/73a775a61af2c3acdc81dce604aa005e6bd96290).
+
 ## Summary
 
 TODO
+
+<br />
+
+### Crowdsale Contract
+
+* Funds contributed during the crowdsale are immediately transferred to the multisig wallet
+* If the minimum funding goal is not met, contributed funds must be transferred back into the crowdsale contract for investors
+  to be able to withdraw their refunds
+
+<br />
+
+### Finalizer Contract
+
+* *WARNING* - The *BonusFinalizeAgent* must be correctly set for the crowdsale contract before the crowdsale contracts
+  `finalize()` function can be called, or the crowdsale will never be finalised correctly.
+
+<br />
+
+### Token Contract
+
+The token contract is [ERC20](https://github.com/ethereum/eips/issues/20) compliant with the following features:
+
+* `decimals` is correctly defined as `uint8` instead of `uint256`
+* `transfer(...)` and `transferFrom(...)` will throw an error instead of return true/false when the transfer is invalid
+* `transfer(...)` and `transferFrom(...)` have not been built with a check on the size of the data being passed. This check is
+  [no longer a recommended feature](https://blog.coinfabrik.com/smart-contract-short-address-attack-mitigation-failure/)
+* `approve(...)` has the [requirement that a non-zero approval limit be set to 0 before a new non-zero limit can be set](https://github.com/ethereum/EIPs/issues/20#issuecomment-263524729)
 
 <br />
 
@@ -14,8 +46,119 @@ TODO
 
 * [Summary](#summary)
 * [Table Of Contents](#table-of-contents)
+* [Recommendations](#recommendations)
 * [Testing](#testing)
 * [Code Review](#code-review)
+
+<br />
+
+<hr />
+
+## Recommendations
+
+* **HIGH IMPORTANCE** - In *DayToken*, `balances[_to] = safeAdd(balances[msg.sender], _value);` in `transfer(...)` should be
+  `balances[_to] = safeAdd(balances[to], _value); `
+  * [x] Fixed in [fd679446](https://github.com/chronologic/chronologic/commit/fd679446f01c2d29b02856719548d6a35e8c34c8)
+* **MEDIUM IMPORTANCE** - In *DayToken* and *Crowdsale*, please convert the magic numbers like `333`, `3227`, `3227`, `3245` into
+  constant variable that will explain the meaning of these numbers
+  * [x] Fixed in [be2bbba9](https://github.com/chronologic/chronologic/commit/be2bbba97ba1c78206d2a21724f6e0b94c9afd93)
+* **LOW IMPORTANCE** - In *DayToken*, `minBalanceToSell`, `crowdsaleAddress` and `BonusFinalizeAgentAddress` should be made public to
+  provide visibility
+  * [x] Fixed for `minBalanceToSell` in [fd679446](https://github.com/chronologic/chronologic/commit/fd679446f01c2d29b02856719548d6a35e8c34c8)
+* **LOW IMPORTANCE** - In *DayToken*, `DayInSecs` should be renamed `dayInSecs` and `BonusFinalizeAgentAddress` should be renamed
+  `bonusFinalizeAgentAddress` for variable naming consistency
+  * [x] Fixed for `bonusFinalizeAgentAddress` in [be2bbba9](https://github.com/chronologic/chronologic/commit/be2bbba97ba1c78206d2a21724f6e0b94c9afd93)
+* **LOW IMPORTANCE** - In *DayToken*, `modifier onlyCrowdsale()` is unused and can be removed to simplify the contract
+  * [x] Fixed in [be2bbba9](https://github.com/chronologic/chronologic/commit/be2bbba97ba1c78206d2a21724f6e0b94c9afd93)
+* **LOW IMPORTANCE** - Un-indent `function transferFrom(...)` in *DayToken*
+  * [x] Fixed in [fd679446](https://github.com/chronologic/chronologic/commit/fd679446f01c2d29b02856719548d6a35e8c34c8)
+* **LOW IMPORTANCE** - In *Crowdsale*, `preMinWei`, `preMaxWei`, `minWei` and `maxWei` should be made public to provide visibility
+* **LOW IMPORTANCE** - In *AddressCappedCrowdsale*, `maxIcoAddresses` is never used
+  * [x] Fixed in [fd679446](https://github.com/chronologic/chronologic/commit/fd679446f01c2d29b02856719548d6a35e8c34c8)
+* **LOW IMPORTANCE** - In *DayToken*, `isValidContributorId(...)` and `isValidContributorAddress(...)` should be made constant
+* **LOW IMPORTANCE** - Remove `DayToken.updateAllBalances()`. After enquiring about the potentially large gas cost of executing
+  this function, the developers have stated that this function is not required any more, as balances are now calculated on the fly
+  and this function is now disabled by default, using the switch `updateAllBalancesEnabled`
+* **LOW/MEDIUM? IMPORTANCE** `totalSupply` (504,011) does not match up with the total token balances from the accounts (504,000)
+
+       # Account                                             EtherBalanceChange                          Token Name
+      -- ------------------------------------------ --------------------------- ------------------------------ ---------------------------
+       0 0xa00af22d07c87d96eeeb0ed583f8f6ac7812827e       90.170304840000000000           0.000000000000000000 Account #0 - Miner
+       1 0xa11aae29840fbb5c86e6fd4cf809eba183aef433       -0.160592112000000000           0.000000000000000000 Account #1 - Contract Owner
+       2 0xa22ab8a9d641ce77e06d98b7d7065d324d3d6976    21000.000000000000000000           0.000000000000000000 Account #2 - Multisig
+       3 0xa33a6c312d9ad0e0f2e95541beed0cc081621fd0        0.000000000000000000           0.000000000000000000 Account #3 - Team #1
+       4 0xa44a08d3f6933c69212114bb66e2df1813651844        0.000000000000000000           0.000000000000000000 Account #4 - Team #2
+       5 0xa55a151eb00fded1634d27d1127b4be4627079ea        0.000000000000000000           0.000000000000000000 Account #5 - Team #3
+       6 0xa66a85ede0cbe03694aa9d9de0bb19c99ff55bd9        0.000000000000000000           0.000000000000000000 Account #6 - Test Address #1
+       7 0xa77a2b9d4b1c010a22a7c565dc418cef683dbcec        0.000000000000000000           0.000000000000000000 Account #7 - Test Address #2
+       8 0xa88a05d2b88283ce84c8325760b72a64591279a2   -20000.005396364000000000      480000.000000000007680000 Account #8
+       9 0xa99a0ae3354c06b1459fd441a32a3f71005d7da0    -1000.004316364000000000       24000.000000000000384000 Account #9
+      10 0x27daa9fe81944d721dc95e09f54c8bd3a90a5603        0.000000000000000000           0.000000000000000000 Token 'DAY' 'Day'
+      11 0x5029cacf1799deb161dc3ab611b2b368c06f15e8        0.000000000000000000           0.000000000000000000 Pricing
+      12 0x332ceb425309f4ab99839300329a9626983323be        0.000000000000000000           0.000000000000000000 Crowdsale
+      13 0xd8dc1b690f36cf38e8032d751343c9e4df9bdf87        0.000000000000000000           0.000000000000000000 BonusFinalizerAgent
+      -- ------------------------------------------ --------------------------- ------------------------------ ---------------------------
+                                                                                     504000.000000000008064000 Total Token Balances
+      -- ------------------------------------------ --------------------------- ------------------------------ ---------------------------
+
+      PASS Send Valid Contribution After Crowdsale Start - ac8 contributes 20,000 ETH
+      PASS Send Valid Contribution After Crowdsale Start - ac9 contributes 1,000 ETH
+      ...
+      token.totalSupply=504011.000000000008064
+
+  The reason for this is that I deployed the *DayToken* with an `_initialSupply` of 11 and these 11 tokens should have been 
+  assigned to the contract owner account 0xa11a . This issue will be of **LOW IMPORTANCE** if this contract will only be
+  deployed with an `_initialSupply` of 0.
+
+  This issue may be fixed by the next issue.
+
+* **HIGH IMPORTANCE** `DayToken.balanceOf(...)` does not work as expected for non-minting addresses. If DAY tokens are transferred
+  from a minting address to a non-minting address, the non-minting address is not registered in the `DayToken.contributors` data
+  structure.
+
+  Following is the `DayToken.balanceOf(...)` function:
+
+      function balanceOf(address _adr) public constant returns (uint256 balance) {
+          return balanceById(idOf[_adr]);   
+      }
+
+  And following is the `DayToken.balanceById(...)` function:
+
+      function balanceById(uint _id) public constant returns (uint256 balance) {
+          address adr = contributors[_id].adr; 
+          if (isDayTokenActivated()) {
+              if (isValidContributorId(_id)) {
+                  return ( availableBalanceOf(_id) );
+              }
+          }
+          return balances[adr]; 
+      }
+
+  As the non-minting address is not registered in the `DayToken.contributors` data structure, `adr` will be set to `0x0`. The
+  balance of any non-minting address will therefore always be 0.
+  
+  A suggested fix follows:
+  
+      function balanceOf(address _adr) public constant returns (uint256 balance) {
+          return balanceById(idOf[_adr], _adr);   
+      }
+      
+      function balanceById(uint _id, address a) public constant returns (uint256 balance) {
+          address adr = contributors[_id].adr;
+          // BK TEST
+          if (adr == 0x0)
+            adr = a; 
+          if (isDayTokenActivated()) {
+              if (isValidContributorId(_id)) {
+                  return ( availableBalanceOf(_id) );
+              }
+          }
+          return balances[adr]; 
+      }
+
+* **LOW IMPORTANCE** `DayToken.isTeamLockInPeriodOverIfTeamAddress(...)` can be set as a constant function
+* **LOW IMPORTANCE** `DayToken.isValidContributorId(...)` can be set as a constant function
+* **LOW IMPORTANCE** `DayToken.isValidContributorAddress(...)` can be set as a constant function
 
 <br />
 
@@ -39,15 +182,15 @@ TODO
     * [x] contract Haltable is Ownable
   * [x] [code-review/SafeMathLib.md](code-review/SafeMathLib.md)
     * [x] contract SafeMathLib
-  * [ ] [code-review/Crowdsale.md](code-review/Crowdsale.md)
-    * [ ] contract Crowdsale is Haltable, SafeMathLib
-  * [ ] [code-review/AddressCappedCrowdsale.md](code-review/AddressCappedCrowdsale.md)
-    * [ ] contract AddressCappedCrowdsale is Crowdsale
+  * [x] [code-review/Crowdsale.md](code-review/Crowdsale.md)
+    * [x] contract Crowdsale is Haltable, SafeMathLib
+  * [x] [code-review/AddressCappedCrowdsale.md](code-review/AddressCappedCrowdsale.md)
+    * [x] contract AddressCappedCrowdsale is Crowdsale
 * Crowdsale Finaliser Contract And New Dependencies
-  * [ ] [code-review/FinalizeAgent.md](code-review/FinalizeAgent.md)
-    * [ ] contract FinalizeAgent
-  * [ ] [code-review/BonusFinalizeAgent.md](code-review/BonusFinalizeAgent.md)
-    * [ ] contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib
+  * [x] [code-review/FinalizeAgent.md](code-review/FinalizeAgent.md)
+    * [x] contract FinalizeAgent
+  * [x] [code-review/BonusFinalizeAgent.md](code-review/BonusFinalizeAgent.md)
+    * [x] contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib
 * Crowdsale Pricing Contract And New Dependencies
   * [x] [code-review/PricingStrategy.md](code-review/PricingStrategy.md)
     * [x] contract PricingStrategy
@@ -58,16 +201,16 @@ TODO
     * [x] contract ERC20Basic
   * [x] [code-review/ERC20.md](code-review/ERC20.md)
     * [x] contract ERC20 is ERC20Basic
-  * [ ] [code-review/ReleasableToken.md](code-review/ReleasableToken.md)
-    * [ ] contract ReleasableToken is ERC20, Ownable
-  * [ ] [code-review/StandardToken.md](code-review/StandardToken.md)
-    * [ ] contract StandardToken is ERC20, SafeMathLib 
-  * [ ] [code-review/MintableToken.md](code-review/MintableToken.md)
-    * [ ] contract MintableToken is StandardToken, Ownable
-  * [ ] [code-review/UpgradeAgent.md](code-review/UpgradeAgent.md)
-    * [ ] contract UpgradeAgent
-  * [ ] [code-review/UpgradeableToken.md](code-review/UpgradeableToken.md)
-    * [ ] contract UpgradeableToken is StandardToken 
+  * [x] [code-review/ReleasableToken.md](code-review/ReleasableToken.md)
+    * [x] contract ReleasableToken is ERC20, Ownable
+  * [x] [code-review/StandardToken.md](code-review/StandardToken.md)
+    * [x] contract StandardToken is ERC20, SafeMathLib 
+  * [x] [code-review/MintableToken.md](code-review/MintableToken.md)
+    * [x] contract MintableToken is StandardToken, Ownable
+  * [x] [code-review/UpgradeAgent.md](code-review/UpgradeAgent.md)
+    * [x] contract UpgradeAgent
+  * [x] [code-review/UpgradeableToken.md](code-review/UpgradeableToken.md)
+    * [x] contract UpgradeableToken is StandardToken 
   * [ ] [code-review/DayToken.md](code-review/DayToken.md)
     * [ ] contract DayToken is  ReleasableToken, MintableToken, UpgradeableToken
 
@@ -75,48 +218,75 @@ TODO
 
 ### Not Reviewed
 
-* Unused Contracts
-  * [ ] [code-review/FractionalERC20.md](code-review/FractionalERC20.md)
-    * [ ] contract FractionalERC20 is ERC20
-  * [ ] [code-review/newToken.md](code-review/newToken.md)
-    * [ ] contract newToken is StandardToken, UpgradeAgent
-* Outside Scope
-  * [ ] [code-review/ConsenSysWallet.md](code-review/ConsenSysWallet.md)
-    * [ ] contract MultiSigWallet
-* Unused Testing Framework
-  * [ ] [code-review/Migrations.md](code-review/Migrations.md)
-    * [ ] contract Migrations 
+#### ConsenSys Multisig Wallet
+
+[../contracts/ConsenSysWallet.sol](../contracts/ConsenSysWallet.sol) is outside the scope of this review.
+
+The following are the differences between the version in this repository and the original ConsenSys
+[MultiSigWallet.sol](https://raw.githubusercontent.com/ConsenSys/MultiSigWallet/e3240481928e9d2b57517bd192394172e31da487/contracts/solidity/MultiSigWallet.sol):
+
+    $ diff -w OriginalConsenSysMultisigWallet.sol ConsenSysWallet.sol 
+    1c1
+    < pragma solidity 0.4.4;
+    ---
+    > pragma solidity ^0.4.13;
+    367d366
+    < 
+
+The only difference is in the Solidity version number.
 
 <br />
 
-### Compiler Warnings
+The following are the differences between the version in this repository and the ConsenSys MultiSigWallet deployed 
+at [0xa646e29877d52b9e2de457eca09c724ff16d0a2b](https://etherscan.io/address/0xa646e29877d52b9e2de457eca09c724ff16d0a2b#code)
+by Status.im and is currently holding 284,732.64 Ether:
 
-```
-PricingStrategy.sol:17:19: Warning: Unused local variable
-  function isSane(address crowdsale) public constant returns (bool) {
-                  ^---------------^
-FlatPricing.sol:23:39: Warning: Unused local variable
-  function calculatePrice(uint value, uint weiRaised, uint tokensSold, address msgSender, uint decimals) public constant returns (uint) {
-                                      ^------------^
-FlatPricing.sol:23:55: Warning: Unused local variable
-  function calculatePrice(uint value, uint weiRaised, uint tokensSold, address msgSender, uint decimals) public constant returns (uint) {
-                                                      ^-------------^
-FlatPricing.sol:23:72: Warning: Unused local variable
-  function calculatePrice(uint value, uint weiRaised, uint tokensSold, address msgSender, uint decimals) public constant returns (uint) {
-                                                                       ^---------------^
-PricingStrategy.sol:17:19: Warning: Unused local variable
-  function isSane(address crowdsale) public constant returns (bool) {
-                  ^---------------^
-AddressCappedCrowdsale.sol:42:28: Warning: Unused local variable
-    function isBreakingCap(uint weiAmount, uint tokenAmount, uint weiRaisedTotal, uint tokensSoldTotal) constant returns (bool limitBroken) {
-                           ^------------^
-AddressCappedCrowdsale.sol:42:44: Warning: Unused local variable
-    function isBreakingCap(uint weiAmount, uint tokenAmount, uint weiRaisedTotal, uint tokensSoldTotal) constant returns (bool limitBroken) {
-                                           ^--------------^
-AddressCappedCrowdsale.sol:42:83: Warning: Unused local variable
-    function isBreakingCap(uint weiAmount, uint tokenAmount, uint weiRaisedTotal, uint tokensSoldTotal) constant returns (bool limitBroken) {
-                                                                                  ^------------------^
-PricingStrategy.sol:17:19: Warning: Unused local variable
-  function isSane(address crowdsale) public constant returns (bool) {
-                  ^---------------^
-```
+    $ diff -w ConsenSysWallet.sol StatusConsenSysMultisigWallet.sol 
+    1c1
+    < pragma solidity ^0.4.13;
+    ---
+    > pragma solidity ^0.4.11;
+    10,18c10,18
+    <     event Confirmation(address indexed sender, uint indexed transactionId);
+    <     event Revocation(address indexed sender, uint indexed transactionId);
+    <     event Submission(uint indexed transactionId);
+    <     event Execution(uint indexed transactionId);
+    <     event ExecutionFailure(uint indexed transactionId);
+    <     event Deposit(address indexed sender, uint value);
+    <     event OwnerAddition(address indexed owner);
+    <     event OwnerRemoval(address indexed owner);
+    <     event RequirementChange(uint required);
+    ---
+    >     event Confirmation(address indexed _sender, uint indexed _transactionId);
+    >     event Revocation(address indexed _sender, uint indexed _transactionId);
+    >     event Submission(uint indexed _transactionId);
+    >     event Execution(uint indexed _transactionId);
+    >     event ExecutionFailure(uint indexed _transactionId);
+    >     event Deposit(address indexed _sender, uint _value);
+    >     event OwnerAddition(address indexed _owner);
+    >     event OwnerRemoval(address indexed _owner);
+    >     event RequirementChange(uint _required);
+    295c295
+    <     /// @dev Returns total number of transactions after filers are applied.
+    ---
+    >     /// @dev Returns total number of transactions after filters are applied.
+
+The only differences are in the Solidity version number and the prefixing of the event variables with `_`s.
+
+This [link](https://etherscan.io/find-similiar-contracts?a=0xa646e29877d52b9e2de457eca09c724ff16d0a2b) will display
+79 (currently) other multisig wallet contracts with high similarity to the ConsenSys MultiSigWallet deployed by Status.im .
+
+Some further information on the ConsenSys multisig wallet:
+
+* [The Gnosis MultiSig Wallet and our Commitment to Security](https://blog.gnosis.pm/the-gnosis-multisig-wallet-and-our-commitment-to-security-ce9aca0d17f6)
+* [Release of new Multisig Wallet](https://blog.gnosis.pm/release-of-new-multisig-wallet-59b6811f7edc)
+
+An audit on a previous version of this multisig has already been done by [Martin Holst Swende](https://gist.github.com/holiman/77dfe5addab521bf28ea552591ef8ac4).
+
+<br />
+
+#### Unused Testing Framework
+
+The following file is used for the testing framework are is outside the scope of this review: 
+* [../contracts/Migrations.sol](../contracts/Migrations.sol)
+

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 import "./Crowdsale.sol";
 import "./DayToken.sol";
@@ -19,12 +19,15 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
 
   DayToken public token;
   Crowdsale public crowdsale;
-  /* Total number of team members */
-  uint public totalMembers;
+  /* Total number of addresses for team members */
+  uint public totalTeamAddresses;
+  /* Total number of test addresses */
+  uint public totalTestAddresses;
+
   /* Number of tokens to be assigned per test address */
   uint public testAddressTokens;
   uint public allocatedBonus;
-  /* Number of day tokens per team address */
+  /* Percentage of day tokens per team address eg 5% will be passed as 500 */
   uint public teamBonus;
   /* Total number of DayTokens to be stored in the DayToken contract as bounty */
   uint public totalBountyInDay;
@@ -32,34 +35,50 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
   address[] public teamAddresses;
   /** List of test addresses*/
   address[] public testAddresses;
+  /* Stores the id of the next Team contributor */
+  uint public nextTeamContributorId;
+  /* Stores the id of the next Test contributor */
+  uint public nextTestContributorId;
   
-  event testAddressAdded(address TestAddress, uint id, uint balance);
-  event teamMemberId(address adr, uint contributorId);
+  event TestAddressAdded(address testAddress, uint id, uint balance);
+  event TeamMemberId(address adr, uint contributorId);
 
-  function BonusFinalizeAgent(DayToken _token, Crowdsale _crowdsale,  address[] _teamAddresses, address[] _testAddresses, uint _testAddressTokens, uint _teamBonus, uint _totalBountyInDay) {
+  function BonusFinalizeAgent(DayToken _token, Crowdsale _crowdsale,  address[] _teamAddresses, 
+    address[] _testAddresses, uint _testAddressTokens, uint _teamBonus, uint _totalBountyInDay) {
     token = _token;
     crowdsale = _crowdsale;
 
     //crowdsale address must not be 0
     require(address(crowdsale) != 0);
 
-    totalMembers = _teamAddresses.length;
+    totalTeamAddresses = _teamAddresses.length;
     teamAddresses = _teamAddresses;
     teamBonus = _teamBonus;
 
+    totalTestAddresses = _testAddresses.length;
     testAddresses = _testAddresses;
     testAddressTokens = _testAddressTokens;
     totalBountyInDay = _totalBountyInDay;
 
     //if any of the address is 0 or invalid throw
-    for (uint j=0;j < totalMembers;j++){
+    for (uint j = 0; j < totalTeamAddresses; j++) {
       require(_teamAddresses[j] != 0);
     }
+
+    nextTeamContributorId = token.totalPreIcoAddresses() + token.totalIcoAddresses() + 1;
+    nextTestContributorId = token.totalPreIcoAddresses() + token.totalIcoAddresses() + 
+      totalTeamAddresses + 1;
   }
 
   /* Can we run finalize properly */
   function isSane() public constant returns (bool) {
-    return (token.mintAgents(address(this)) == true) && (token.releaseAgent() == address(this));
+    // check addresses add up
+    uint totalAddresses = token.totalPreIcoAddresses() + token.totalIcoAddresses() + totalTeamAddresses + 
+      totalTestAddresses + token.totalPostIcoAddresses();
+      
+    return (totalAddresses == token.maxAddresses()) && 
+      (token.mintAgents(address(this)) == true) && 
+      (token.releaseAgent() == address(this));
   }
 
   /** Called once by crowdsale finalize() if the sale was success. */
@@ -73,27 +92,29 @@ contract BonusFinalizeAgent is FinalizeAgent, SafeMathLib {
     uint tokensSold = crowdsale.tokensSold();
     
     //Mint the total bounty to be given out on daily basis and store it in the DayToken contract
-    token.mint(token, totalBountyInDay);
+    if (token.updateAllBalancesEnabled()) {
+      token.mint(token, totalBountyInDay);
+    }
 
-    // Calculate team bonus and assign them the addresses with tokens
-    for (uint i=0; i < totalMembers; i++){
-      allocatedBonus = safeMul(tokensSold, teamBonus) / 10000;
+    // Calculate team bonus to allocate
+    allocatedBonus = safeMul(tokensSold, teamBonus) / 10000;
+
+    // assign addresses with tokens
+    for (uint i = 0; i < totalTeamAddresses; i++) {
       token.mint(teamAddresses[i], allocatedBonus);
-      uint id = token.addAddressWithId(teamAddresses[i], 3228 + i);
-      teamMemberId(teamAddresses[i], id);
+      token.addTeamAddress(teamAddresses[i], nextTeamContributorId);
+      TeamMemberId(teamAddresses[i], nextTeamContributorId);
+      nextTeamContributorId++;
     }
 
     //Add Test Addresses
-    for(uint j=0; j < testAddresses.length ; j++){
+    for (uint j = 0; j < totalTestAddresses; j++) {
       token.mint(testAddresses[j],testAddressTokens);
-      id = token.addAddressWithId(testAddresses[j],  3228 + i + j);
-      testAddressAdded(testAddresses[j], id, testAddressTokens);
+      token.addContributor(nextTestContributorId, testAddresses[j], 0);
+      TestAddressAdded(testAddresses[j], nextTestContributorId, testAddressTokens);
+      nextTestContributorId++;
     }
     
-    // function to set the ending id of team + test addresses
-    token.setTeamTestEndId(3228 + i +j);
-
-
     // Make token transferable
     // realease them in the wild
     // Hell yeah!!! we did it.

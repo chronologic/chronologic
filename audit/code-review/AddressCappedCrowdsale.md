@@ -7,8 +7,10 @@ Source file [../../contracts/AddressCappedCrowdsale.sol](../../contracts/Address
 <hr />
 
 ```javascript
-pragma solidity ^0.4.11;
+// BK Ok
+pragma solidity ^0.4.13;
 
+// BK Ok
 import "./Crowdsale.sol";
 
 /**
@@ -17,13 +19,12 @@ import "./Crowdsale.sol";
  * - Tokens are dynamically created during the crowdsale
  *
  */
+// BK Ok
 contract AddressCappedCrowdsale is Crowdsale {
 
     /* Maximum amount of wei this crowdsale can raise. */
+    // BK Ok
     uint public weiIcoCap;
-
-    /* Maximum Number of addresses allowed during ICO. */
-    uint public maxIcoAddresses;
 
     /** Constructor to initialize all variables, including Crowdsale variables
     * @param _token Address of the deployed DayToken contract
@@ -35,32 +36,38 @@ contract AddressCappedCrowdsale is Crowdsale {
     * @param _weiIcoCap Hard cap for amount to be raised during ICO in wei
     * @param _preMinWei Minimum amount, in wei for a contribution during pre-ICO stage
     * @param _preMaxWei Maximum amount, in Wei for a contribution during pre-ICO stage
+    * @param _minWei Minimum amount, in Wei for a contribution during ICO stage
     * @param _maxWei Maximum amount, in Wei for a contribution during ICO stage
-    * @param _maxPreAddresses Maximum number of addresses to be alloted during pre-ICO
-    * @param _maxIcoAddresses Maximum number of addresses to be alloted (sold) during ICO
     */
-    function AddressCappedCrowdsale(address _token, PricingStrategy _pricingStrategy, address _multisigWallet, uint _start, uint _end, uint _minimumFundingGoal, uint _weiIcoCap, uint _preMinWei, uint _preMaxWei, uint _maxWei, uint _maxPreAddresses, uint _maxIcoAddresses) Crowdsale(_token, _pricingStrategy, _multisigWallet, _start, _end, _minimumFundingGoal, _preMinWei, _preMaxWei, _maxWei,  _maxPreAddresses) {
+    // BK Ok - Constructor
+    function AddressCappedCrowdsale(address _token, PricingStrategy _pricingStrategy, 
+        address _multisigWallet, uint _start, uint _end, uint _minimumFundingGoal, uint _weiIcoCap, 
+        uint _preMinWei, uint _preMaxWei, uint _minWei,  uint _maxWei) 
+        
+        // BK Ok
+        Crowdsale(_token, _pricingStrategy, _multisigWallet, _start, _end, _minimumFundingGoal, 
+        _preMinWei, _preMaxWei, _minWei, _maxWei) {
+        // BK Ok
         weiIcoCap = _weiIcoCap;
-        maxIcoAddresses = _maxIcoAddresses;
+        // BK Ok
         token = DayToken(_token);
     }
 
     /**
     * Called from invest() to confirm if the curret investment does not break our cap rule.
     */
-    function isBreakingCap(uint weiAmount, uint tokenAmount, uint weiRaisedTotal, uint tokensSoldTotal) constant returns (bool limitBroken) {
+    // BK Ok
+    function isBreakingCap(uint weiRaisedTotal) constant returns (bool limitBroken) {
+        // BK Ok
         return weiRaisedTotal > weiIcoCap;
-    }
-
-    /** Called from getStage() to confirm if number of addresses exceeds our Maximum addresses during ICO cap */
-    function isCrowdsaleFull() public constant returns (bool) {
-        return token.latestContributerId() > maxIcoAddresses;
     }
 
     /**
     * Dynamically create tokens and assign them to the investor.
     */
+    // BK Ok
     function assignTokens(address receiver, uint tokenAmount) private {
+        // BK Ok
         token.mint(receiver, tokenAmount);
     }
 }

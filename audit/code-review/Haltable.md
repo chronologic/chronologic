@@ -8,7 +8,7 @@ Source file [../../contracts/Haltable.sol](../../contracts/Haltable.sol).
 
 ```javascript
 // BK Ok
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 // BK Ok
 import './Ownable.sol';
@@ -31,7 +31,6 @@ contract Haltable is Ownable {
   modifier stopInEmergency {
     // BK Ok
     require(!halted);
-    //if (halted) throw;
     // BK Ok
     _;
   }
@@ -40,7 +39,6 @@ contract Haltable is Ownable {
   modifier onlyInEmergency {
     // BK Ok
     require(halted);
-    //if (!halted) throw;
     // BK Ok
     _;
   }

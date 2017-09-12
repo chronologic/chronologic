@@ -8,7 +8,7 @@ Source file [../../contracts/PricingStrategy.sol](../../contracts/PricingStrateg
 
 ```javascript
 // BK Ok
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.13;
 
 /**
  * Interface for defining crowdsale pricing.
@@ -29,6 +29,8 @@ contract PricingStrategy {
    */
   // BK Ok
   function isSane(address crowdsale) public constant returns (bool) {
+	// BK Ok
+    require(crowdsale != 0); 
     // BK Ok
     return true;
   }
@@ -38,14 +40,11 @@ contract PricingStrategy {
    *
    *
    * @param value - What is the value of the transaction send in as wei
-   * @param tokensSold - how much tokens have been sold this far
-   * @param weiRaised - how much money has been raised this far
-   * @param msgSender - who is the investor of this transaction
    * @param decimals - how many decimal units the token has
    * @return Amount of tokens the investor receives
    */
   // BK Ok
-  function calculatePrice(uint value, uint weiRaised, uint tokensSold, address msgSender, uint decimals) public constant returns (uint tokenAmount);
+  function calculatePrice(uint value, uint decimals) public constant returns (uint tokenAmount);
 }
 
 ```
